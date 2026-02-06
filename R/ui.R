@@ -81,17 +81,11 @@ ui <- page_fillable(
     tags$div(
       class = "left-column",
 
-      # Large search box (sticky at top)
+      # Large search box with dropdown (sticky at top)
       searchModuleUI("search"),
 
       # Dataset metadata panel (sticky below search)
-      uiOutput("dataset_metadata_panel"),
-
-      # Results container (scrolls independently)
-      tags$div(
-        class = "search-results-container",
-        uiOutput("search-search_results")
-      )
+      uiOutput("dataset_metadata_panel")
     ),
 
     # Right Column (60%)

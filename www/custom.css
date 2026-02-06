@@ -691,6 +691,7 @@ button i {
   z-index: 100;
   border-bottom: 1px solid #CCCCCC;
   flex-shrink: 0;
+  overflow: visible; /* Allow dropdown to extend beyond container */
 }
 
 .search-container input {
@@ -704,6 +705,125 @@ button i {
 .search-container input:focus {
   outline: 2px solid #0052CC;
   background-color: #FFFFFF;
+}
+
+/* Search Dropdown (Modern Autocomplete) */
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  right: 12px;
+  width: calc(100% - 24px);
+  max-height: 400px;
+  background-color: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  border-top: none;
+  z-index: 1001;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: none; /* Hidden by default, shown via JavaScript */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.search-dropdown-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-dropdown-item {
+  padding: 10px 12px;
+  min-height: 44px;
+  cursor: pointer;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #EEEEEE;
+  transition: background-color 0.1s ease;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.search-dropdown-item:hover {
+  background-color: #F0F0F0;
+}
+
+.search-dropdown-item.active {
+  background-color: #F0F0F0;
+  border-left: 3px solid #000000;
+}
+
+/* Empty state in dropdown */
+.search-dropdown-item.search-dropdown-empty {
+  text-align: center;
+  color: #AAAAAA;
+  cursor: default;
+  font-size: 13px;
+  padding: 16px 12px;
+}
+
+.search-dropdown-item.search-dropdown-empty:hover {
+  background-color: #FFFFFF;
+}
+
+/* Dropdown item layout */
+.dropdown-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+  gap: 8px;
+}
+
+.dropdown-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-item-sid {
+  font-size: 12px;
+  color: #999999;
+  flex-shrink: 0;
+}
+
+.dropdown-item-unikey {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* "Showing N of X" indicator */
+.search-dropdown-more {
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #666666;
+  background-color: #F9F9F9;
+  border-top: 1px solid #CCCCCC;
+  font-style: italic;
+  cursor: default;
+}
+
+/* Scrollbar for dropdown */
+.search-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-dropdown::-webkit-scrollbar-track {
+  background-color: #F5F5F5;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb {
+  background-color: #CCCCCC;
+  border-radius: 4px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: #999999;
 }
 
 /* Dataset Metadata Panel - Refined Clinical Design */
