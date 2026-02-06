@@ -84,6 +84,9 @@ ui <- page_fillable(
       # Large search box (sticky at top)
       searchModuleUI("search"),
 
+      # Dataset metadata panel (sticky below search)
+      uiOutput("dataset_metadata_panel"),
+
       # Results container (scrolls independently)
       tags$div(
         class = "search-results-container",

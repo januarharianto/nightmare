@@ -706,6 +706,69 @@ button i {
   background-color: #FFFFFF;
 }
 
+/* Dataset Metadata Panel - Refined Clinical Design */
+.metadata-panel {
+  padding: 10px 12px 8px 12px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #DDDDDD;
+  position: sticky;
+  top: 80px; /* Below search container */
+  z-index: 99; /* Below search (100), above results */
+  flex-shrink: 0; /* Don't compress when space constrained */
+  /* Subtle shadow for depth without visual separation */
+  box-shadow: inset 0 -1px 0 #EEEEEE;
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columns equal width */
+  grid-template-rows: auto auto;   /* 2 rows auto height */
+  gap: 10px 14px; /* Increased gaps for clarity */
+  padding: 0;
+  background-color: transparent; /* Remove bg box, integrate with panel */
+  border: none; /* Remove border for seamless integration */
+}
+
+.metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: auto; /* Flexible height based on content */
+  align-items: flex-start;
+}
+
+.metadata-label {
+  font-size: 11px; /* Slightly smaller for hierarchy */
+  font-weight: 600; /* Medium weight instead of bold */
+  color: #888888; /* Slightly lighter gray */
+  letter-spacing: 0.4px; /* Subtle spacing for clinical feel */
+  text-transform: uppercase; /* Case distinction emphasizes label role */
+  line-height: 1.2;
+}
+
+.metadata-value {
+  font-size: 15px; /* Slightly larger for emphasis */
+  font-weight: bold;
+  color: #000000; /* Black for maximum contrast/readability */
+  line-height: 1.3;
+  letter-spacing: -0.3px; /* Slight tightening for cohesion */
+}
+
+/* Placeholder dashes when no data - subtle appearance */
+.metadata-value:empty::after {
+  content: "—";
+  color: #EEEEEE;
+  font-weight: normal;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 600px) {
+  .metadata-grid {
+    grid-template-columns: 1fr; /* Single column */
+    gap: 8px 0; /* Vertical spacing only */
+  }
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;

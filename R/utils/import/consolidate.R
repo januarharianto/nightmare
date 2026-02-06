@@ -35,6 +35,31 @@ detect_year_from_canvas <- function(canvas_data) {
   return(format(Sys.Date(), "%Y"))
 }
 
+#' Detect semester from Canvas data
+#'
+#' @param canvas_data data.frame from import_canvas_grades with semester attribute
+#' @return Character semester code (e.g., "S1", "S2", "S2C")
+detect_semester_from_canvas <- function(canvas_data) {
+  semester <- attr(canvas_data, "semester")
+
+  if (!is.null(semester) && !is.na(semester)) {
+    return(semester)
+  }
+
+  # Fallback: try to extract from section column directly
+  if ("section" %in% names(canvas_data)) {
+    section_sample <- canvas_data$section[!is.na(canvas_data$section)][1]
+    if (!is.na(section_sample)) {
+      semester_match <- str_extract(section_sample, "S[1-2][A-Z]?")
+      if (!is.na(semester_match)) {
+        return(semester_match)
+      }
+    }
+  }
+
+  return("Unknown")
+}
+
 #' Consolidate Student Data
 #'
 #' @param canvas data.frame from import_canvas_grades

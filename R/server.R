@@ -34,6 +34,88 @@ server <- function(input, output, session) {
     can_redo = FALSE
   )
 
+  # Dataset metadata reactive
+  datasetMetadata <- reactive({
+    data <- studentData()
+
+    # Return placeholder if no data
+    if (is.null(data) || nrow(data) == 0) {
+      return(list(
+        unit = "—",
+        year = "—",
+        semester = "—",
+        student_count = "—"
+      ))
+    }
+
+    # Extract unit code
+    unit <- if ("unit_of_study" %in% names(data) && nrow(data) > 0) {
+      unique(data$unit_of_study)[1]
+    } else {
+      "—"
+    }
+
+    # Extract year from attribute
+    year <- attr(data, "academic_year")
+    if (is.null(year) || is.na(year)) {
+      year <- "—"
+    }
+
+    # Extract semester from attribute (set by canvas import)
+    semester <- attr(data, "semester")
+    if (is.null(semester) || is.na(semester)) {
+      # Fallback: try detection function
+      semester <- tryCatch(
+        detect_semester_from_canvas(data),
+        error = function(e) "—"
+      )
+    }
+
+    list(
+      unit = as.character(unit),
+      year = as.character(year),
+      semester = as.character(semester),
+      student_count = nrow(data)
+    )
+  })
+
+  # Render dataset metadata panel
+  output$dataset_metadata_panel <- renderUI({
+    meta <- datasetMetadata()
+
+    tags$div(
+      class = "metadata-panel",
+      tags$div(
+        class = "metadata-grid",
+        # Row 1
+        tags$div(
+          class = "metadata-item",
+          tags$span(class = "metadata-label", "Unit:"),
+          tags$span(class = "metadata-value", meta$unit)
+        ),
+        tags$div(
+          class = "metadata-item",
+          tags$span(class = "metadata-label", "Year:"),
+          tags$span(class = "metadata-value", meta$year)
+        ),
+        # Row 2
+        tags$div(
+          class = "metadata-item",
+          tags$span(class = "metadata-label", "Students:"),
+          tags$span(
+            class = "metadata-value",
+            if (meta$student_count == "—") "—" else as.character(meta$student_count)
+          )
+        ),
+        tags$div(
+          class = "metadata-item",
+          tags$span(class = "metadata-label", "Semester:"),
+          tags$span(class = "metadata-value", meta$semester)
+        )
+      )
+    )
+  })
+
   # Load sample data on startup
   observe({
     tryCatch({

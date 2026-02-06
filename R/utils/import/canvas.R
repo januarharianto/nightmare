@@ -116,6 +116,13 @@ import_canvas_grades <- function(file_path) {
       attr(students, "academic_year") <- year_match
       message(sprintf("Academic year from Canvas: %s", year_match))
     }
+
+    # Extract semester (e.g., S1, S2, S1C, S2C)
+    semester_match <- str_extract(section, "S[1-2][A-Z]?")
+    if (!is.na(semester_match)) {
+      attr(students, "semester") <- semester_match
+      message(sprintf("Semester from Canvas: %s", semester_match))
+    }
   }
 
   message(sprintf("Imported %d students from Canvas", nrow(students)))
