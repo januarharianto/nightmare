@@ -26,7 +26,8 @@ ui <- page_fillable(
   # Custom CSS and shinyjs
   useShinyjs(),
   tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+    tags$script(src = "search-keyboard.js")
   ),
 
   # Top Navbar

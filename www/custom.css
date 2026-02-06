@@ -159,7 +159,7 @@ p { margin-bottom: 8px; }
 /* Main Layout */
 .main-container {
   display: flex;
-  height: calc(100vh - 116px);
+  height: calc(100vh - 100px);
   margin-top: 0;
   margin-left: 120px;
   overflow: hidden;
@@ -832,7 +832,7 @@ button i {
 
 /* Search Container (Left Column) */
 .search-container {
-  padding: 12px;
+  padding: 6px 12px;
   background-color: #FFFFFF;
   flex-shrink: 0;
 }
@@ -882,6 +882,11 @@ button i {
 
 .search-result-item:active {
   background-color: #EEEEEE;
+}
+
+.search-result-item.keyboard-active {
+  background-color: #E8E8E8;
+  border-left: 3px solid #000000;
 }
 
 .result-item-name {
@@ -947,7 +952,7 @@ button i {
 
 /* Dataset Metadata Panel - Ultra Minimal Single Line */
 .metadata-panel {
-  padding: 6px 16px;
+  padding: 4px 16px;
   background-color: transparent;
   border-bottom: 1px solid #EEEEEE;
   z-index: 99;
@@ -955,6 +960,7 @@ button i {
   min-height: 24px;
   margin-top: 60px;
   margin-left: 120px;
+  margin-bottom: 0;
 }
 
 .metadata-grid {
