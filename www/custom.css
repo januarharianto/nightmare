@@ -126,36 +126,6 @@ p { margin-bottom: 8px; }
   max-width: 500px;
 }
 
-.navbar-nightmare .controls {
-  display: flex;
-  gap: 8px;
-}
-
-.navbar-nightmare button {
-  height: 36px;
-  padding: 6px 12px;
-  background-color: #FFFFFF;
-  color: #000000;
-  border: 1px solid #CCCCCC;
-  cursor: pointer;
-  font-size: 13px;
-  font-family: inherit;
-}
-
-.navbar-nightmare button:hover:not(:disabled) {
-  background-color: #F0F0F0;
-}
-
-.navbar-nightmare button:active {
-  background-color: #E0E0E0;
-}
-
-.navbar-nightmare button:disabled {
-  background-color: #F5F5F5;
-  color: #AAAAAA;
-  cursor: not-allowed;
-}
-
 /* Main Layout */
 .main-container {
   display: flex;
@@ -406,38 +376,6 @@ table.dataTable.display tbody tr:hover {
   line-height: 1;
 }
 
-/* State Buttons (Undo, Redo, Backup, Export) */
-.state-controls {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 8px;
-  border: 1px solid #CCCCCC;
-  background-color: #F5F5F5;
-}
-
-.state-button {
-  flex: 1;
-  padding: 8px;
-  background-color: #FFFFFF;
-  color: #000000;
-  border: 1px solid #CCCCCC;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  font-family: inherit;
-}
-
-.state-button:hover:not(:disabled) {
-  background-color: #F0F0F0;
-}
-
-.state-button:disabled {
-  background-color: #F0F0F0;
-  color: #AAAAAA;
-  cursor: not-allowed;
-}
-
 /* Right Panel - Student Detail */
 .student-detail-header {
   padding: 12px;
@@ -635,8 +573,7 @@ table.dataTable.display tbody tr:hover {
 /* Print styles */
 @media print {
   .navbar-nightmare,
-  .filters-section,
-  .state-controls {
+  .filters-section {
     display: none;
   }
 

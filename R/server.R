@@ -8,19 +8,10 @@ source("R/utils/import/disability_plans.R")
 source("R/utils/import/consolidate.R")
 source("R/utils/import/file_detection.R")
 source("R/utils/risk_scoring.R")
-source("R/utils/history.R")
-source("R/utils/exports/helpers.R")
-source("R/utils/exports/canvas.R")
-source("R/utils/exports/extensions.R")
-source("R/utils/exports/at_risk.R")
-source("R/utils/exports/comprehensive.R")
 source("R/utils/ui_helpers.R")
 source("R/modules/dashboard_module.R")
 source("R/modules/student_detail_module.R")
-source("R/modules/backup_module.R")
-source("R/modules/export_module.R")
 source("R/modules/search_module.R")
-source("R/utils/action_handlers.R")
 
 load_nightmare_dependencies()
 
@@ -30,11 +21,6 @@ server <- function(input, output, session) {
   studentData <- reactiveVal(data.frame())
   isLoaded <- reactiveVal(FALSE)
   activeView <- reactiveVal("student")
-  history <- HistoryManager$new()
-  undo_redo_state <- reactiveValues(
-    can_undo = FALSE,
-    can_redo = FALSE
-  )
 
   # Reset app state on every session start
   session$onFlush(function() {
@@ -211,9 +197,6 @@ server <- function(input, output, session) {
 
         studentData(consolidated)
         isLoaded(TRUE)
-        history$push(consolidated, "Initial data load")
-        undo_redo_state$can_undo <- history$can_undo()
-        undo_redo_state$can_redo <- history$can_redo()
 
         showNotification(
           sprintf("Loaded %d students from sample data", nrow(consolidated)),
@@ -265,8 +248,4 @@ server <- function(input, output, session) {
     build_student_detail_view(student)
   })
 
-  # Action handlers
-  setup_undo_redo(input, output, history, studentData, undo_redo_state)
-  setup_backup(input, studentData)
-  setup_export(input, output, studentData)
 }

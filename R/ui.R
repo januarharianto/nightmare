@@ -8,8 +8,6 @@ library(shinyjs)
 # Source modules
 source("R/modules/dashboard_module.R")
 source("R/modules/student_detail_module.R")
-source("R/modules/backup_module.R")
-source("R/modules/export_module.R")
 source("R/modules/search_module.R")
 
 ui <- page_fillable(
@@ -48,30 +46,6 @@ ui <- page_fillable(
       )
     ),
 
-    # Controls
-    tags$div(
-      class = "controls",
-      actionButton(
-        "undo_action",
-        "Undo",
-        icon = icon("undo")
-      ),
-      actionButton(
-        "redo_action",
-        "Redo",
-        icon = icon("redo")
-      ),
-      actionButton(
-        "backup_action",
-        "Backup",
-        icon = icon("save")
-      ),
-      actionButton(
-        "export_action",
-        "Export",
-        icon = icon("download")
-      )
-    )
   ),
 
   # Sidebar navigation
@@ -97,9 +71,4 @@ ui <- page_fillable(
   # Main container with two-column layout or placeholder
   uiOutput("main_content_output"),
 
-  # Hidden download button for export
-  tags$div(
-    style = "display: none;",
-    downloadButton("download_export", "Download")
-  )
 )
