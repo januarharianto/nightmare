@@ -34,6 +34,15 @@ server <- function(input, output, session) {
     can_redo = FALSE
   )
 
+  # Reset app state on every session start
+  session$onFlush(function() {
+    # Clear browser storage to prevent state persistence
+    shinyjs::runjs("
+      localStorage.clear();
+      sessionStorage.clear();
+    ")
+  })
+
   # Dataset metadata reactive
   datasetMetadata <- reactive({
     data <- studentData()
@@ -159,6 +168,18 @@ server <- function(input, output, session) {
 
   # Search module
   selectedStudentId <- searchModuleServer("search", studentData)
+
+  # Reset search input on app startup
+  session$onFlush(function() {
+    shinyjs::runjs("
+      // Clear selectize search input to ensure fresh start
+      const searchInput = document.querySelector('[data-id=\"search-student_search\"]');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    ")
+  }, once = TRUE)
 
   # Student detail panel
   output$student_detail_panel <- renderUI({

@@ -73,6 +73,9 @@ ui <- page_fillable(
     )
   ),
 
+  # Dataset metadata panel (top bar)
+  uiOutput("dataset_metadata_panel"),
+
   # Main container with two-column layout
   tags$div(
     class = "main-container",
@@ -82,10 +85,7 @@ ui <- page_fillable(
       class = "left-column",
 
       # Large search box with dropdown (sticky at top)
-      searchModuleUI("search"),
-
-      # Dataset metadata panel (sticky below search)
-      uiOutput("dataset_metadata_panel")
+      searchModuleUI("search")
     ),
 
     # Right Column (60%)
