@@ -77,19 +77,16 @@ ui <- page_fillable(
   tags$div(
     class = "sidebar-navigation",
     tags$div(
-      class = "sidebar-item",
+      class = "sidebar-item active",
       `data-view` = "student",
       onclick = "Shiny.setInputValue('active_view', 'student', {priority: 'event'})",
-      class = "sidebar-item active",
-      tags$span(class = "sidebar-icon", icon("users")),
-      tags$span(class = "sidebar-label", "Students")
+      "Students"
     ),
     tags$div(
       class = "sidebar-item",
       `data-view` = "extensions",
       onclick = "Shiny.setInputValue('active_view', 'extensions', {priority: 'event'})",
-      tags$span(class = "sidebar-icon", icon("file-contract")),
-      tags$span(class = "sidebar-label", "Extensions")
+      "Extensions"
     )
   ),
 
