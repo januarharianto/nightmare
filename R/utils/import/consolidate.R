@@ -21,19 +21,41 @@ detect_unit_from_canvas <- function(canvas_data) {
   return(most_common)
 }
 
+#' Detect year from Canvas data
+#'
+#' @param canvas_data data.frame from import_canvas_grades
+#' @return Character year code (e.g., "2025")
+detect_year_from_canvas <- function(canvas_data) {
+  year <- attr(canvas_data, "academic_year")
+  if (!is.null(year) && !is.na(year)) {
+    message(sprintf("Using academic year from Canvas data: %s", year))
+    return(year)
+  }
+  warning("Academic year not found in Canvas data, using current year")
+  return(format(Sys.Date(), "%Y"))
+}
+
 #' Consolidate Student Data
 #'
 #' @param canvas data.frame from import_canvas_grades
 #' @param consids data.frame from import_special_considerations
 #' @param plans data.frame from import_disability_plans
 #' @param unit_filter Optional unit code to filter final results
+#' @param year_filter Optional year to filter plans data (defaults to auto-detect from plans)
 #' @return data.frame with fully consolidated student records
-consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL) {
+consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL, year_filter = NULL) {
   message("Consolidating student data from all sources...")
 
   # If unit_filter not provided, detect from Canvas
   if (is.null(unit_filter)) {
     unit_filter <- detect_unit_from_canvas(canvas)
+  }
+
+  # If year_filter not provided, detect from Canvas data
+  if (is.null(year_filter)) {
+    year_filter <- detect_year_from_canvas(canvas)
+  } else {
+    message(sprintf("Using provided year filter: %s", year_filter))
   }
 
   # Start with Canvas as base (all students in unit)

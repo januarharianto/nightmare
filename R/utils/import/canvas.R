@@ -104,6 +104,20 @@ import_canvas_grades <- function(file_path) {
     )
   })
 
+  # Extract academic year from test student row (before filtering)
+  test_row <- raw_data %>%
+    filter(grepl("Student, Test", Student, fixed = TRUE)) %>%
+    slice(1)
+
+  if (nrow(test_row) > 0) {
+    section <- as.character(test_row$Section[1])
+    year_match <- str_extract(section, "\\d{4}")
+    if (!is.na(year_match)) {
+      attr(students, "academic_year") <- year_match
+      message(sprintf("Academic year from Canvas: %s", year_match))
+    }
+  }
+
   message(sprintf("Imported %d students from Canvas", nrow(students)))
   return(students)
 }

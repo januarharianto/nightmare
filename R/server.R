@@ -46,10 +46,15 @@ server <- function(input, output, session) {
 
       if (file.exists(canvas_path)) {
         canvas <- import_canvas_grades(canvas_path)
+
+        # Detect year from Canvas data for filtering plans
+        detected_year <- detect_year_from_canvas(canvas)
+
         consids <- import_special_considerations(consids_path,
                                                  unit_filter = NIGHTMARE_CONFIG$data$default_unit)
         plans <- import_disability_plans(plans_path,
-                                        unit_filter = NIGHTMARE_CONFIG$data$default_unit)
+                                        unit_filter = NIGHTMARE_CONFIG$data$default_unit,
+                                        year_filter = detected_year)
 
         consolidated <- consolidate_student_data(canvas, consids, plans)
         consolidated <- apply_risk_scoring(consolidated)

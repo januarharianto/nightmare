@@ -8,8 +8,9 @@ library(readxl)
 #'
 #' @param file_path Path to disability plans Excel file
 #' @param unit_filter Optional unit code to filter by (e.g., "BIOL2022")
+#' @param year_filter Optional year to filter by (e.g., "2024")
 #' @return data.frame with student_id and disability plan data
-import_disability_plans <- function(file_path, unit_filter = NULL) {
+import_disability_plans <- function(file_path, unit_filter = NULL, year_filter = NULL) {
   message("Importing disability plans from: ", file_path)
 
   # Read Excel with no header (raw)
@@ -37,6 +38,12 @@ import_disability_plans <- function(file_path, unit_filter = NULL) {
     } else {
       warning("No 'UoS Code' column found for filtering by unit")
     }
+  }
+
+  # Apply year filter if provided
+  if (!is.null(year_filter)) {
+    data <- data[data$Year == year_filter, ]
+    message(sprintf("Filtered plans to %d rows for year %s", nrow(data), year_filter))
   }
 
   # Identify adjustment columns (exclude metadata columns)
@@ -93,7 +100,10 @@ import_disability_plans <- function(file_path, unit_filter = NULL) {
   )
   plans_by_student$plan_adjustments <- lapply(plans_list, function(x) x$plan_adjustments)
 
-  message(sprintf("Imported disability plans for %d unique students", nrow(plans_by_student)))
+  # Group by student_id to deduplicate (keep first row per student)
+  plans_by_student <- plans_by_student[!duplicated(plans_by_student$student_id), ]
+
+  message(sprintf("Grouped plans to %d unique students", nrow(plans_by_student)))
 
   return(plans_by_student)
 }
