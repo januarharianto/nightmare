@@ -28,6 +28,8 @@ server <- function(input, output, session) {
 
   # Reactive values
   studentData <- reactiveVal(data.frame())
+  isLoaded <- reactiveVal(FALSE)
+  activeView <- reactiveVal("student")
   history <- HistoryManager$new()
   undo_redo_state <- reactiveValues(
     can_undo = FALSE,
@@ -41,6 +43,18 @@ server <- function(input, output, session) {
       localStorage.clear();
       sessionStorage.clear();
     ")
+  })
+
+  # Handle view navigation
+  observeEvent(input$active_view, {
+    activeView(input$active_view)
+    # Update sidebar active state
+    shinyjs::runjs(sprintf("
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.querySelector('[data-view=\"%s\"]').classList.add('active');
+    ", input$active_view))
   })
 
   # Dataset metadata reactive
@@ -88,8 +102,53 @@ server <- function(input, output, session) {
     )
   })
 
+  # Render main content (switches between views)
+  output$main_content_output <- renderUI({
+    if (!isLoaded()) {
+      return(NULL)
+    }
+
+    if (activeView() == "student") {
+      # Student view with search and detail panels
+      tags$div(
+        class = "main-container",
+
+        # Left Column (40%) - Search-focused
+        tags$div(
+          class = "left-column",
+
+          # Large search box with dropdown (sticky at top)
+          searchModuleUI("search")
+        ),
+
+        # Right Column (60%)
+        tags$div(
+          class = "right-column",
+          uiOutput("student_detail_panel")
+        )
+      )
+    } else if (activeView() == "extensions") {
+      # Extensions view (placeholder)
+      tags$div(
+        class = "main-container",
+        tags$div(
+          class = "extensions-view",
+          tags$div(
+            class = "empty-state",
+            tags$p("Extensions view")
+          )
+        )
+      )
+    }
+  })
+
   # Render dataset metadata panel
   output$dataset_metadata_panel <- renderUI({
+    # Only render metadata panel after data is loaded
+    if (!isLoaded()) {
+      return(NULL)
+    }
+
     meta <- datasetMetadata()
 
     tags$div(
@@ -151,6 +210,7 @@ server <- function(input, output, session) {
         consolidated <- apply_risk_scoring(consolidated)
 
         studentData(consolidated)
+        isLoaded(TRUE)
         history$push(consolidated, "Initial data load")
         undo_redo_state$can_undo <- history$can_undo()
         undo_redo_state$can_redo <- history$can_redo()
@@ -183,6 +243,11 @@ server <- function(input, output, session) {
 
   # Student detail panel
   output$student_detail_panel <- renderUI({
+    # Show blank until data is loaded
+    if (!isLoaded()) {
+      return(NULL)
+    }
+
     if (is.null(selectedStudentId())) {
       return(div(class = "empty-state",
         tags$p("Select a student from the list to view details")))

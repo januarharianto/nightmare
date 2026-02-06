@@ -73,27 +73,31 @@ ui <- page_fillable(
     )
   ),
 
+  # Sidebar navigation
+  tags$div(
+    class = "sidebar-navigation",
+    tags$div(
+      class = "sidebar-item",
+      `data-view` = "student",
+      onclick = "Shiny.setInputValue('active_view', 'student', {priority: 'event'})",
+      class = "sidebar-item active",
+      tags$span(class = "sidebar-icon", icon("users")),
+      tags$span(class = "sidebar-label", "Students")
+    ),
+    tags$div(
+      class = "sidebar-item",
+      `data-view` = "extensions",
+      onclick = "Shiny.setInputValue('active_view', 'extensions', {priority: 'event'})",
+      tags$span(class = "sidebar-icon", icon("file-contract")),
+      tags$span(class = "sidebar-label", "Extensions")
+    )
+  ),
+
   # Dataset metadata panel (top bar)
   uiOutput("dataset_metadata_panel"),
 
-  # Main container with two-column layout
-  tags$div(
-    class = "main-container",
-
-    # Left Column (40%) - Search-focused
-    tags$div(
-      class = "left-column",
-
-      # Large search box with dropdown (sticky at top)
-      searchModuleUI("search")
-    ),
-
-    # Right Column (60%)
-    tags$div(
-      class = "right-column",
-      uiOutput("student_detail_panel")
-    )
-  ),
+  # Main container with two-column layout or placeholder
+  uiOutput("main_content_output"),
 
   # Hidden download button for export
   tags$div(
