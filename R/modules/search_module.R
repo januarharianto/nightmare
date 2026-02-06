@@ -5,6 +5,7 @@ searchModuleUI <- function(id) {
   ns <- NS(id)
   div(class = "search-section",
     div(class = "search-container",
+      tags$label("Search", class = "search-label", `for` = ns("search_box")),
       textInput(ns("search_box"), label = NULL,
                 placeholder = "Search by Name, SID, or Unikey...", width = "100%")
     ),
