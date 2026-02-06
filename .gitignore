@@ -1,0 +1,43 @@
+# Markdown files - exclude all except README
+*.md
+!README.md
+
+# Sensitive student data - NEVER COMMIT
+_sample-data/
+data/
+backups/
+
+# Development artifacts
+.omc/
+.claude/
+
+# Temporary development files
+test_ui_redesign.R
+verify_redesign.R
+PHASE*.md
+*COMPLETE.md
+*SUMMARY.md
+*REDESIGN.md
+
+# R-specific
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Shiny
+rsconnect/
+shiny_bookmarks/
+
+# Temporary files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

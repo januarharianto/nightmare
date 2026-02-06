@@ -1,0 +1,13 @@
+Package: nightmare
+Version: 0.1.0
+Title: NIGHTMARE - Student Data Management for Unit Coordinators
+Description: Local-first web app for consolidating student academic data
+Depends: R (>= 4.1.0)
+Imports:
+  shiny,
+  bslib,
+  DT,
+  dplyr,
+  readr,
+  writexl,
+  reactable

@@ -1,0 +1,826 @@
+/* CLINICAL MINIMAL THEME - NIGHTMARE */
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background-color: #FFFFFF;
+  color: #000000;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+/* Typography */
+h1 { font-size: 18px; font-weight: bold; margin-bottom: 12px; }
+h2 { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+h3 { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+h4 { font-size: 13px; font-weight: bold; margin-bottom: 6px; }
+h5 { font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+h6 { font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+
+p { margin-bottom: 8px; }
+
+/* Top Navbar */
+.navbar-nightmare {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #CCCCCC;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  gap: 16px;
+}
+
+/* Logo section with metadata */
+.navbar-logo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 350px;
+}
+
+.navbar-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.app-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000000;
+  letter-spacing: 0.5px;
+}
+
+.app-version {
+  font-size: 12px;
+  color: #999999;
+}
+
+.navbar-subtitle {
+  font-size: 11px;
+  color: #666666;
+  line-height: 1.3;
+  max-width: 500px;
+}
+
+.navbar-nightmare .controls {
+  display: flex;
+  gap: 8px;
+}
+
+.navbar-nightmare button {
+  height: 36px;
+  padding: 6px 12px;
+  background-color: #FFFFFF;
+  color: #000000;
+  border: 1px solid #CCCCCC;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.navbar-nightmare button:hover:not(:disabled) {
+  background-color: #F0F0F0;
+}
+
+.navbar-nightmare button:active {
+  background-color: #E0E0E0;
+}
+
+.navbar-nightmare button:disabled {
+  background-color: #F5F5F5;
+  color: #AAAAAA;
+  cursor: not-allowed;
+}
+
+/* Main Layout */
+.main-container {
+  display: flex;
+  height: calc(100vh - 60px);
+  margin-top: 60px;
+  overflow: hidden;
+}
+
+.left-column {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #CCCCCC;
+  padding: 0;
+}
+
+.right-column {
+  width: 60%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.summary-card {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #CCCCCC;
+  background-color: #FFFFFF;
+  text-align: center;
+}
+
+.summary-card .number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #000000;
+}
+
+.summary-card .label {
+  font-size: 12px;
+  color: #666666;
+  margin-top: 4px;
+}
+
+/* Filters */
+.filters-section {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #CCCCCC;
+  background-color: #F5F5F5;
+}
+
+.filters-section h3 {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: bold;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.filter-group select,
+.filter-group input[type="number"],
+.filter-group input[type="text"] {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #CCCCCC;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: #FFFFFF;
+  height: 32px;
+}
+
+.filter-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: 2px solid #0052CC;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.clear-button {
+  padding: 6px 12px;
+  background-color: #FFFFFF;
+  color: #000000;
+  border: 1px solid #CCCCCC;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: inherit;
+}
+
+.clear-button:hover {
+  background-color: #F0F0F0;
+}
+
+/* Student Table (Dense) */
+.students-section {
+  margin-bottom: 12px;
+}
+
+.students-section h3 {
+  padding: 8px;
+  border-bottom: 2px solid #000000;
+  margin-bottom: 0;
+  background-color: #FFFFFF;
+}
+
+.table-container {
+  border: 1px solid #CCCCCC;
+  background-color: #FFFFFF;
+}
+
+/* DataTables overrides for clinical design */
+.dataTables_wrapper {
+  padding: 0;
+  font-family: inherit;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  padding: 8px;
+  font-size: 12px;
+}
+
+.dataTables_wrapper .dataTables_length select {
+  padding: 4px 6px;
+  border: 1px solid #CCCCCC;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+  padding: 4px 8px;
+  border: 1px solid #CCCCCC;
+  font-size: 12px;
+  font-family: inherit;
+  margin-left: 6px;
+}
+
+table.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 0 !important;
+}
+
+table.dataTable thead th {
+  background-color: #F5F5F5;
+  border-bottom: 1px solid #CCCCCC;
+  padding: 8px;
+  text-align: left;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  color: #000000;
+}
+
+table.dataTable thead th:hover {
+  background-color: #E0E0E0;
+}
+
+table.dataTable tbody td {
+  padding: 8px;
+  border-bottom: 1px solid #CCCCCC;
+  height: 36px;
+  vertical-align: middle;
+}
+
+table.dataTable tbody tr:hover {
+  background-color: #F0F0F0 !important;
+  cursor: pointer;
+}
+
+table.dataTable tbody tr.selected {
+  background-color: #E0E0E0 !important;
+}
+
+/* Remove DataTables default styling */
+table.dataTable.cell-border tbody th,
+table.dataTable.cell-border tbody td {
+  border: none;
+  border-bottom: 1px solid #CCCCCC;
+}
+
+table.dataTable.stripe tbody tr.odd,
+table.dataTable.display tbody tr.odd {
+  background-color: #FFFFFF;
+}
+
+table.dataTable.stripe tbody tr.even,
+table.dataTable.display tbody tr.even {
+  background-color: #FAFAFA;
+}
+
+table.dataTable.hover tbody tr:hover,
+table.dataTable.display tbody tr:hover {
+  background-color: #F0F0F0 !important;
+}
+
+/* Risk Indicators */
+.risk-high {
+  color: #D62028;
+  font-weight: bold;
+}
+
+.risk-medium {
+  color: #FFA500;
+  font-weight: bold;
+}
+
+.risk-low {
+  color: #0B8620;
+  font-weight: bold;
+}
+
+.risk-dot {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* State Buttons (Undo, Redo, Backup, Export) */
+.state-controls {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid #CCCCCC;
+  background-color: #F5F5F5;
+}
+
+.state-button {
+  flex: 1;
+  padding: 8px;
+  background-color: #FFFFFF;
+  color: #000000;
+  border: 1px solid #CCCCCC;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: inherit;
+}
+
+.state-button:hover:not(:disabled) {
+  background-color: #F0F0F0;
+}
+
+.state-button:disabled {
+  background-color: #F0F0F0;
+  color: #AAAAAA;
+  cursor: not-allowed;
+}
+
+/* Right Panel - Student Detail */
+.student-detail-header {
+  padding: 12px;
+  border-bottom: 2px solid #000000;
+  margin-bottom: 12px;
+  background-color: #FFFFFF;
+}
+
+.student-detail-header .name {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.student-detail-header .meta {
+  font-size: 12px;
+  color: #666666;
+  margin-bottom: 2px;
+}
+
+.detail-section {
+  margin-bottom: 12px;
+  border: 1px solid #CCCCCC;
+  background-color: #FFFFFF;
+}
+
+.detail-section-header {
+  padding: 10px 12px;
+  background-color: #F5F5F5;
+  border-bottom: 1px solid #CCCCCC;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.detail-section-header:hover {
+  background-color: #E0E0E0;
+}
+
+.detail-section-content {
+  padding: 12px;
+  font-size: 13px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #EEEEEE;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: bold;
+  color: #000000;
+  width: 40%;
+}
+
+.detail-value {
+  color: #000000;
+  text-align: right;
+  width: 60%;
+}
+
+/* Dense Inner Table */
+.detail-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.detail-table th {
+  background-color: #F5F5F5;
+  border-bottom: 1px solid #CCCCCC;
+  padding: 6px;
+  text-align: left;
+  font-weight: bold;
+}
+
+.detail-table td {
+  border-bottom: 1px solid #EEEEEE;
+  padding: 6px;
+}
+
+.detail-table tr:hover {
+  background-color: #F9F9F9;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 48px 12px;
+  text-align: center;
+  color: #AAAAAA;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+/* Risk assessment detail styling */
+.risk-score-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #F5F5F5;
+  border: 1px solid #CCCCCC;
+  margin-bottom: 12px;
+}
+
+.risk-score-display .score {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.risk-badge {
+  padding: 4px 12px;
+  font-weight: bold;
+  font-size: 12px;
+  border: 1px solid;
+}
+
+.risk-badge.high {
+  background-color: #FFCCCC;
+  color: #7A0000;
+  border-color: #D62028;
+}
+
+.risk-badge.medium {
+  background-color: #FFF4CC;
+  color: #7A6A00;
+  border-color: #FFA500;
+}
+
+.risk-badge.low {
+  background-color: #CCFFCC;
+  color: #2D5016;
+  border-color: #0B8620;
+}
+
+/* Support plans styling */
+.support-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #EEEEEE;
+}
+
+.support-item:last-child {
+  border-bottom: none;
+}
+
+.support-item-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.support-item-desc {
+  color: #666666;
+  font-size: 12px;
+}
+
+/* Scrollbars (minimal styling) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #CCCCCC;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #999999;
+}
+
+/* Print styles */
+@media print {
+  .navbar-nightmare,
+  .filters-section,
+  .state-controls {
+    display: none;
+  }
+
+  .main-container {
+    height: auto;
+    margin-top: 0;
+  }
+
+  .left-column,
+  .right-column {
+    overflow: visible;
+  }
+}
+
+/* Responsive (minimal adjustment) */
+@media (max-width: 1024px) {
+  .left-column {
+    width: 35%;
+  }
+  .right-column {
+    width: 65%;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+  .left-column,
+  .right-column {
+    width: 100%;
+    height: 50%;
+  }
+
+  .navbar-nightmare .search-box {
+    max-width: 200px;
+  }
+
+  .summary-cards {
+    flex-direction: column;
+  }
+}
+
+/* Shiny-specific overrides */
+.shiny-input-container {
+  margin-bottom: 0;
+}
+
+.shiny-input-container label {
+  margin-bottom: 4px;
+  display: block;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+/* Remove bslib default styling */
+.bslib-page-fill,
+.bslib-page-fillable {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Slider input styling */
+.irs {
+  font-family: inherit;
+}
+
+.irs--flat .irs-bar,
+.irs--flat .irs-to,
+.irs--flat .irs-from,
+.irs--flat .irs-single {
+  background-color: #000000;
+}
+
+.irs--flat .irs-handle > i:first-child {
+  background-color: #000000;
+}
+
+/* Notification styling */
+.shiny-notification {
+  border: 1px solid #CCCCCC;
+  background-color: #FFFFFF;
+  color: #000000;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.shiny-notification-message {
+  font-weight: normal;
+}
+
+.shiny-notification-error {
+  border-color: #D62028;
+  background-color: #FFEEEE;
+}
+
+.shiny-notification-warning {
+  border-color: #FFA500;
+  background-color: #FFF8EE;
+}
+
+/* Button icon spacing */
+button i {
+  margin-right: 4px;
+}
+
+/* Search Container (Left Column) */
+.search-container {
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #FFFFFF;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #CCCCCC;
+  flex-shrink: 0;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid #CCCCCC;
+  font-family: inherit;
+}
+
+.search-container input:focus {
+  outline: 2px solid #0052CC;
+  background-color: #FFFFFF;
+}
+
+/* Search Results Container (scrollable) */
+.search-results-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Scrollbar styling for results container */
+.search-results-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-results-container::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.search-results-container::-webkit-scrollbar-thumb {
+  background-color: #CCCCCC;
+  border-radius: 4px;
+}
+
+.search-results-container::-webkit-scrollbar-thumb:hover {
+  background-color: #999999;
+}
+
+/* Search Results List */
+.search-results-list {
+  list-style: none;
+  margin: 0 12px;
+  padding: 0;
+  border: 1px solid #CCCCCC;
+  border-top: none;
+}
+
+.search-results-item {
+  display: block;
+  padding: 12px 16px;
+  border-bottom: 1px solid #CCCCCC;
+  cursor: pointer;
+  background-color: #FFFFFF;
+  transition: background-color 0.15s ease;
+  text-decoration: none;
+  color: inherit;
+  border-left: 3px solid transparent;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.search-results-item:last-child {
+  border-bottom: none;
+}
+
+.search-results-item:hover {
+  background-color: #F5F5F5;
+}
+
+.search-results-item.selected {
+  background-color: #E8E8E8;
+  border-left: 3px solid #000000;
+}
+
+.search-results-item:focus {
+  outline: 2px solid #000000;
+  outline-offset: -2px;
+}
+
+/* Result item header (name + SID on same row) */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.result-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.result-sid {
+  font-size: 12px;
+  color: #999999;
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Result metadata (unikey) */
+.result-unikey {
+  font-size: 12px;
+  color: #999999;
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.search-results-header {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: bold;
+  background-color: #F5F5F5;
+  border: 1px solid #CCCCCC;
+  border-bottom: none;
+  margin: 0 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.search-empty-state {
+  padding: 48px 12px;
+  text-align: center;
+  color: #AAAAAA;
+  font-size: 14px;
+}
