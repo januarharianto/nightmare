@@ -1,6 +1,8 @@
-# Markdown files - exclude all except README
+# Markdown files - exclude all except key documentation
 *.md
 !README.md
+!PACKAGING.md
+!PACKAGING_QUICK_START.md
 
 # Sensitive student data - NEVER COMMIT
 _sample-data/
@@ -41,3 +43,4 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+/dist
