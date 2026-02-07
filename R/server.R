@@ -199,7 +199,7 @@ server <- function(input, output, session) {
                     "Shiny.setInputValue('unit_dropdown_select', '%s', {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
                     f
                   ),
-                  if (is_active) HTML(paste0("&#10003; ", f)) else f
+                  f
                 )
               })
             )

@@ -857,14 +857,21 @@ label.search-label {
 }
 
 .unit-dropdown-item {
-  padding: 6px 12px;
+  padding: 6px 12px 6px 28px;
   font-size: 13px;
   cursor: pointer;
   color: #333333;
+  position: relative;
 }
 
 .unit-dropdown-item:hover {
   background-color: #F0F0F0;
+}
+
+.unit-dropdown-item.active::before {
+  content: "\2713";
+  position: absolute;
+  left: 10px;
 }
 
 .unit-dropdown-item.active {
