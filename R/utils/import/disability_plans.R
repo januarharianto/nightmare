@@ -13,18 +13,22 @@ library(readxl)
 import_disability_plans <- function(file_path, unit_filter = NULL, year_filter = NULL) {
   message("Importing disability plans from: ", file_path)
 
-  # Read Excel with no header (raw)
-  raw_data <- read_excel(file_path, col_names = FALSE)
+  # Read first 2 rows to get real headers (categories + arrangement names)
+  header_rows <- read_excel(file_path, col_names = FALSE, n_max = 2,
+                            .name_repair = "minimal")
+  categories <- as.character(header_rows[1, ])       # Row 1 = category names
+  arrangement_names <- as.character(header_rows[2, ]) # Row 2 = arrangement names
 
-  # Extract actual headers from row 3 (index 3)
-  actual_headers <- as.character(raw_data[3, ])
+  # Read the full file with no header to get row 3 headers for metadata columns
+  raw_data <- read_excel(file_path, col_names = FALSE, .name_repair = "minimal")
 
-  # Make column names unique (handle duplicate "Arrangement" columns)
-  actual_headers <- make.names(actual_headers, unique = TRUE)
+  # Extract row 3 headers (used for metadata column identification)
+  row3_headers <- as.character(raw_data[3, ])
+  row3_headers <- make.names(row3_headers, unique = TRUE)
 
   # Data starts at row 4 (index 4)
   data <- raw_data[4:nrow(raw_data), ]
-  colnames(data) <- actual_headers
+  colnames(data) <- row3_headers
 
   # Convert to data frame and filter out empty rows
   data <- as.data.frame(data, stringsAsFactors = FALSE)
@@ -46,11 +50,13 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
     message(sprintf("Filtered plans to %d rows for year %s", nrow(data), year_filter))
   }
 
-  # Identify adjustment columns (exclude metadata columns)
-  # After make.names(), spaces become dots
-  metadata_pattern <- "^(Year|Session|UoS\\.Code|SID|Preferred\\.Name|Family\\.Name|Unikey|Email|Name|Assessment|Date|W\\.|Category|AP\\.)"
-  metadata_cols <- grep(metadata_pattern, names(data), value = TRUE)
-  adjustment_cols <- setdiff(names(data), metadata_cols)
+  # Identify arrangement columns (cols 16 onward are arrangements)
+  # Metadata columns are 1-15
+  n_metadata <- min(15, ncol(data))
+  arrangement_indices <- seq(n_metadata + 1, ncol(data))
+
+  # Filter values to exclude
+  exclude_pattern <- "not required|date has passed"
 
   # Process each student's plan
   plans_list <- lapply(1:nrow(data), function(i) {
@@ -58,13 +64,15 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
     student_id <- as.character(student_row$SID)
     student_name <- as.character(student_row$Preferred.Name)
 
-    # Collect all non-empty adjustments
-    adjustments_list <- lapply(adjustment_cols, function(col) {
-      value <- student_row[[col]]
-      if (!is.na(value) && value != "" && value != "NA") {
+    # Pivot arrangement columns into tidy data frame
+    adjustments_list <- lapply(arrangement_indices, function(col_idx) {
+      value <- as.character(student_row[[col_idx]])
+      if (!is.na(value) && value != "" && value != "NA" &&
+          !grepl(exclude_pattern, value, ignore.case = TRUE)) {
         data.frame(
-          adjustment_type = col,
-          description = as.character(value),
+          category = ifelse(is.na(categories[col_idx]), "", categories[col_idx]),
+          arrangement_type = ifelse(is.na(arrangement_names[col_idx]), "", arrangement_names[col_idx]),
+          value = value,
           stringsAsFactors = FALSE
         )
       } else {
@@ -77,8 +85,9 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
 
     if (is.null(adjustments_df)) {
       adjustments_df <- data.frame(
-        adjustment_type = character(),
-        description = character(),
+        category = character(),
+        arrangement_type = character(),
+        value = character(),
         stringsAsFactors = FALSE
       )
     }

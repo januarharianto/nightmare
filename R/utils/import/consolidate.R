@@ -134,8 +134,9 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
   if (!"plan_adjustments" %in% names(consolidated)) {
     consolidated$plan_adjustments <- lapply(1:nrow(consolidated), function(i) {
       data.frame(
-        adjustment_type = character(),
-        description = character(),
+        category = character(),
+        arrangement_type = character(),
+        value = character(),
         stringsAsFactors = FALSE
       )
     })
@@ -167,8 +168,9 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
       plan_adjustments = ifelse(
         sapply(plan_adjustments, is.null) | is.na(plan_adjustments),
         list(data.frame(
-          adjustment_type = character(),
-          description = character(),
+          category = character(),
+          arrangement_type = character(),
+          value = character(),
           stringsAsFactors = FALSE
         )),
         plan_adjustments

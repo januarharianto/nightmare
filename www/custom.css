@@ -1101,6 +1101,57 @@ label.search-label {
   color: #AAAAAA;
 }
 
+/* Plan adjustment groups */
+.plan-group {
+  margin-bottom: 12px;
+}
+
+.plan-group-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #AAAAAA;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  padding-top: 8px;
+}
+
+.plan-adjustment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid #EEEEEE;
+  font-size: 12px;
+}
+
+.plan-adjustment-label {
+  color: #000000;
+  font-weight: 500;
+}
+
+.plan-adjustment-value {
+  color: #666666;
+  text-align: right;
+}
+
+.plan-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.plan-tag {
+  background-color: #F5F5F5;
+  border: 1px solid #CCCCCC;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;
