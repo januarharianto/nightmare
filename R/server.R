@@ -7,7 +7,9 @@ source("R/utils/import/consolidate.R")
 source("R/utils/import/file_detection.R")
 source("R/utils/import/folder_loader.R")
 source("R/utils/ui_helpers.R")
+source("R/utils/extensions_data.R")
 source("R/modules/search_module.R")
+source("R/modules/extensions_module.R")
 
 server <- function(input, output, session) {
 
@@ -138,16 +140,9 @@ server <- function(input, output, session) {
         tags$div(class = "student-content", uiOutput("student_detail_panel"))
       )
     } else if (activeView() == "extensions") {
-      # Extensions view (placeholder)
       tags$div(
         class = "main-container",
-        tags$div(
-          class = "extensions-view",
-          tags$div(
-            class = "empty-state",
-            tags$p("Extensions view")
-          )
-        )
+        extensionsModuleUI("extensions")
       )
     }
   })
@@ -300,6 +295,9 @@ server <- function(input, output, session) {
 
   # Search module
   selectedStudentId <- searchModuleServer("search", studentData)
+
+  # Extensions module
+  extensionsModuleServer("extensions", studentData, dataSources)
 
   # Student detail panel
   output$student_detail_panel <- renderUI({

@@ -32,10 +32,9 @@ ui <- page_fillable(
       ),
       tags$div(
         class = "navbar-subtitle",
-        "New Incredibly Glitchy Hacking Tool to Manage Records that Enrage me | Januar Harianto"
+        "New inredibly glitchy hacking tool to manage all records effortlessly | Januar Harianto"
       )
     ),
-
   ),
 
   # Sidebar navigation
