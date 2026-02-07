@@ -303,30 +303,17 @@ build_student_detail_view <- function(student) {
                       tags$thead(tags$tr(
                         tags$th("Assessment"),
                         tags$th("Extended To"),
-                        tags$th("Due Date"),
-                        tags$th("")
+                        tags$th("Due Date")
                       )),
                       tags$tbody(
                         lapply(1:nrow(extensions), function(i) {
                           e <- extensions[i, ]
                           ext_str <- fmt_date(e$extension_date)
                           due_str <- fmt_date(e$due_date)
-                          past_closing <- !is.na(e$extension_date) &&
-                            !is.na(e$closing_date) &&
-                            as.Date(e$extension_date) > as.Date(e$closing_date)
-                          warning_tag <- if (past_closing) {
-                            state_label <- if (e$approved) "Approved" else "Pending"
-                            tags$span(class = "consids-past-closing",
-                                      paste("Past closing \u2014", state_label))
-                          } else {
-                            ""
-                          }
-
                           tags$tr(
                             tags$td(e$assessment_name),
                             tags$td(ext_str),
-                            tags$td(due_str),
-                            tags$td(warning_tag)
+                            tags$td(due_str)
                           )
                         })
                       )
