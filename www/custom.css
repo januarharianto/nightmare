@@ -1011,6 +1011,32 @@ label.search-label {
   color: #000000;
 }
 
+/* Data Source Indicators */
+.source-tags {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.source-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.source-tag.active {
+  background-color: #000000;
+  color: #FFFFFF;
+}
+
+.source-tag.inactive {
+  background-color: #EEEEEE;
+  color: #CCCCCC;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;

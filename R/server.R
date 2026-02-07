@@ -21,6 +21,7 @@ server <- function(input, output, session) {
   isLoaded <- reactiveVal(FALSE)
   activeView <- reactiveVal("student")
   currentUnit <- reactiveVal(NULL)
+  dataSources <- reactiveVal(list(canvas = FALSE, consids = FALSE, plans = FALSE))
 
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
@@ -29,6 +30,12 @@ server <- function(input, output, session) {
 
     tryCatch({
       imported <- load_folder(folder_path, unit_filter = unit)
+
+      dataSources(list(
+        canvas = !is.null(imported$canvas),
+        consids = !is.null(imported$consids),
+        plans = !is.null(imported$plans)
+      ))
 
       if (is.null(imported$canvas)) {
         showNotification("No Canvas gradebook found in folder", type = "error")
@@ -91,7 +98,8 @@ server <- function(input, output, session) {
         unit = "—",
         year = "—",
         semester = "—",
-        student_count = "—"
+        student_count = "—",
+        sources = list(canvas = FALSE, consids = FALSE, plans = FALSE)
       ))
     }
 
@@ -122,7 +130,8 @@ server <- function(input, output, session) {
       unit = as.character(unit),
       year = as.character(year),
       semester = as.character(semester),
-      student_count = nrow(data)
+      student_count = nrow(data),
+      sources = dataSources()
     )
   })
 
@@ -213,6 +222,26 @@ server <- function(input, output, session) {
           class = "metadata-item",
           tags$span(class = "metadata-label", "Semester:"),
           tags$span(class = "metadata-value", meta$semester)
+        ),
+        # Data source indicators
+        tags$div(
+          class = "metadata-item",
+          tags$span(class = "metadata-label", "Sources:"),
+          tags$div(
+            class = "source-tags",
+            tags$span(
+              class = paste("source-tag", if (meta$sources$canvas) "active" else "inactive"),
+              "Grades"
+            ),
+            tags$span(
+              class = paste("source-tag", if (meta$sources$consids) "active" else "inactive"),
+              "Consids"
+            ),
+            tags$span(
+              class = paste("source-tag", if (meta$sources$plans) "active" else "inactive"),
+              "Plans"
+            )
+          )
         )
       ),
       # Close dropdown on outside click (idempotent listener)
