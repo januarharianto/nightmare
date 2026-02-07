@@ -177,63 +177,181 @@ build_student_detail_view <- function(student) {
         )
       ),
 
-      # Extensions Section
+      # Special Considerations Section
       tags$div(
         class = "detail-section",
-        tags$div(class = "detail-section-header", "Extensions & Special Considerations"),
+        tags$div(class = "detail-section-header", "Special Considerations"),
         tags$div(
           class = "detail-section-content",
-          tags$div(
-            class = "detail-row",
-            tags$div(class = "detail-label", "Total Extension Days"),
-            tags$div(class = "detail-value", student$total_approved_extension_days)
-          ),
-          tags$div(
-            class = "detail-row",
-            tags$div(class = "detail-label", "Replacement Exam"),
-            tags$div(class = "detail-value", if (student$has_replacement_exam) "Yes" else "No")
-          ),
-          tags$div(
-            class = "detail-row",
-            tags$div(class = "detail-label", "Mark Adjustment"),
-            tags$div(class = "detail-value", if (student$has_mark_adjustment) "Yes" else "No")
-          ),
+          {
+            consids <- student$special_consids[[1]]
+            n_consids <- nrow(consids)
 
-          # Extensions table
-          if (nrow(student$special_consids[[1]]) > 0) {
-            extensions <- student$special_consids[[1]] %>%
-              filter(approved == TRUE) %>%
-              mutate(
-                Extension = ifelse(!is.na(extension_date) & extension_date != "",
-                                 extension_date, "N/A"),
-                Type = ifelse(!is.na(outcome_type), outcome_type, "Extension")
-              ) %>%
-              select(Assessment = assessment_name, Extension, Type, Ticket = ticket_id)
+            if (n_consids == 0) {
+              tags$div(class = "empty-state",
+                tags$p("No special considerations"))
+            } else {
+              # Split by outcome type groups
+              extensions <- consids[consids$outcome_type %in%
+                c("Simple Extension", "Extension of time"), ]
+              replacements <- consids[grepl("replacement.*exam", consids$outcome_type,
+                                            ignore.case = TRUE), ]
+              mark_adj <- consids[grepl("mark.*adjustment", consids$outcome_type,
+                                        ignore.case = TRUE), ]
+              other_types <- c("Simple Extension", "Extension of time")
+              other <- consids[!consids$outcome_type %in% other_types &
+                !grepl("replacement.*exam", consids$outcome_type, ignore.case = TRUE) &
+                !grepl("mark.*adjustment", consids$outcome_type, ignore.case = TRUE), ]
 
-            if (nrow(extensions) > 0) {
               tagList(
-                tags$h5(style = "margin-top: 12px; margin-bottom: 8px;", "Extension Details"),
-                tags$table(
-                  class = "detail-table",
-                  tags$thead(
-                    tags$tr(
-                      tags$th("Assessment"),
-                      tags$th("Extension Date"),
-                      tags$th("Type"),
-                      tags$th("Ticket")
-                    )
+                # Summary bar
+                tags$div(
+                  class = "consids-summary",
+                  tags$div(
+                    tags$div(class = "stat-label", "Total"),
+                    tags$div(class = "stat-value", as.character(n_consids))
                   ),
-                  tags$tbody(
-                    lapply(1:nrow(extensions), function(i) {
-                      tags$tr(
-                        tags$td(extensions$Assessment[i]),
-                        tags$td(extensions$Extension[i]),
-                        tags$td(extensions$Type[i]),
-                        tags$td(extensions$Ticket[i])
+                  tags$div(
+                    tags$div(class = "stat-label", "Extensions"),
+                    tags$div(class = "stat-value", as.character(nrow(extensions)))
+                  ),
+                  if (nrow(replacements) > 0) {
+                    tags$div(
+                      tags$div(class = "stat-label", "Replacement Exams"),
+                      tags$div(class = "stat-value consids-alert",
+                               as.character(nrow(replacements)))
+                    )
+                  },
+                  if (nrow(mark_adj) > 0) {
+                    tags$div(
+                      tags$div(class = "stat-label", "Mark Adj."),
+                      tags$div(class = "stat-value", as.character(nrow(mark_adj)))
+                    )
+                  }
+                ),
+
+                # Replacement Exams group (shown first — most actionable)
+                if (nrow(replacements) > 0) {
+                  tagList(
+                    tags$div(class = "consids-group-header consids-alert-header",
+                             "Replacement Exams"),
+                    tags$table(
+                      class = "detail-table",
+                      tags$thead(tags$tr(
+                        tags$th("Assessment"),
+                        tags$th("Type"),
+                        tags$th("Ticket")
+                      )),
+                      tags$tbody(
+                        lapply(1:nrow(replacements), function(i) {
+                          r <- replacements[i, ]
+                          tags$tr(
+                            tags$td(r$assessment_name),
+                            tags$td(r$assessment_type),
+                            tags$td(r$ticket_id)
+                          )
+                        })
                       )
-                    })
+                    )
                   )
-                )
+                },
+
+                # Extensions group
+                if (nrow(extensions) > 0) {
+                  tagList(
+                    tags$div(class = "consids-group-header", "Extensions"),
+                    tags$table(
+                      class = "detail-table",
+                      tags$thead(tags$tr(
+                        tags$th("Assessment"),
+                        tags$th("Extended To"),
+                        tags$th("Due Date"),
+                        tags$th("")
+                      )),
+                      tags$tbody(
+                        lapply(1:nrow(extensions), function(i) {
+                          e <- extensions[i, ]
+                          ext_str <- if (!is.na(e$extension_date)) {
+                            format(e$extension_date, "%d %b %Y")
+                          } else {
+                            "--"
+                          }
+                          due_str <- if (!is.na(e$due_date)) {
+                            format(e$due_date, "%d %b %Y")
+                          } else {
+                            "--"
+                          }
+                          # Flag if extension goes past closing date
+                          past_closing <- !is.na(e$extension_date) &&
+                            !is.na(e$closing_date) &&
+                            as.Date(e$extension_date) > as.Date(e$closing_date)
+                          warning_tag <- if (past_closing) {
+                            tags$span(class = "consids-past-closing", "Past closing")
+                          } else {
+                            ""
+                          }
+
+                          tags$tr(
+                            tags$td(e$assessment_name),
+                            tags$td(ext_str),
+                            tags$td(due_str),
+                            tags$td(warning_tag)
+                          )
+                        })
+                      )
+                    )
+                  )
+                },
+
+                # Mark Adjustments group
+                if (nrow(mark_adj) > 0) {
+                  tagList(
+                    tags$div(class = "consids-group-header", "Mark Adjustments"),
+                    tags$table(
+                      class = "detail-table",
+                      tags$thead(tags$tr(
+                        tags$th("Assessment"),
+                        tags$th("Type"),
+                        tags$th("Ticket")
+                      )),
+                      tags$tbody(
+                        lapply(1:nrow(mark_adj), function(i) {
+                          m <- mark_adj[i, ]
+                          tags$tr(
+                            tags$td(m$assessment_name),
+                            tags$td(m$assessment_type),
+                            tags$td(m$ticket_id)
+                          )
+                        })
+                      )
+                    )
+                  )
+                },
+
+                # Other outcomes
+                if (nrow(other) > 0) {
+                  tagList(
+                    tags$div(class = "consids-group-header", "Other"),
+                    tags$table(
+                      class = "detail-table",
+                      tags$thead(tags$tr(
+                        tags$th("Assessment"),
+                        tags$th("Outcome"),
+                        tags$th("Ticket")
+                      )),
+                      tags$tbody(
+                        lapply(1:nrow(other), function(i) {
+                          o <- other[i, ]
+                          tags$tr(
+                            tags$td(o$assessment_name),
+                            tags$td(o$outcome_type),
+                            tags$td(o$ticket_id)
+                          )
+                        })
+                      )
+                    )
+                  )
+                }
               )
             }
           }

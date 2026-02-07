@@ -1176,6 +1176,63 @@ label.search-label {
   color: #CCCCCC;
 }
 
+/* Special Considerations */
+.consids-summary {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #EEEEEE;
+  font-size: 12px;
+}
+
+.consids-summary .stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #AAAAAA;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.consids-summary .stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.consids-summary .stat-value.consids-alert {
+  color: #000000;
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+.consids-group-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #AAAAAA;
+  padding: 10px 0 4px 0;
+  border-bottom: 1px solid #EEEEEE;
+  margin-bottom: 4px;
+}
+
+.consids-alert-header {
+  color: #000000;
+}
+
+.consids-past-closing {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #FFFFFF;
+  background-color: #000000;
+  padding: 2px 6px;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;

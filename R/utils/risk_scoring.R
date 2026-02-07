@@ -3,8 +3,8 @@
 #' Identifies and scores students at risk based on 5 factors:
 #' - Factor 1: Average performance on completed assessments (0-40 pts)
 #' - Factor 2: Missing submissions with no extension (0-30 pts)
-#' - Factor 3: Multiple extensions (>2 assessments) (0-25 pts)
-#' - Factor 4: Near policy limit (>=4 total extensions) (0-30 pts)
+#' - Factor 3: Multiple special considerations (>2 assessments) (0-25 pts)
+#' - Factor 4: Near policy limit (>=4 consids) + replacement exams (0-30 pts)
 #' - Factor 5: Zero scores on completed assessments (0-20 pts)
 
 library(dplyr)
@@ -64,26 +64,32 @@ calculate_risk_score <- function(student_data) {
     score <- score + 15
   }
 
-  # FACTOR 3: Multiple Extensions (0-25 points)
+  # FACTOR 3: Multiple Special Considerations (0-25 points)
   if (nrow(special_consids) > 0) {
-    unique_ext_assessments <- special_consids %>%
-      filter(approved == TRUE, !is.na(extension_date), extension_date != "") %>%
+    unique_consid_assessments <- special_consids %>%
+      filter(approved == TRUE) %>%
       pull(assessment_name) %>%
       unique()
 
-    if (length(unique_ext_assessments) > 2) {
+    if (length(unique_consid_assessments) > 2) {
       score <- score + 25
     }
   }
 
-  # FACTOR 4: Near Policy Limit (0-30 points)
+  # FACTOR 4: Near Policy Limit / Replacement Exams (0-30 points)
   if (nrow(special_consids) > 0) {
-    extension_count <- special_consids %>%
-      filter(!is.na(extension_date), extension_date != "", approved == TRUE) %>%
+    consid_count <- special_consids %>%
+      filter(approved == TRUE) %>%
       nrow()
 
-    if (extension_count >= 4) {
-      score <- score + 30
+    has_replacement <- any(grepl("replacement.*exam", special_consids$outcome_type,
+                                  ignore.case = TRUE), na.rm = TRUE)
+
+    if (consid_count >= 4) {
+      score <- score + 20
+    }
+    if (has_replacement) {
+      score <- score + 10
     }
   }
 
@@ -174,37 +180,43 @@ get_risk_factors_for_student <- function(student_record) {
     ))
   }
 
-  # FACTOR 3: Multiple Extensions
+  # FACTOR 3: Multiple Special Considerations
   if (nrow(special_consids) > 0) {
-    unique_ext_assessments <- special_consids %>%
-      filter(approved == TRUE, !is.na(extension_date), extension_date != "") %>%
+    unique_consid_assessments <- special_consids %>%
+      filter(approved == TRUE) %>%
       pull(assessment_name) %>%
       unique()
 
-    if (length(unique_ext_assessments) > 2) {
-      assessment_list <- paste(head(unique_ext_assessments, 3), collapse = ", ")
-      if (length(unique_ext_assessments) > 3) {
+    if (length(unique_consid_assessments) > 2) {
+      assessment_list <- paste(head(unique_consid_assessments, 3), collapse = ", ")
+      if (length(unique_consid_assessments) > 3) {
         assessment_list <- paste0(assessment_list, ", ...")
       }
       factors <- c(factors, sprintf(
-        "%d assessments with extensions (%s)",
-        length(unique_ext_assessments),
+        "%d assessments with special considerations (%s)",
+        length(unique_consid_assessments),
         assessment_list
       ))
     }
   }
 
-  # FACTOR 4: Near Policy Limit
+  # FACTOR 4: Near Policy Limit / Replacement Exams
   if (nrow(special_consids) > 0) {
-    extension_count <- special_consids %>%
-      filter(!is.na(extension_date), extension_date != "", approved == TRUE) %>%
+    consid_count <- special_consids %>%
+      filter(approved == TRUE) %>%
       nrow()
 
-    if (extension_count >= 4) {
+    has_replacement <- any(grepl("replacement.*exam", special_consids$outcome_type,
+                                  ignore.case = TRUE), na.rm = TRUE)
+
+    if (consid_count >= 4) {
       factors <- c(factors, sprintf(
-        "%d total extensions granted (approaching policy limit)",
-        extension_count
+        "%d total special considerations (approaching policy limit)",
+        consid_count
       ))
+    }
+    if (has_replacement) {
+      factors <- c(factors, "Approved for replacement exam")
     }
   }
 

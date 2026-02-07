@@ -109,10 +109,16 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
       data.frame(
         ticket_id = character(),
         assessment_name = character(),
+        assessment_title = character(),
+        assessment_category = character(),
+        assessment_type = character(),
         outcome_type = character(),
-        extension_date = character(),
+        classification = character(),
         state = character(),
         approved = logical(),
+        extension_date = as.Date(character()),
+        due_date = as.POSIXct(character()),
+        closing_date = as.POSIXct(character()),
         stringsAsFactors = FALSE
       )
     })
@@ -125,6 +131,9 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
   }
   if (!"has_mark_adjustment" %in% names(consolidated)) {
     consolidated$has_mark_adjustment <- FALSE
+  }
+  if (!"total_consids" %in% names(consolidated)) {
+    consolidated$total_consids <- 0L
   }
 
   # Handle disability plan columns
@@ -151,10 +160,16 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
         list(data.frame(
           ticket_id = character(),
           assessment_name = character(),
+          assessment_title = character(),
+          assessment_category = character(),
+          assessment_type = character(),
           outcome_type = character(),
-          extension_date = character(),
+          classification = character(),
           state = character(),
           approved = logical(),
+          extension_date = as.Date(character()),
+          due_date = as.POSIXct(character()),
+          closing_date = as.POSIXct(character()),
           stringsAsFactors = FALSE
         )),
         special_consids
@@ -162,6 +177,7 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
       total_extensions = ifelse(is.na(total_extensions), 0L, as.integer(total_extensions)),
       has_replacement_exam = ifelse(is.na(has_replacement_exam), FALSE, has_replacement_exam),
       has_mark_adjustment = ifelse(is.na(has_mark_adjustment), FALSE, has_mark_adjustment),
+      total_consids = ifelse(is.na(total_consids), 0L, as.integer(total_consids)),
 
       # Disability plan defaults
       has_disability_plan = ifelse(is.na(has_disability_plan), FALSE, has_disability_plan),

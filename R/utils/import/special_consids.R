@@ -24,8 +24,6 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
   # Apply unit filter if provided
   if (!is.null(unit_filter)) {
     if ("availability" %in% names(data)) {
-      # Build pattern: match unit code and optionally year in the availability string
-      # Availability format: "BIOL2022-S2C-2025-ND-CC"
       pattern <- unit_filter
       if (!is.null(year_filter)) {
         pattern <- paste0(unit_filter, ".*", year_filter)
@@ -43,27 +41,53 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
     stop("Could not find student ID column in special considerations data")
   }
 
-  # Process each consideration record
+  # Helper: safely extract a column, returning NA if it doesn't exist
+  safe_col <- function(df, col_name, default = NA_character_) {
+    if (col_name %in% names(df)) df[[col_name]] else rep(default, nrow(df))
+  }
+
+  # Process each consideration record — extract all relevant fields
   consids_processed <- data %>%
     mutate(
       student_id = as.character(.data[[student_id_col]]),
       ticket_id = as.character(number),
-      assessment_name = ifelse("assessment_title" %in% names(.), assessment_title, NA_character_),
-      outcome_type = ifelse("u_outcome_type" %in% names(.), u_outcome_type, NA_character_),
-      extension_date_raw = ifelse("extension_in_calendar_days" %in% names(.),
-                                   extension_in_calendar_days,
-                                   NA_character_),
-      state = state,
-      approved = TRUE  # Already filtered to approved
+      assessment_name = as.character(safe_col(., "assessment", NA_character_)),
+      assessment_title = as.character(safe_col(., "assessment_title", NA_character_)),
+      assessment_category = as.character(safe_col(., "assessment_category", NA_character_)),
+      assessment_type = as.character(safe_col(., "assessment_type", NA_character_)),
+      outcome_type = as.character(safe_col(., "u_outcome_type", NA_character_)),
+      classification = as.character(safe_col(., "classification", NA_character_)),
+      state = as.character(state),
+      approved = TRUE,
+      # Parse extension_in_calendar_days as Date (DD-MM-YYYY format)
+      extension_date = if ("extension_in_calendar_days" %in% names(.)) {
+        as.Date(extension_in_calendar_days, format = "%d-%m-%Y")
+      } else {
+        as.Date(NA)
+      },
+      # Parse due_date as POSIXct datetime
+      due_date = if ("due_date" %in% names(.)) {
+        as.POSIXct(due_date, format = "%d-%m-%Y %H:%M:%S")
+      } else {
+        as.POSIXct(NA)
+      },
+      # Parse assessment.u_closing_date as POSIXct datetime
+      closing_date = if ("assessment.u_closing_date" %in% names(.)) {
+        as.POSIXct(assessment.u_closing_date, format = "%d-%m-%Y %H:%M:%S")
+      } else {
+        as.POSIXct(NA)
+      }
     ) %>%
-    select(student_id, ticket_id, assessment_name, outcome_type,
-           extension_date_raw, state, approved)
+    select(student_id, ticket_id, assessment_name, assessment_title,
+           assessment_category, assessment_type, outcome_type, classification,
+           state, approved, extension_date, due_date, closing_date)
 
-  # Deduplicate: keep only the most recent ticket per student per assessment
-  # Sort by ticket_id descending (higher = more recent) then take first per group
+  # Deduplicate: keep most recent ticket per student + assessment + outcome_type.
+  # A student can have BOTH a Simple Extension AND a Replacement exam for the
+  # same assessment, so we must include outcome_type in the grouping key.
   consids_processed <- consids_processed %>%
-    arrange(student_id, assessment_name, desc(ticket_id)) %>%
-    group_by(student_id, assessment_name) %>%
+    arrange(student_id, assessment_name, outcome_type, desc(ticket_id)) %>%
+    group_by(student_id, assessment_name, outcome_type) %>%
     slice(1) %>%
     ungroup()
 
@@ -74,15 +98,31 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
       special_consids = list(data.frame(
         ticket_id = ticket_id,
         assessment_name = assessment_name,
+        assessment_title = assessment_title,
+        assessment_category = assessment_category,
+        assessment_type = assessment_type,
         outcome_type = outcome_type,
-        extension_date = extension_date_raw,
+        classification = classification,
         state = state,
         approved = approved,
+        extension_date = extension_date,
+        due_date = due_date,
+        closing_date = closing_date,
         stringsAsFactors = FALSE
       )),
-      total_extensions = sum(!is.na(extension_date_raw) & extension_date_raw != ""),
-      has_replacement_exam = any(grepl("replacement.*exam", outcome_type, ignore.case = TRUE), na.rm = TRUE),
-      has_mark_adjustment = any(grepl("mark.*adjustment", outcome_type, ignore.case = TRUE), na.rm = TRUE),
+      total_extensions = sum(
+        outcome_type %in% c("Simple Extension", "Extension of time"),
+        na.rm = TRUE
+      ),
+      has_replacement_exam = any(
+        grepl("replacement.*exam", outcome_type, ignore.case = TRUE),
+        na.rm = TRUE
+      ),
+      has_mark_adjustment = any(
+        grepl("mark.*adjustment", outcome_type, ignore.case = TRUE),
+        na.rm = TRUE
+      ),
+      total_consids = n(),
       .groups = "drop"
     )
 
