@@ -16,6 +16,16 @@ import_canvas_grades <- function(file_path) {
   # Read CSV (Canvas uses standard headers)
   raw_data <- read_csv(file_path, show_col_types = FALSE)
 
+  # Extract Points Possible row BEFORE filtering it out
+  points_possible_row <- raw_data %>%
+    filter(grepl("Points Possible", Student, ignore.case = TRUE)) %>%
+    slice(1)
+
+  has_points_possible <- nrow(points_possible_row) > 0
+  if (!has_points_possible) {
+    warning("No 'Points Possible' row found in Canvas export. max_points will be NA.")
+  }
+
   # Filter out metadata rows (where Student is NA or contains non-student text)
   data <- raw_data %>%
     filter(!is.na(Student)) %>%
@@ -43,9 +53,19 @@ import_canvas_grades <- function(file_path) {
       }
     )
 
-  # Identify assignment columns (contain weight % and ID in brackets)
-  # Pattern: "Assignment Name [weight%] (id)"
-  assignment_cols <- names(data)[grepl("\\[.*%\\].*\\(\\d+\\)", names(data))]
+  # Identify assignment columns: match columns ending with (id)
+  assignment_cols <- names(data)[grepl("\\(\\d+\\)$", names(data))]
+
+  # Pre-compute per-column: max_points, is_ongoing, and filter out non-graded
+  col_meta <- lapply(assignment_cols, function(col) {
+    max_pts <- if (has_points_possible) as.numeric(points_possible_row[[col]]) else NA_real_
+    scores_raw <- as.numeric(data[[col]])
+    na_ratio <- sum(is.na(scores_raw)) / nrow(data)
+    list(col = col, max_points = max_pts, is_ongoing = na_ratio > 0.60)
+  })
+
+  # Filter out assignments where max_points is 0 or NA (attendance, surveys, etc.)
+  col_meta <- Filter(function(m) !is.na(m$max_points) && m$max_points > 0, col_meta)
 
   # Extract final grade (look for "Current Grade" or similar)
   final_grade_col <- names(data)[grepl("^Current (Score|Grade|Points)", names(data), ignore.case = TRUE)]
@@ -57,35 +77,44 @@ import_canvas_grades <- function(file_path) {
 
   # Process assignments into nested structure
   students$assignments <- lapply(1:nrow(students), function(i) {
-    if (length(assignment_cols) == 0) {
+    if (length(col_meta) == 0) {
       return(data.frame(
         name = character(),
         score = numeric(),
         max_points = numeric(),
-        weight = numeric(),
+        percentage = numeric(),
+        is_ongoing = logical(),
         assignment_id = character(),
         stringsAsFactors = FALSE
       ))
     }
 
-    assignments_list <- lapply(assignment_cols, function(col) {
-      # Parse assignment name, weight, and ID
-      # Pattern: "Name [weight%] (id)"
-      name_part <- str_extract(col, "^[^\\[]+")
-      weight_part <- str_extract(col, "\\[(.+?)%\\]")
-      id_part <- str_extract(col, "\\((\\d+)\\)")
+    assignments_list <- lapply(col_meta, function(m) {
+      col <- m$col
 
-      weight <- as.numeric(str_extract(weight_part, "\\d+\\.?\\d*"))
+      # Parse assignment name and ID from column header
+      name_part <- str_extract(col, "^[^\\[\\(]+")
+      # Strip trailing weight bracket if present e.g. " [10%] "
+      name_part <- str_replace(name_part, "\\s*$", "")
+      id_part <- str_extract(col, "\\((\\d+)\\)")
       assignment_id <- str_extract(id_part, "\\d+")
 
-      # Get score for this student
+      # Get score for this student - keep NA as NA
       score <- as.numeric(data[[col]][i])
+
+      max_pts <- m$max_points
+      pct <- if (!is.na(score) && !is.na(max_pts) && max_pts > 0) {
+        score / max_pts * 100
+      } else {
+        NA_real_
+      }
 
       data.frame(
         name = str_trim(name_part),
-        score = ifelse(is.na(score), 0, score),
-        max_points = NA_real_,  # Canvas doesn't always include max points in export
-        weight = ifelse(is.na(weight), 0, weight),
+        score = score,
+        max_points = max_pts,
+        percentage = pct,
+        is_ongoing = m$is_ongoing,
         assignment_id = ifelse(is.na(assignment_id), "", assignment_id),
         stringsAsFactors = FALSE
       )

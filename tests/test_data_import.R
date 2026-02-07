@@ -11,7 +11,6 @@ if (basename(getwd()) == "tests") {
 }
 
 # Load the project
-source("R/schema.R")
 source("R/utils/import/canvas.R")
 source("R/utils/import/special_consids.R")
 source("R/utils/import/disability_plans.R")
@@ -136,7 +135,9 @@ test_that("Assignments are properly nested", {
     if (nrow(first_student_assignments) > 0) {
       expect_true("name" %in% names(first_student_assignments))
       expect_true("score" %in% names(first_student_assignments))
-      expect_true("weight" %in% names(first_student_assignments))
+      expect_true("max_points" %in% names(first_student_assignments))
+      expect_true("percentage" %in% names(first_student_assignments))
+      expect_true("is_ongoing" %in% names(first_student_assignments))
     }
   }
 })

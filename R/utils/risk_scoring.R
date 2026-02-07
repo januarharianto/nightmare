@@ -1,10 +1,11 @@
 #' Risk Scoring Functions for NIGHTMARE
 #'
-#' Identifies and scores students at risk based on multiple factors:
-#' - Multiple extensions (>2 assessments with extensions)
-#' - Failing assessments (score = 0 or < 30%)
-#' - Missing work (past due date, no extension granted)
-#' - Near 10-day policy limit (>5 days overdue after extensions)
+#' Identifies and scores students at risk based on 5 factors:
+#' - Factor 1: Average performance on completed assessments (0-40 pts)
+#' - Factor 2: Missing submissions with no extension (0-30 pts)
+#' - Factor 3: Multiple extensions (>2 assessments) (0-25 pts)
+#' - Factor 4: Near policy limit (>=4 total extensions) (0-30 pts)
+#' - Factor 5: Zero scores on completed assessments (0-20 pts)
 
 library(dplyr)
 library(purrr)
@@ -20,80 +21,78 @@ calculate_risk_score <- function(student_data) {
   special_consids <- student_data$special_consids[[1]]
   assignments <- student_data$assignments[[1]]
 
-  # FACTOR 1: Multiple Extensions (>2 assessments with extensions)
-  has_multiple_extensions <- FALSE
+  # Filter to completed assessments only (exclude ongoing)
+  completed <- if (nrow(assignments) > 0) {
+    assignments %>% filter(is_ongoing == FALSE)
+  } else {
+    assignments[0, ]
+  }
+
+  # Get assessment names with approved extensions
+  extended_assessments <- character(0)
   if (nrow(special_consids) > 0) {
-    # Count unique assessments with approved extensions
-    unique_assessments <- special_consids %>%
+    extended_assessments <- special_consids %>%
+      filter(approved == TRUE) %>%
+      pull(assessment_name) %>%
+      unique()
+  }
+
+  # FACTOR 1: Average Performance (0-40 points)
+  scored <- completed %>%
+    filter(!is.na(score), max_points > 0)
+
+  if (nrow(scored) > 0) {
+    avg_pct <- mean(scored$percentage, na.rm = TRUE)
+
+    if (avg_pct < 40) {
+      score <- score + 40
+    } else if (avg_pct < 50) {
+      score <- score + 20
+    } else if (avg_pct < 60) {
+      score <- score + 10
+    }
+  }
+
+  # FACTOR 2: Missing Submissions (0-30 points)
+  # Completed assessments where student has NA score and no approved extension
+  missing <- completed %>%
+    filter(is.na(score), !(name %in% extended_assessments))
+
+  if (nrow(missing) >= 2) {
+    score <- score + 30
+  } else if (nrow(missing) == 1) {
+    score <- score + 15
+  }
+
+  # FACTOR 3: Multiple Extensions (0-25 points)
+  if (nrow(special_consids) > 0) {
+    unique_ext_assessments <- special_consids %>%
       filter(approved == TRUE, !is.na(extension_date), extension_date != "") %>%
       pull(assessment_name) %>%
-      unique() %>%
-      length()
+      unique()
 
-    if (unique_assessments > 2) {
-      has_multiple_extensions <- TRUE
+    if (length(unique_ext_assessments) > 2) {
       score <- score + 25
     }
   }
 
-  # FACTOR 2: Failing Assessments
-  # Only flag if final grade < 50 OR if they have failing weighted assessments (>5% weight, score <40)
-  has_failing_assessment <- FALSE
-
-  # Check final grade first (most reliable indicator)
-  if (!is.na(student_data$final_grade) && student_data$final_grade < 50) {
-    has_failing_assessment <- TRUE
-    score <- score + 35
-  } else if (nrow(assignments) > 0) {
-    # Only check significant weighted assignments (>5% weight)
-    failing_weighted <- assignments %>%
-      filter(weight > 5, score < 40, !is.na(score))
-
-    # Flag if 2+ significant assignments are failing
-    if (nrow(failing_weighted) >= 2) {
-      has_failing_assessment <- TRUE
-      score <- score + 35
-    }
-  }
-
-  # FACTOR 3: Missing Work (assignments with score = 0 and no extension, and weight > 5%)
-  has_missing_work <- FALSE
-  if (nrow(assignments) > 0) {
-    # Get assessment names with extensions
-    extended_assessments <- character(0)
-    if (nrow(special_consids) > 0) {
-      extended_assessments <- special_consids %>%
-        filter(approved == TRUE) %>%
-        pull(assessment_name) %>%
-        unique()
-    }
-
-    # Check for zero-score weighted assignments without extensions
-    missing_count <- assignments %>%
-      filter(score == 0, weight > 5, !(name %in% extended_assessments)) %>%
-      nrow()
-
-    if (missing_count > 0) {
-      has_missing_work <- TRUE
-      score <- score + 40
-    }
-  }
-
-  # FACTOR 4: Near Policy Limit (extension dates >7 days after due date)
-  # Parse extension_date field (format: dd-mm-yyyy) and calculate days from due_date
-  near_policy_limit <- FALSE
+  # FACTOR 4: Near Policy Limit (0-30 points)
   if (nrow(special_consids) > 0) {
-    # Check if extension dates are significantly far from typical due dates
-    # Since we have extension_date in format "dd-mm-yyyy", we can count how many extensions exist
-    # More than 3 extensions could indicate approaching policy limit
     extension_count <- special_consids %>%
       filter(!is.na(extension_date), extension_date != "", approved == TRUE) %>%
       nrow()
 
     if (extension_count >= 4) {
-      near_policy_limit <- TRUE
       score <- score + 30
     }
+  }
+
+  # FACTOR 5: Zero Scores (0-20 points)
+  zeros <- completed %>%
+    filter(score == 0, max_points > 0)
+
+  if (nrow(zeros) > 0) {
+    score <- score + 20
   }
 
   # Cap at 100
@@ -127,75 +126,75 @@ get_risk_factors_for_student <- function(student_record) {
   special_consids <- student_record$special_consids[[1]]
   assignments <- student_record$assignments[[1]]
 
-  # FACTOR 1: Multiple Extensions
+  # Filter to completed assessments only
+  completed <- if (nrow(assignments) > 0) {
+    assignments %>% filter(is_ongoing == FALSE)
+  } else {
+    assignments[0, ]
+  }
+
+  # Get assessment names with approved extensions
+  extended_assessments <- character(0)
   if (nrow(special_consids) > 0) {
-    unique_assessments <- special_consids %>%
+    extended_assessments <- special_consids %>%
+      filter(approved == TRUE) %>%
+      pull(assessment_name) %>%
+      unique()
+  }
+
+  # FACTOR 1: Average Performance
+  scored <- completed %>%
+    filter(!is.na(score), max_points > 0)
+
+  if (nrow(scored) > 0) {
+    avg_pct <- mean(scored$percentage, na.rm = TRUE)
+
+    if (avg_pct < 60) {
+      factors <- c(factors, sprintf(
+        "Average assessment score: %.0f%% (%d completed assessment%s)",
+        avg_pct,
+        nrow(scored),
+        if (nrow(scored) == 1) "" else "s"
+      ))
+    }
+  }
+
+  # FACTOR 2: Missing Submissions
+  missing <- completed %>%
+    filter(is.na(score), !(name %in% extended_assessments))
+
+  if (nrow(missing) > 0) {
+    missing_names <- paste(missing$name, collapse = ", ")
+    factors <- c(factors, sprintf(
+      "%d missing submission%s: %s (no extension%s)",
+      nrow(missing),
+      if (nrow(missing) == 1) "" else "s",
+      missing_names,
+      if (nrow(missing) == 1) "" else "s"
+    ))
+  }
+
+  # FACTOR 3: Multiple Extensions
+  if (nrow(special_consids) > 0) {
+    unique_ext_assessments <- special_consids %>%
       filter(approved == TRUE, !is.na(extension_date), extension_date != "") %>%
       pull(assessment_name) %>%
       unique()
 
-    if (length(unique_assessments) > 2) {
-      assessment_list <- paste(head(unique_assessments, 3), collapse = ", ")
-      if (length(unique_assessments) > 3) {
+    if (length(unique_ext_assessments) > 2) {
+      assessment_list <- paste(head(unique_ext_assessments, 3), collapse = ", ")
+      if (length(unique_ext_assessments) > 3) {
         assessment_list <- paste0(assessment_list, ", ...")
       }
       factors <- c(factors, sprintf(
         "%d assessments with extensions (%s)",
-        length(unique_assessments),
+        length(unique_ext_assessments),
         assessment_list
       ))
     }
   }
 
-  # FACTOR 2: Failing Assessments
-  if (!is.na(student_record$final_grade) && student_record$final_grade < 50) {
-    factors <- c(factors, sprintf("Final grade: %.1f%% (failing)", student_record$final_grade))
-  } else if (nrow(assignments) > 0) {
-    failing_weighted <- assignments %>%
-      filter(weight > 5, score < 40, !is.na(score))
-
-    if (nrow(failing_weighted) >= 2) {
-      factors <- c(factors, sprintf(
-        "%d weighted assessments (>5%%) with scores < 40%%",
-        nrow(failing_weighted)
-      ))
-      # Show first 2 examples
-      for (i in 1:min(2, nrow(failing_weighted))) {
-        factors <- c(factors, sprintf(
-          "  • %s (%.0f%% weight): score = %.1f",
-          failing_weighted$name[i],
-          failing_weighted$weight[i],
-          failing_weighted$score[i]
-        ))
-      }
-    }
-  }
-
-  # FACTOR 3: Missing Work (weighted assignments only)
-  if (nrow(assignments) > 0) {
-    extended_assessments <- character(0)
-    if (nrow(special_consids) > 0) {
-      extended_assessments <- special_consids %>%
-        filter(approved == TRUE) %>%
-        pull(assessment_name) %>%
-        unique()
-    }
-
-    missing <- assignments %>%
-      filter(score == 0, weight > 5, !(name %in% extended_assessments))
-
-    if (nrow(missing) > 0) {
-      for (i in 1:min(2, nrow(missing))) {
-        factors <- c(factors, sprintf(
-          "Missing: %s (%.0f%% weight, no extension)",
-          missing$name[i],
-          missing$weight[i]
-        ))
-      }
-    }
-  }
-
-  # FACTOR 4: Near Policy Limit (>= 4 extensions total)
+  # FACTOR 4: Near Policy Limit
   if (nrow(special_consids) > 0) {
     extension_count <- special_consids %>%
       filter(!is.na(extension_date), extension_date != "", approved == TRUE) %>%
@@ -205,6 +204,19 @@ get_risk_factors_for_student <- function(student_record) {
       factors <- c(factors, sprintf(
         "%d total extensions granted (approaching policy limit)",
         extension_count
+      ))
+    }
+  }
+
+  # FACTOR 5: Zero Scores
+  zeros <- completed %>%
+    filter(score == 0, max_points > 0)
+
+  if (nrow(zeros) > 0) {
+    for (i in 1:nrow(zeros)) {
+      factors <- c(factors, sprintf(
+        "Zero score on completed assessment: %s",
+        zeros$name[i]
       ))
     }
   }

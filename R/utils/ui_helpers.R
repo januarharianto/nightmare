@@ -52,59 +52,127 @@ build_student_detail_view <- function(student) {
         )
       ),
 
-      # Academic Performance Section
+      # Assessments Section
       tags$div(
         class = "detail-section",
-        tags$div(class = "detail-section-header", "Academic Performance"),
+        tags$div(class = "detail-section-header", "Assessments"),
         tags$div(
           class = "detail-section-content",
-          tags$div(
-            class = "detail-row",
-            tags$div(class = "detail-label", "Final Grade"),
-            tags$div(class = "detail-value", sprintf("%.1f%%", student$final_grade))
-          ),
-          tags$div(
-            class = "detail-row",
-            tags$div(class = "detail-label", "Unit of Study"),
-            tags$div(class = "detail-value", student$unit_of_study)
-          ),
-          tags$div(
-            class = "detail-row",
-            tags$div(class = "detail-label", "Section"),
-            tags$div(class = "detail-value", student$section)
-          ),
+          {
+            assignments <- student$assignments[[1]]
 
-          # Assignments table
-          if (nrow(student$assignments[[1]]) > 0) {
-            assignments <- student$assignments[[1]] %>%
-              mutate(
-                Score = sprintf("%.1f", score),
-                Weight = sprintf("%.1f%%", weight)
-              ) %>%
-              select(Assessment = name, Score, Weight)
+            if (nrow(assignments) == 0) {
+              tags$div(
+                class = "empty-state",
+                tags$p("No assessment data available")
+              )
+            } else {
+              # Compute summary stats
+              completed <- assignments[!assignments$is_ongoing, ]
+              n_total <- nrow(assignments)
+              has_score <- completed[!is.na(completed$score), ]
+              n_completed <- nrow(has_score)
+              n_ongoing <- sum(assignments$is_ongoing)
+              avg_pct <- if (n_completed > 0) round(mean(has_score$percentage, na.rm = TRUE), 0) else NA
+              n_at_risk <- sum(!is.na(completed$score) & completed$percentage < 50) +
+                sum(is.na(completed$score))
 
-            tagList(
-              tags$h5(style = "margin-top: 12px; margin-bottom: 8px;", "Assessment Breakdown"),
-              tags$table(
-                class = "detail-table",
-                tags$thead(
-                  tags$tr(
-                    tags$th("Assessment"),
-                    tags$th("Score"),
-                    tags$th("Weight")
+              all_ongoing <- n_total == n_ongoing
+
+              tagList(
+                # Summary statistics
+                tags$div(
+                  class = "assessment-summary",
+                  tags$div(
+                    tags$div(class = "stat-label", "Completed"),
+                    tags$div(class = "stat-value",
+                      if (all_ongoing) "--" else sprintf("%d of %d", n_completed, n_total)
+                    )
+                  ),
+                  tags$div(
+                    tags$div(class = "stat-label", "Average"),
+                    tags$div(class = "stat-value",
+                      if (all_ongoing || is.na(avg_pct)) "--" else sprintf("%d%%", avg_pct)
+                    )
+                  ),
+                  tags$div(
+                    tags$div(class = "stat-label", "At Risk"),
+                    tags$div(class = "stat-value",
+                      if (all_ongoing) "--" else as.character(n_at_risk)
+                    )
                   )
                 ),
-                tags$tbody(
-                  lapply(1:nrow(assignments), function(i) {
+
+                if (all_ongoing) {
+                  tags$div(
+                    style = "padding: 8px 0; color: #AAAAAA; font-size: 12px;",
+                    "All assessments pending"
+                  )
+                },
+
+                # Assessment table
+                tags$table(
+                  class = "detail-table",
+                  tags$thead(
                     tags$tr(
-                      tags$td(assignments$Assessment[i]),
-                      tags$td(assignments$Score[i]),
-                      tags$td(assignments$Weight[i])
+                      tags$th("Assessment"),
+                      tags$th("Score"),
+                      tags$th("Percentage"),
+                      tags$th("Status")
                     )
-                  })
+                  ),
+                  tags$tbody(
+                    lapply(1:nrow(assignments), function(i) {
+                      a <- assignments[i, ]
+                      has_sc <- !is.na(a$score)
+                      ongoing <- isTRUE(a$is_ongoing)
+                      missing <- !has_sc && !ongoing
+
+                      # Score column
+                      score_display <- if (has_sc) {
+                        sprintf("%g / %g", a$score, a$max_points)
+                      } else if (ongoing) {
+                        "--"
+                      } else {
+                        sprintf("-- / %g", a$max_points)
+                      }
+
+                      # Percentage column
+                      pct_display <- if (has_sc) {
+                        sprintf("%.0f%%", a$percentage)
+                      } else if (ongoing) {
+                        "--"
+                      } else {
+                        "Missing"
+                      }
+
+                      # Status column and row class
+                      if (ongoing) {
+                        row_class <- "assessment-pending"
+                        status_html <- tags$span(class = "assessment-status status-pending", "Pending")
+                      } else if (missing) {
+                        row_class <- "assessment-missing"
+                        status_html <- tags$span(class = "assessment-status status-missing", "Missing")
+                      } else if (a$percentage < 50) {
+                        row_class <- "assessment-failing"
+                        status_html <- tags$span(class = "assessment-status status-failing", "Failing")
+                      } else {
+                        row_class <- ""
+                        status_html <- ""
+                      }
+
+                      tags$tr(
+                        class = row_class,
+                        tags$td(a$name),
+                        tags$td(score_display),
+                        tags$td(class = "assessment-pct", pct_display),
+                        tags$td(status_html)
+                      )
+                    })
+                  )
                 )
               )
-            )
+            }
           }
         )
       ),

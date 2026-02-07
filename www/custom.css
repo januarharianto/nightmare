@@ -1037,6 +1037,70 @@ label.search-label {
   color: #CCCCCC;
 }
 
+/* Assessment summary stats */
+.assessment-summary {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #EEEEEE;
+  font-size: 12px;
+}
+
+.assessment-summary .stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #AAAAAA;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.assessment-summary .stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* Assessment status indicators */
+.assessment-pending td {
+  color: #AAAAAA;
+}
+
+.assessment-failing .assessment-pct {
+  color: #000000;
+  font-weight: 700;
+}
+
+.assessment-missing .assessment-pct {
+  color: #000000;
+  font-weight: 700;
+}
+
+.assessment-status {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.status-failing {
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  font-size: 9px;
+}
+
+.status-missing {
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  font-size: 9px;
+}
+
+.status-pending {
+  color: #AAAAAA;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;
