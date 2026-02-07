@@ -92,8 +92,8 @@ render_density_plot <- function(percentages) {
 }
 
 # Draw a histogram for an assessment's percentage distribution.
-# Bins at grade boundaries: 0-50, 50-65, 65-75, 75-85, 85-100.
-# Black outline bars, #F5F5F5 fill, grade boundary lines, minimal axes.
+# F range (0-50) split into 10-wide sub-bins for finer detail;
+# P/CR/D/HD use grade boundaries. Black outline, #F5F5F5 fill.
 # Call inside renderPlot().
 render_histogram_plot <- function(percentages) {
   if (length(percentages) < 2) {
@@ -102,7 +102,7 @@ render_histogram_plot <- function(percentages) {
     return(invisible(NULL))
   }
 
-  breaks <- c(0, 50, 65, 75, 85, 100)
+  breaks <- c(seq(0, 50, by = 10), 65, 75, 85, 100)
 
   par(mar = c(2, 0, 0, 0), bg = "#FFFFFF")
   h <- hist(percentages, breaks = breaks, plot = FALSE)
