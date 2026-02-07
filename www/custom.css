@@ -433,21 +433,32 @@ p { margin-bottom: 8px; }
   text-align: right;
 }
 
-.match-resolve-group {
+.match-item {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid #EEEEEE;
 }
 
-.match-resolve-group:last-child {
+.match-item:last-child {
   border-bottom: none;
   margin-bottom: 0;
 }
 
-.match-resolve-label {
+.match-section-header {
+  font-size: 10px;
   font-weight: 700;
-  margin-bottom: 8px;
-  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #AAAAAA;
+  padding: 12px 0 6px 0;
+  border-bottom: 1px solid #CCCCCC;
+  margin-bottom: 12px;
+}
+
+.match-saved-badge {
+  margin-left: 6px;
+  font-size: 9px;
+  vertical-align: middle;
 }
 
 /* Scrollbars (minimal styling) */

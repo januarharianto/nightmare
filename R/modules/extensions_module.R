@@ -8,8 +8,7 @@ extensionsModuleUI <- function(id) {
     tags$div(class = "extensions-toolbar",
       tags$div(class = "extensions-picker",
         tags$span(class = "extensions-label", "Assessment"),
-        selectInput(ns("assessment_select"), label = NULL,
-                    choices = c("Select an assessment..." = ""), width = "100%")
+        uiOutput(ns("assessment_picker"))
       ),
       downloadButton(ns("export_seams2"), "Export SEAMS2", class = "btn-export-seams2")
     ),
@@ -30,7 +29,7 @@ extensionsModuleUI <- function(id) {
   )
 }
 
-extensionsModuleServer <- function(id, studentData, dataSources) {
+extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -50,6 +49,7 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
 
     matchResult <- reactiveVal(NULL)
     matchOverrides <- reactiveVal(list())
+    overridesLoadedFromDisk <- reactiveVal(FALSE)
 
     selectedAssessment <- reactive({
       val <- input$assessment_select
@@ -57,7 +57,37 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
       val
     })
 
-    # --- Compute initial match when data loads ---
+    # --- Load overrides from disk when data loads ---
+
+    observe({
+      unit <- currentUnit()
+      ext <- extensionsFlat()
+      canvas <- canvasNames()
+      if (is.null(unit) || is.null(ext) || nrow(ext) == 0 || length(canvas) == 0) {
+        overridesLoadedFromDisk(FALSE)
+        return()
+      }
+
+      data_dir <- NIGHTMARE_CONFIG$data$data_dir
+      saved <- load_match_overrides(data_dir, unit)
+      if (length(saved) == 0) {
+        overridesLoadedFromDisk(FALSE)
+        matchOverrides(list())
+        return()
+      }
+
+      sc_names <- unique(ext$assessment_name)
+      validated <- validate_match_overrides(saved, sc_names, canvas)
+      if (length(validated) > 0) {
+        matchOverrides(validated)
+        overridesLoadedFromDisk(TRUE)
+      } else {
+        matchOverrides(list())
+        overridesLoadedFromDisk(FALSE)
+      }
+    })
+
+    # --- Compute match when data or overrides change ---
 
     observe({
       ext <- extensionsFlat()
@@ -75,44 +105,44 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
       matchResult(result)
     })
 
-    # --- Update assessment picker ---
+    # --- Render assessment picker (renderUI so it evaluates lazily when visible) ---
 
-    observe({
+    output$assessment_picker <- renderUI({
       mr <- matchResult()
       canvas <- canvasNames()
       ext <- extensionsFlat()
-      if (is.null(mr) || length(canvas) == 0) {
-        updateSelectInput(session, "assessment_select",
-                          choices = c("Select an assessment..." = ""))
-        return()
-      }
 
-      # Count extensions per canvas assignment
-      matched_canvas <- unique(mr$matched$canvas_name)
-
-      # Build choices safely
       choices <- c("Select an assessment..." = "")
 
-      if (length(matched_canvas) > 0 && nrow(ext) > 0) {
-        counts <- vapply(matched_canvas, function(cn) {
-          sc_names <- mr$matched$spec_cons_name[mr$matched$canvas_name == cn]
-          sum(ext$assessment_name %in% sc_names)
-        }, integer(1))
-        matched_choices <- matched_canvas
-        names(matched_choices) <- paste0(matched_canvas, " (", counts, ")")
-        choices <- c(choices, matched_choices)
-      } else if (length(matched_canvas) > 0) {
-        matched_choices <- matched_canvas
-        names(matched_choices) <- paste0(matched_canvas, " (0)")
-        choices <- c(choices, matched_choices)
+      if (!is.null(mr) && length(canvas) > 0) {
+        matched_canvas <- unique(mr$matched$canvas_name)
+
+        if (length(matched_canvas) > 0 && !is.null(ext) && nrow(ext) > 0) {
+          counts <- vapply(matched_canvas, function(cn) {
+            sc_names <- mr$matched$spec_cons_name[mr$matched$canvas_name == cn]
+            sum(ext$assessment_name %in% sc_names)
+          }, integer(1))
+          matched_choices <- matched_canvas
+          names(matched_choices) <- paste0(matched_canvas, " (", counts, ")")
+          choices <- c(choices, matched_choices)
+        } else if (length(matched_canvas) > 0) {
+          matched_choices <- matched_canvas
+          names(matched_choices) <- paste0(matched_canvas, " (0)")
+          choices <- c(choices, matched_choices)
+        }
+
+        unmatched_canvas <- setdiff(canvas, matched_canvas)
+        if (length(unmatched_canvas) > 0) {
+          choices <- c(choices, setNames(unmatched_canvas, unmatched_canvas))
+        }
       }
 
-      unmatched_canvas <- setdiff(canvas, matched_canvas)
-      if (length(unmatched_canvas) > 0) {
-        choices <- c(choices, setNames(unmatched_canvas, unmatched_canvas))
-      }
+      # Preserve current selection across re-renders
+      current <- isolate(input$assessment_select)
+      selected <- if (!is.null(current) && current %in% choices) current else ""
 
-      updateSelectInput(session, "assessment_select", choices = choices)
+      selectInput(ns("assessment_select"), label = NULL,
+                  choices = choices, selected = selected, width = "100%")
     })
 
     # --- Render summary stats ---
@@ -127,7 +157,7 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
       ext <- extensionsFlat()
       stats <- compute_extension_stats(ext, assess, mr)
 
-      avg_display <- if (is.na(stats$avg_days)) "—" else sprintf("%.1f", stats$avg_days)
+      avg_display <- if (is.na(stats$avg_days)) "\u2014" else sprintf("%.1f", stats$avg_days)
 
       tags$div(class = "extensions-summary",
         tags$div(
@@ -153,20 +183,35 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
       )
     })
 
-    # --- Render unmatched banner ---
+    # --- Render unmatched/override banner ---
 
     output$unmatched_banner <- renderUI({
       mr <- matchResult()
       if (is.null(mr)) return(NULL)
 
+      overrides <- matchOverrides()
+      n_overrides <- length(overrides)
       n_unresolved <- length(mr$unmatched) + length(mr$ambiguous)
-      if (n_unresolved == 0) return(NULL)
+      from_disk <- overridesLoadedFromDisk()
+
+      # Nothing to show
+      if (n_unresolved == 0 && n_overrides == 0) return(NULL)
+
+      parts <- c()
+      if (n_unresolved > 0) {
+        parts <- c(parts, paste0(n_unresolved, " assessment(s) could not be matched"))
+      }
+      if (n_overrides > 0) {
+        suffix <- if (from_disk) " (loaded from disk)" else ""
+        parts <- c(parts, paste0(n_overrides, " manual match(es) active", suffix))
+      }
+
+      # Action label
+      action_label <- if (n_unresolved > 0) "Resolve" else "Edit"
 
       tags$div(class = "extensions-unmatched-banner",
-        tags$span(
-          paste0(n_unresolved, " assessment(s) could not be matched")
-        ),
-        actionLink(ns("show_match_modal"), "Resolve")
+        tags$span(paste(parts, collapse = " | ")),
+        actionLink(ns("show_match_modal"), action_label)
       )
     })
 
@@ -255,41 +300,79 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
       mr <- matchResult()
       if (is.null(mr)) return()
 
+      overrides <- matchOverrides()
       ambiguous_items <- mr$ambiguous
       unmatched_items <- mr$unmatched
       canvas <- canvasNames()
 
       modal_content <- tagList()
 
-      # Ambiguous items: show radio buttons with candidates
-      if (length(ambiguous_items) > 0) {
-        for (sc_name in names(ambiguous_items)) {
-          candidates <- ambiguous_items[[sc_name]]
+      # Section 1: Currently matched (manual) — editable existing overrides
+      if (length(overrides) > 0) {
+        section_items <- tagList()
+        for (sc_name in names(overrides)) {
+          input_id <- ns(paste0("match_", gsub("[^a-zA-Z0-9]", "_", sc_name)))
+          current_val <- overrides[[sc_name]]
+          selected <- if (is.na(current_val)) "__skip__" else current_val
+          choices <- c(setNames(canvas, canvas), "Skip (no match)" = "__skip__")
+
+          section_items <- tagList(section_items,
+            tags$div(class = "match-item",
+              tags$div(class = "stat-label",
+                sc_name,
+                tags$span(class = "source-tag active match-saved-badge", "SAVED")
+              ),
+              radioButtons(input_id, label = NULL, choices = choices, selected = selected)
+            )
+          )
+        }
+        modal_content <- tagList(modal_content,
+          tags$div(class = "match-section-header", "CURRENTLY MATCHED (MANUAL)"),
+          section_items
+        )
+      }
+
+      # Section 2: Ambiguous matches (excluding already-overridden)
+      new_ambiguous <- ambiguous_items[!names(ambiguous_items) %in% names(overrides)]
+      if (length(new_ambiguous) > 0) {
+        section_items <- tagList()
+        for (sc_name in names(new_ambiguous)) {
+          candidates <- new_ambiguous[[sc_name]]
           input_id <- ns(paste0("match_", gsub("[^a-zA-Z0-9]", "_", sc_name)))
           choices <- c(setNames(candidates, candidates), "Skip (no match)" = "__skip__")
 
-          modal_content <- tagList(modal_content,
+          section_items <- tagList(section_items,
             tags$div(class = "match-item",
               tags$div(class = "stat-label", sc_name),
               radioButtons(input_id, label = NULL, choices = choices, selected = "__skip__")
             )
           )
         }
+        modal_content <- tagList(modal_content,
+          tags$div(class = "match-section-header", "AMBIGUOUS MATCHES"),
+          section_items
+        )
       }
 
-      # Unmatched items: show radio buttons with all canvas names
-      if (length(unmatched_items) > 0) {
-        for (sc_name in unmatched_items) {
+      # Section 3: Unmatched assessments (excluding already-overridden)
+      new_unmatched <- unmatched_items[!unmatched_items %in% names(overrides)]
+      if (length(new_unmatched) > 0) {
+        section_items <- tagList()
+        for (sc_name in new_unmatched) {
           input_id <- ns(paste0("match_", gsub("[^a-zA-Z0-9]", "_", sc_name)))
           choices <- c(setNames(canvas, canvas), "Skip (no match)" = "__skip__")
 
-          modal_content <- tagList(modal_content,
+          section_items <- tagList(section_items,
             tags$div(class = "match-item",
               tags$div(class = "stat-label", sc_name),
               radioButtons(input_id, label = NULL, choices = choices, selected = "__skip__")
             )
           )
         }
+        modal_content <- tagList(modal_content,
+          tags$div(class = "match-section-header", "UNMATCHED ASSESSMENTS"),
+          section_items
+        )
       }
 
       showModal(modalDialog(
@@ -309,31 +392,41 @@ extensionsModuleServer <- function(id, studentData, dataSources) {
       mr <- matchResult()
       if (is.null(mr)) return()
 
-      all_names <- c(names(mr$ambiguous), mr$unmatched)
-      overrides <- list()
+      # Collect from all sections: existing overrides + new ambiguous + new unmatched
+      overrides <- matchOverrides()
+      all_names <- unique(c(
+        names(overrides),
+        names(mr$ambiguous),
+        mr$unmatched
+      ))
 
+      new_overrides <- list()
       for (sc_name in all_names) {
         input_id <- paste0("match_", gsub("[^a-zA-Z0-9]", "_", sc_name))
         chosen <- input[[input_id]]
         if (!is.null(chosen)) {
-          overrides[[sc_name]] <- if (chosen == "__skip__") NA else chosen
+          new_overrides[[sc_name]] <- if (chosen == "__skip__") NA else chosen
         }
       }
 
-      # Merge with existing overrides
-      existing <- matchOverrides()
-      for (nm in names(overrides)) {
-        existing[[nm]] <- overrides[[nm]]
-      }
-      matchOverrides(existing)
+      # Replace overrides wholesale
+      matchOverrides(new_overrides)
+      overridesLoadedFromDisk(FALSE)
 
       # Recompute match result
       ext <- extensionsFlat()
       canvas <- canvasNames()
       sc_names <- unique(ext$assessment_name)
       result <- match_assessments(sc_names, canvas)
-      result <- apply_match_overrides(result, matchOverrides())
+      result <- apply_match_overrides(result, new_overrides)
       matchResult(result)
+
+      # Save to disk
+      unit <- currentUnit()
+      if (!is.null(unit) && length(new_overrides) > 0) {
+        data_dir <- NIGHTMARE_CONFIG$data$data_dir
+        save_match_overrides(data_dir, unit, new_overrides)
+      }
 
       removeModal()
     })

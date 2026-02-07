@@ -297,7 +297,7 @@ server <- function(input, output, session) {
   selectedStudentId <- searchModuleServer("search", studentData)
 
   # Extensions module
-  extensionsModuleServer("extensions", studentData, dataSources)
+  extensionsModuleServer("extensions", studentData, dataSources, currentUnit)
 
   # Student detail panel
   output$student_detail_panel <- renderUI({

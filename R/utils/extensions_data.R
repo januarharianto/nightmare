@@ -181,6 +181,69 @@ apply_match_overrides <- function(match_result, overrides) {
   list(matched = matched, unmatched = unmatched, ambiguous = ambiguous)
 }
 
+# Save match overrides to a JSON dotfile in the unit's data folder.
+# overrides: named list of spec_cons_name -> canvas_name (NA for skipped).
+save_match_overrides <- function(data_dir, unit, overrides) {
+  folder <- file.path(data_dir, unit)
+  if (!dir.exists(folder)) return(invisible(NULL))
+
+  # Convert NA values to JSON null via explicit NULL assignment
+  overrides_json <- lapply(overrides, function(x) if (is.na(x)) NULL else x)
+
+  payload <- list(
+    version = 1L,
+    saved_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+    overrides = overrides_json
+  )
+
+  path <- file.path(folder, ".match_overrides.json")
+  writeLines(toJSON(payload, auto_unbox = TRUE, null = "null", pretty = TRUE), path)
+  invisible(path)
+}
+
+# Load match overrides from a JSON dotfile.
+# Returns a named list (spec_cons_name -> canvas_name, or NA for skipped).
+# Returns empty list if the file is missing or corrupt.
+load_match_overrides <- function(data_dir, unit) {
+  path <- file.path(data_dir, unit, ".match_overrides.json")
+  if (!file.exists(path)) return(list())
+
+  tryCatch({
+    payload <- fromJSON(path, simplifyVector = FALSE)
+    if (is.null(payload$overrides)) return(list())
+
+    # Convert JSON null back to NA
+    result <- lapply(payload$overrides, function(x) if (is.null(x)) NA else x)
+    attr(result, "saved_at") <- payload$saved_at
+    result
+  }, error = function(e) {
+    list()
+  })
+}
+
+# Validate overrides against current spec cons + canvas names.
+# Drops entries where the spec cons name no longer exists, or where the
+# canvas name no longer exists (unless the override is NA/skip).
+validate_match_overrides <- function(overrides, spec_cons_names, canvas_names) {
+  if (length(overrides) == 0) return(list())
+
+  saved_at <- attr(overrides, "saved_at")
+  keep <- list()
+
+  for (nm in names(overrides)) {
+    # Spec cons name must still exist
+    if (!(nm %in% spec_cons_names)) next
+    val <- overrides[[nm]]
+    # NA (skip) is always valid; otherwise canvas name must still exist
+    if (is.na(val) || val %in% canvas_names) {
+      keep[[nm]] <- val
+    }
+  }
+
+  attr(keep, "saved_at") <- saved_at
+  keep
+}
+
 # Compute summary statistics for extensions on a given Canvas assignment.
 compute_extension_stats <- function(ext_flat, canvas_name, match_result) {
   # Find which spec_cons_names map to this canvas assignment

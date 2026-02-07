@@ -8,4 +8,5 @@ load_nightmare_dependencies <- function() {
   library(readxl)
   library(stringr)
   library(shinyjs)
+  library(jsonlite)
 }
