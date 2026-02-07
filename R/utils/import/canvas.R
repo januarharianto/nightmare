@@ -39,8 +39,8 @@ import_canvas_grades <- function(file_path) {
     mutate(
       # Ensure student_id is character for joining
       student_id = as.character(student_id),
-      # Extract unit code from Section (first token before space)
-      unit_of_study = str_extract(section, "^[A-Z]+[0-9]+"),
+      # Extract unit code from Section (e.g. BIOL2022, ENVX2001)
+      unit_of_study = str_extract(section, "[A-Z]+\\d{4}"),
       # Handle email if present, otherwise construct from login
       email = if ("Email" %in% names(data)) {
         data$Email
