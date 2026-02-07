@@ -1,6 +1,32 @@
 # Extensions data utilities for NIGHTMARE
 # Pure data-processing functions — no Shiny reactives or side effects.
 
+# Parse a plan extension value string into a number of days.
+# Handles formats like "Up to 1 week", "7 days", "2 weeks", bare numbers.
+# Returns NA if the value can't be parsed (e.g. "yes", "x", or unrecognised text).
+parse_plan_days <- function(value) {
+  if (is.null(value) || is.na(value)) return(NA_real_)
+  v <- trimws(tolower(value))
+  if (v %in% c("yes", "y", "true", "x", "")) return(NA_real_)
+
+  # Strip "up to" prefix
+  v <- sub("^up\\s+to\\s+", "", v)
+
+  # "7 days", "1 day", "7days"
+  m <- regmatches(v, regexec("^(\\d+\\.?\\d*)\\s*days?$", v))[[1]]
+  if (length(m) == 2) return(as.numeric(m[2]))
+
+  # "2 weeks", "1 week", "1.5 weeks"
+  m <- regmatches(v, regexec("^(\\d+\\.?\\d*)\\s*weeks?$", v))[[1]]
+  if (length(m) == 2) return(as.numeric(m[2]) * 7)
+
+  # Bare number (assume days)
+  m <- regmatches(v, regexec("^(\\d+\\.?\\d*)$", v))[[1]]
+  if (length(m) == 2) return(as.numeric(m[2]))
+
+  NA_real_
+}
+
 # Flatten extensions from nested student data.
 # Un-nests special_consids, filters to extension types, and returns a flat
 # data.frame with one row per extension record.
@@ -19,6 +45,7 @@ flatten_extensions <- function(data) {
     due_date = as.POSIXct(character()),
     closing_date = as.POSIXct(character()),
     has_plan_extension = logical(),
+    plan_days = numeric(),
     stringsAsFactors = FALSE
   )
 
@@ -34,14 +61,20 @@ flatten_extensions <- function(data) {
     ext <- consids[consids$outcome_type %in% extension_types, , drop = FALSE]
     if (nrow(ext) == 0) return(NULL)
 
-    # Determine if student has a plan-based extension adjustment
+    # Determine if student has a plan-based extension adjustment + extract days
     plan_adj <- data$plan_adjustments[[i]]
     has_plan <- FALSE
+    plan_days <- NA_real_
     if (!is.null(plan_adj) && nrow(plan_adj) > 0) {
       aa_rows <- plan_adj[plan_adj$category == "Assessment Adjustment", , drop = FALSE]
       if (nrow(aa_rows) > 0) {
-        has_plan <- any(grepl("Extension|Take Home", aa_rows$arrangement_type,
-                              ignore.case = TRUE))
+        ext_rows <- aa_rows[grepl("Extension|Take Home", aa_rows$arrangement_type,
+                                  ignore.case = TRUE), , drop = FALSE]
+        if (nrow(ext_rows) > 0) {
+          has_plan <- TRUE
+          parsed <- vapply(ext_rows$value, parse_plan_days, numeric(1))
+          plan_days <- if (all(is.na(parsed))) NA_real_ else max(parsed, na.rm = TRUE)
+        }
       }
     }
 
@@ -58,6 +91,7 @@ flatten_extensions <- function(data) {
       due_date = as.POSIXct(ext$due_date),
       closing_date = as.POSIXct(ext$closing_date),
       has_plan_extension = rep(has_plan, nrow(ext)),
+      plan_days = rep(plan_days, nrow(ext)),
       stringsAsFactors = FALSE
     )
   })
@@ -281,14 +315,15 @@ compute_extension_stats <- function(ext_flat, canvas_name, match_result) {
 build_extensions_table <- function(ext_flat, canvas_name, match_result) {
   # Empty table schema
   empty_table <- data.frame(
+    Ref = character(),
     Student = character(),
     UniKey = character(),
     `Due Date` = character(),
     `Extended To` = character(),
     `+Days` = character(),
+    Plan = character(),
     Outcome = character(),
     Status = character(),
-    Plan = character(),
     .approved = logical(),
     .extension_date = as.Date(character()),
     .student_id = character(),
@@ -323,18 +358,24 @@ build_extensions_table <- function(ext_flat, canvas_name, match_result) {
                                    units = "days"))
   plus_days <- ifelse(is.na(days_diff), "TBC", as.character(days_diff))
 
-  # Plan indicator
-  plan_col <- ifelse(filtered$has_plan_extension, "Yes", "")
+  # Plan indicator: show days if available, "Yes" if plan exists but no days, "" if no plan
+  plan_col <- ifelse(
+    filtered$has_plan_extension,
+    ifelse(is.na(filtered$plan_days), "Yes",
+           paste0("+", as.character(filtered$plan_days), "D")),
+    ""
+  )
 
   tbl <- data.frame(
+    Ref = filtered$ticket_id,
     Student = filtered$name,
     UniKey = filtered$sis_login_id,
     `Due Date` = due_dates_formatted,
     `Extended To` = ext_dates_formatted,
     `+Days` = plus_days,
+    Plan = plan_col,
     Outcome = filtered$outcome_type,
     Status = filtered$state,
-    Plan = plan_col,
     .approved = filtered$approved,
     .extension_date = filtered$extension_date,
     .student_id = filtered$student_id,

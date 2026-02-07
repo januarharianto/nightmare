@@ -251,14 +251,15 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
       # Build HTML table
       header <- tags$thead(
         tags$tr(
+          tags$th("Ref"),
           tags$th("Student"),
           tags$th("UniKey"),
           tags$th("Due Date"),
           tags$th("Extended To"),
           tags$th("+Days"),
+          tags$th("Plan"),
           tags$th("Outcome"),
-          tags$th("Status"),
-          tags$th("Plan")
+          tags$th("Status")
         )
       )
 
@@ -271,21 +272,25 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
           "consids-state-approved"
         }
 
-        plan_cell <- if (tbl$Plan[i] == "Yes") {
+        plan_val <- tbl$Plan[i]
+        plan_cell <- if (plan_val == "") {
+          ""
+        } else if (plan_val == "Yes") {
           tags$span(class = "source-tag active", "PLAN")
         } else {
-          ""
+          tags$span(class = "source-tag active", plan_val)
         }
 
         tags$tr(class = row_class,
+          tags$td(tbl$Ref[i]),
           tags$td(tbl$Student[i]),
           tags$td(tbl$UniKey[i]),
           tags$td(tbl$`Due Date`[i]),
           tags$td(tbl$`Extended To`[i]),
           tags$td(tbl$`+Days`[i]),
+          tags$td(plan_cell),
           tags$td(tbl$Outcome[i]),
-          tags$td(tags$span(class = status_class, tbl$Status[i])),
-          tags$td(plan_cell)
+          tags$td(tags$span(class = status_class, tbl$Status[i]))
         )
       })
 
