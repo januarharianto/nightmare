@@ -191,14 +191,15 @@ server <- function(input, output, session) {
             tags$div(
               id = "unit-dropdown",
               class = "unit-dropdown",
-              lapply(folders, function(f) {
+              lapply(sort(folders), function(f) {
+                is_active <- identical(f, active)
                 tags$div(
-                  class = paste("unit-dropdown-item", if (identical(f, active)) "active" else ""),
+                  class = paste("unit-dropdown-item", if (is_active) "active" else ""),
                   onclick = sprintf(
                     "Shiny.setInputValue('unit_dropdown_select', '%s', {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
                     f
                   ),
-                  f
+                  if (is_active) HTML(paste0("&#10003; ", f)) else f
                 )
               })
             )
