@@ -182,26 +182,26 @@ server <- function(input, output, session) {
         tags$div(
           class = "metadata-item unit-selector",
           tags$span(class = "metadata-label", "Unit:"),
-          tags$span(
+          tags$div(
             class = "metadata-value metadata-value-clickable",
             onclick = "document.getElementById('unit-dropdown').classList.toggle('open')",
-            meta$unit,
-            tags$span(class = "unit-dropdown-indicator", HTML("&#9662;"))
-          ),
-          # Inline dropdown
-          tags$div(
-            id = "unit-dropdown",
-            class = "unit-dropdown",
-            lapply(folders, function(f) {
-              tags$div(
-                class = paste("unit-dropdown-item", if (identical(f, active)) "active" else ""),
-                onclick = sprintf(
-                  "Shiny.setInputValue('unit_dropdown_select', '%s', {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
+            tags$span(meta$unit),
+            tags$span(class = "unit-dropdown-indicator", HTML("&#9662;")),
+            # Inline dropdown
+            tags$div(
+              id = "unit-dropdown",
+              class = "unit-dropdown",
+              lapply(folders, function(f) {
+                tags$div(
+                  class = paste("unit-dropdown-item", if (identical(f, active)) "active" else ""),
+                  onclick = sprintf(
+                    "Shiny.setInputValue('unit_dropdown_select', '%s', {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
+                    f
+                  ),
                   f
-                ),
-                f
-              )
-            })
+                )
+              })
+            )
           )
         ),
         tags$div(

@@ -816,30 +816,33 @@ label.search-label {
 }
 
 /* Unit selector dropdown */
-.unit-selector {
-  position: relative;
-}
-
 .metadata-value-clickable {
+  position: relative;
   cursor: pointer;
+  border: 1px solid #CCCCCC;
+  padding: 3px 8px;
+  background-color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .metadata-value-clickable:hover {
-  text-decoration: underline;
+  background-color: #F5F5F5;
+  border-color: #999999;
 }
 
 .metadata-value-clickable .unit-dropdown-indicator {
-  font-size: 10px;
-  color: #AAAAAA;
-  margin-left: 2px;
+  font-size: 12px;
+  color: #666666;
+  line-height: 1;
 }
 
 .unit-dropdown {
   display: none;
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 4px;
+  top: calc(100% + 1px);
+  left: -1px;
   background-color: #FFFFFF;
   border: 1px solid #CCCCCC;
   z-index: 1001;
