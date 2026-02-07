@@ -20,6 +20,45 @@ server <- function(input, output, session) {
   studentData <- reactiveVal(data.frame())
   isLoaded <- reactiveVal(FALSE)
   activeView <- reactiveVal("student")
+  currentUnit <- reactiveVal(NULL)
+
+  # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
+  load_unit_data <- function(unit) {
+    data_dir <- NIGHTMARE_CONFIG$data$data_dir
+    folder_path <- file.path(data_dir, unit)
+
+    tryCatch({
+      imported <- load_folder(folder_path, unit_filter = unit)
+
+      if (is.null(imported$canvas)) {
+        showNotification("No Canvas gradebook found in folder", type = "error")
+        return(FALSE)
+      }
+
+      consolidated <- consolidate_student_data(
+        imported$canvas, imported$consids, imported$plans
+      )
+      consolidated <- apply_risk_scoring(consolidated)
+
+      studentData(consolidated)
+      isLoaded(TRUE)
+      currentUnit(unit)
+      save_last_unit(data_dir, unit)
+
+      showNotification(
+        sprintf("Loaded %d students from %s", nrow(consolidated), unit),
+        type = "message",
+        duration = NIGHTMARE_CONFIG$notifications$duration_message
+      )
+      return(TRUE)
+    }, error = function(e) {
+      showNotification(
+        paste("Error loading data:", e$message),
+        type = "error"
+      )
+      return(FALSE)
+    })
+  }
 
   # Reset app state on every session start
   session$onFlush(function() {
@@ -143,7 +182,12 @@ server <- function(input, output, session) {
         tags$div(
           class = "metadata-item",
           tags$span(class = "metadata-label", "Unit:"),
-          tags$span(class = "metadata-value", meta$unit)
+          tags$span(
+            class = "metadata-value metadata-value-clickable",
+            onclick = "Shiny.setInputValue('switch_unit', Math.random(), {priority: 'event'})",
+            meta$unit,
+            tags$span(class = "unit-dropdown-indicator", HTML("&#9662;"))
+          )
         ),
         tags$div(
           class = "metadata-item",
@@ -168,7 +212,7 @@ server <- function(input, output, session) {
     )
   })
 
-  # Show folder picker on startup
+  # Show folder picker on startup (auto-load last unit if available)
   observe({
     data_dir <- NIGHTMARE_CONFIG$data$data_dir
     folders <- scan_data_folders(data_dir)
@@ -187,52 +231,58 @@ server <- function(input, output, session) {
       return()
     }
 
-    # Pre-select last used unit, or first available
-    selected <- if (!is.null(last_unit) && last_unit %in% folders) last_unit else folders[1]
+    # Auto-load last unit if valid
+    if (!is.null(last_unit) && last_unit %in% folders) {
+      load_unit_data(last_unit)
+      return()
+    }
 
+    # Fallback: show modal to select unit
     showModal(modalDialog(
       title = "Select Unit",
-      selectInput("folder_select", "Unit of Study", choices = folders, selected = selected),
+      selectInput("folder_select", "Unit of Study", choices = folders, selected = folders[1]),
       footer = actionButton("folder_confirm", "Load", class = "btn-dark"),
       easyClose = FALSE
     ))
   })
 
-  # Handle folder selection
+  # Handle folder selection (startup modal)
   observeEvent(input$folder_confirm, {
     removeModal()
+    load_unit_data(input$folder_select)
+  })
+
+  # Handle unit switcher click from metadata bar
+  observeEvent(input$switch_unit, {
     data_dir <- NIGHTMARE_CONFIG$data$data_dir
-    unit <- input$folder_select
-    folder_path <- file.path(data_dir, unit)
+    folders <- scan_data_folders(data_dir)
 
-    tryCatch({
-      imported <- load_folder(folder_path, unit_filter = unit)
+    if (length(folders) == 0) return()
 
-      if (is.null(imported$canvas)) {
-        showNotification("No Canvas gradebook found in folder", type = "error")
-        return()
-      }
+    selected <- currentUnit()
+    if (is.null(selected) || !(selected %in% folders)) selected <- folders[1]
 
-      consolidated <- consolidate_student_data(
-        imported$canvas, imported$consids, imported$plans
-      )
-      consolidated <- apply_risk_scoring(consolidated)
+    showModal(modalDialog(
+      title = "Switch Unit",
+      selectInput("switch_unit_select", "Unit of Study", choices = folders, selected = selected),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("switch_unit_confirm", "Switch", class = "btn-dark")
+      ),
+      easyClose = TRUE
+    ))
+  })
 
-      studentData(consolidated)
-      isLoaded(TRUE)
-      save_last_unit(data_dir, unit)
-
-      showNotification(
-        sprintf("Loaded %d students from %s", nrow(consolidated), unit),
-        type = "message",
-        duration = NIGHTMARE_CONFIG$notifications$duration_message
-      )
-    }, error = function(e) {
-      showNotification(
-        paste("Error loading data:", e$message),
-        type = "error"
-      )
-    })
+  # Handle unit switch confirmation
+  observeEvent(input$switch_unit_confirm, {
+    removeModal()
+    new_unit <- input$switch_unit_select
+    if (!is.null(new_unit) && new_unit != currentUnit()) {
+      # Reset state before loading new data
+      studentData(data.frame())
+      isLoaded(FALSE)
+      load_unit_data(new_unit)
+    }
   })
 
   # Search module

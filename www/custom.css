@@ -957,6 +957,21 @@ label.search-label {
   color: #EEEEEE;
 }
 
+/* Clickable unit switcher in metadata bar */
+.metadata-value-clickable {
+  cursor: pointer;
+}
+
+.metadata-value-clickable:hover {
+  text-decoration: underline;
+}
+
+.metadata-value-clickable .unit-dropdown-indicator {
+  font-size: 10px;
+  color: #AAAAAA;
+  margin-left: 2px;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;
