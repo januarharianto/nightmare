@@ -2,12 +2,9 @@
 
 library(shiny)
 library(bslib)
-library(DT)
 library(shinyjs)
 
 # Source modules
-source("R/modules/dashboard_module.R")
-source("R/modules/student_detail_module.R")
 source("R/modules/search_module.R")
 
 ui <- page_fillable(

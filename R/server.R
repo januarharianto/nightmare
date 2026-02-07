@@ -1,4 +1,4 @@
-# Server Logic for NIGHTMARE - Refactored (Phase 1)
+# Server Logic for NIGHTMARE
 
 source("R/dependencies.R")
 source("R/config.R")
@@ -9,8 +9,6 @@ source("R/utils/import/consolidate.R")
 source("R/utils/import/file_detection.R")
 source("R/utils/risk_scoring.R")
 source("R/utils/ui_helpers.R")
-source("R/modules/dashboard_module.R")
-source("R/modules/student_detail_module.R")
 source("R/modules/search_module.R")
 
 load_nightmare_dependencies()
@@ -103,7 +101,6 @@ server <- function(input, output, session) {
         tags$div(
           class = "left-column",
 
-          # Large search box with dropdown (sticky at top)
           searchModuleUI("search")
         ),
 
