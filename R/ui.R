@@ -32,7 +32,7 @@ ui <- page_fillable(
       ),
       tags$div(
         class = "navbar-subtitle",
-        "New inredibly glitchy hacking tool to manage all records effortlessly | Januar Harianto"
+        HTML("<b>N</b>ew <b>I</b>nredibly <b>G</b>litchy <b>H</b>acking <b>T</b>ool to <b>M</b>anage <b>A</b>ll <b>R</b>ecords <b>E</b>ffortlessly... by Januar Harianto")
       )
     ),
   ),
@@ -51,6 +51,12 @@ ui <- page_fillable(
       `data-view` = "extensions",
       onclick = "Shiny.setInputValue('active_view', 'extensions', {priority: 'event'})",
       "Extensions"
+    ),
+    tags$div(
+      class = "sidebar-item",
+      `data-view` = "assessments",
+      onclick = "Shiny.setInputValue('active_view', 'assessments', {priority: 'event'})",
+      "Assessments"
     )
   ),
 

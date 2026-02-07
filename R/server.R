@@ -8,8 +8,10 @@ source("R/utils/import/file_detection.R")
 source("R/utils/import/folder_loader.R")
 source("R/utils/ui_helpers.R")
 source("R/utils/extensions_data.R")
+source("R/utils/assessments_data.R")
 source("R/modules/search_module.R")
 source("R/modules/extensions_module.R")
+source("R/modules/assessments_module.R")
 
 server <- function(input, output, session) {
 
@@ -143,6 +145,11 @@ server <- function(input, output, session) {
       tags$div(
         class = "main-container",
         extensionsModuleUI("extensions")
+      )
+    } else if (activeView() == "assessments") {
+      tags$div(
+        class = "main-container",
+        assessmentsModuleUI("assessments")
       )
     }
   })
@@ -298,6 +305,9 @@ server <- function(input, output, session) {
 
   # Extensions module
   extensionsModuleServer("extensions", studentData, dataSources, currentUnit)
+
+  # Assessments module
+  assessmentsModuleServer("assessments", studentData)
 
   # Student detail panel
   output$student_detail_panel <- renderUI({
