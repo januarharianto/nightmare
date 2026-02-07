@@ -56,7 +56,6 @@ assessmentsModuleServer <- function(id, studentData) {
       # Create a card for each assessment
       cards <- lapply(names(scores), function(aname) {
         info <- scores[[aname]]
-        grades <- compute_grade_counts(info$scores)
         plot_id <- paste0("plot_", gsub("[^a-zA-Z0-9]", "_", aname))
 
         tags$div(class = "assessment-card detail-section",
@@ -64,30 +63,7 @@ assessmentsModuleServer <- function(id, studentData) {
           tags$div(class = "assessment-card-header detail-section-header",
             paste0(aname, " (", info$max_points, " pts)")
           ),
-          # Grade counts row
-          tags$div(class = "assessment-grade-row extensions-summary",
-            tags$div(
-              tags$span(class = "stat-label", "F"),
-              tags$span(class = "stat-value", grades[["F"]])
-            ),
-            tags$div(
-              tags$span(class = "stat-label", "P"),
-              tags$span(class = "stat-value", grades[["P"]])
-            ),
-            tags$div(
-              tags$span(class = "stat-label", "CR"),
-              tags$span(class = "stat-value", grades[["CR"]])
-            ),
-            tags$div(
-              tags$span(class = "stat-label", "D"),
-              tags$span(class = "stat-value", grades[["D"]])
-            ),
-            tags$div(
-              tags$span(class = "stat-label", "HD"),
-              tags$span(class = "stat-value", grades[["HD"]])
-            )
-          ),
-          # Density plot
+          # Plot with integrated grade labels and counts
           tags$div(class = "assessment-plot",
             plotOutput(ns(plot_id), height = "160px")
           )
