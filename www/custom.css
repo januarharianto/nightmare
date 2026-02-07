@@ -1157,12 +1157,15 @@ label.search-label {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  padding: 12px;
+  overflow: hidden;
 }
 
 .assessments-grid {
   gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  min-height: 0;
 }
 
 .assessment-card-header {
