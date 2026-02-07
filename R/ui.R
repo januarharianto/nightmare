@@ -68,4 +68,13 @@ ui <- page_fillable(
   # Main container with two-column layout or placeholder
   uiOutput("main_content_output"),
 
+  # Footer
+  tags$footer(
+    class = "app-footer",
+    tags$span(paste0("NIGHTMARE v", NIGHTMARE_CONFIG$ui$version)),
+    tags$span(class = "footer-sep", "|"),
+    tags$span(paste0("\u00A9 ", format(Sys.Date(), "%Y"), " ", NIGHTMARE_CONFIG$ui$author)),
+    tags$span(class = "footer-sep", "|"),
+    tags$span("MIT License")
+  )
 )

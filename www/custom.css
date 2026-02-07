@@ -32,7 +32,7 @@ p { margin-bottom: 8px; }
   left: 0;
   top: 60px;
   width: 120px;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 60px - 36px);
   background-color: #FAFAFA;
   border-right: 1px solid #CCCCCC;
   display: flex;
@@ -130,7 +130,7 @@ p { margin-bottom: 8px; }
 .main-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 100px - 36px);
   margin-top: 0;
   margin-left: 120px;
   overflow: hidden;
@@ -584,7 +584,8 @@ table.dataTable.display tbody tr:hover {
 /* Print styles */
 @media print {
   .navbar-nightmare,
-  .filters-section {
+  .filters-section,
+  .app-footer {
     display: none;
   }
 
@@ -1150,6 +1151,29 @@ label.search-label {
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.3px;
+}
+
+/* App footer - fixed bottom bar spanning full width */
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  padding: 0 16px;
+  border-top: 1px solid #CCCCCC;
+  background-color: #FFFFFF;
+  font-size: 11px;
+  color: #AAAAAA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.footer-sep {
+  margin: 0 8px;
+  color: #CCCCCC;
 }
 
 /* Search Results Container (scrollable) */
