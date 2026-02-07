@@ -121,12 +121,12 @@ identify_risk_category <- function(risk_score) {
   return(factor(category, levels = c("Low", "Medium", "High")))
 }
 
-#' Get Human-Readable Risk Factors for a Student
+#' Get Structured Risk Factors for a Student
 #'
 #' @param student_record Single row data.frame with consolidated student data
-#' @return Character vector of risk factor descriptions
+#' @return data.frame with columns: factor, detail, points
 get_risk_factors_for_student <- function(student_record) {
-  factors <- character()
+  rows <- list()
 
   # Extract nested data
   special_consids <- student_record$special_consids[[1]]
@@ -155,13 +155,18 @@ get_risk_factors_for_student <- function(student_record) {
   if (nrow(scored) > 0) {
     avg_pct <- mean(scored$percentage, na.rm = TRUE)
 
-    if (avg_pct < 60) {
-      factors <- c(factors, sprintf(
-        "Average assessment score: %.0f%% (%d completed assessment%s)",
-        avg_pct,
-        nrow(scored),
-        if (nrow(scored) == 1) "" else "s"
-      ))
+    if (avg_pct < 40) {
+      rows <- c(rows, list(list(
+        factor = "Low average", detail = sprintf("%.0f%% across %d assessment%s",
+          avg_pct, nrow(scored), if (nrow(scored) == 1) "" else "s"), points = 40)))
+    } else if (avg_pct < 50) {
+      rows <- c(rows, list(list(
+        factor = "Low average", detail = sprintf("%.0f%% across %d assessment%s",
+          avg_pct, nrow(scored), if (nrow(scored) == 1) "" else "s"), points = 20)))
+    } else if (avg_pct < 60) {
+      rows <- c(rows, list(list(
+        factor = "Below average", detail = sprintf("%.0f%% across %d assessment%s",
+          avg_pct, nrow(scored), if (nrow(scored) == 1) "" else "s"), points = 10)))
     }
   }
 
@@ -170,14 +175,11 @@ get_risk_factors_for_student <- function(student_record) {
     filter(is.na(score), !(name %in% extended_assessments))
 
   if (nrow(missing) > 0) {
-    missing_names <- paste(missing$name, collapse = ", ")
-    factors <- c(factors, sprintf(
-      "%d missing submission%s: %s (no extension%s)",
-      nrow(missing),
-      if (nrow(missing) == 1) "" else "s",
-      missing_names,
-      if (nrow(missing) == 1) "" else "s"
-    ))
+    pts <- if (nrow(missing) >= 2) 30 else 15
+    rows <- c(rows, list(list(
+      factor = "Missing submissions",
+      detail = paste(missing$name, collapse = ", "),
+      points = pts)))
   }
 
   # FACTOR 3: Multiple Special Considerations
@@ -188,15 +190,10 @@ get_risk_factors_for_student <- function(student_record) {
       unique()
 
     if (length(unique_consid_assessments) > 2) {
-      assessment_list <- paste(head(unique_consid_assessments, 3), collapse = ", ")
-      if (length(unique_consid_assessments) > 3) {
-        assessment_list <- paste0(assessment_list, ", ...")
-      }
-      factors <- c(factors, sprintf(
-        "%d assessments with special considerations (%s)",
-        length(unique_consid_assessments),
-        assessment_list
-      ))
+      rows <- c(rows, list(list(
+        factor = "Multiple consids",
+        detail = sprintf("%d assessments affected", length(unique_consid_assessments)),
+        points = 25)))
     }
   }
 
@@ -210,13 +207,16 @@ get_risk_factors_for_student <- function(student_record) {
                                   ignore.case = TRUE), na.rm = TRUE)
 
     if (consid_count >= 4) {
-      factors <- c(factors, sprintf(
-        "%d total special considerations (approaching policy limit)",
-        consid_count
-      ))
+      rows <- c(rows, list(list(
+        factor = "Policy limit",
+        detail = sprintf("%d total considerations", consid_count),
+        points = 20)))
     }
     if (has_replacement) {
-      factors <- c(factors, "Approved for replacement exam")
+      rows <- c(rows, list(list(
+        factor = "Replacement exam",
+        detail = "Approved",
+        points = 10)))
     }
   }
 
@@ -225,19 +225,23 @@ get_risk_factors_for_student <- function(student_record) {
     filter(score == 0, max_points > 0)
 
   if (nrow(zeros) > 0) {
-    for (i in 1:nrow(zeros)) {
-      factors <- c(factors, sprintf(
-        "Zero score on completed assessment: %s",
-        zeros$name[i]
-      ))
-    }
+    rows <- c(rows, list(list(
+      factor = "Zero scores",
+      detail = paste(zeros$name, collapse = ", "),
+      points = 20)))
   }
 
-  if (length(factors) == 0) {
-    factors <- "No risk factors identified"
+  if (length(rows) == 0) {
+    return(data.frame(factor = character(), detail = character(),
+                      points = integer(), stringsAsFactors = FALSE))
   }
 
-  return(factors)
+  data.frame(
+    factor = sapply(rows, `[[`, "factor"),
+    detail = sapply(rows, `[[`, "detail"),
+    points = sapply(rows, `[[`, "points"),
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Apply Risk Scoring to All Students

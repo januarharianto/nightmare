@@ -27,27 +27,38 @@ build_student_detail_view <- function(student) {
           class = "detail-section-content",
           tags$div(
             class = "risk-score-display",
-            tags$div(
-              tags$span("Risk Score: "),
-              tags$span(class = "score", sprintf("%.0f / 100", student$risk_score))
-            ),
             tags$span(
               class = paste0("risk-badge ", tolower(student$risk_category)),
               student$risk_category
-            )
+            ),
+            tags$span(class = "score", sprintf("%.0f", student$risk_score)),
+            tags$span(class = "score-label", "/ 100")
           ),
 
-          # Risk factors
-          if (length(student$risk_factors[[1]]) > 0) {
-            tagList(
-              tags$h5(style = "margin-bottom: 8px;", "Risk Factors"),
-              tags$ul(
-                style = "margin-left: 20px;",
-                lapply(student$risk_factors[[1]], function(factor) {
-                  tags$li(factor)
-                })
+          # Risk factors table
+          {
+            factors_df <- student$risk_factors[[1]]
+            if (nrow(factors_df) > 0) {
+              tags$table(
+                class = "detail-table risk-factors-table",
+                tags$thead(tags$tr(
+                  tags$th("Factor"),
+                  tags$th("Detail"),
+                  tags$th("Pts")
+                )),
+                tags$tbody(
+                  lapply(1:nrow(factors_df), function(i) {
+                    f <- factors_df[i, ]
+                    tags$tr(
+                      tags$td(class = "risk-factor-name", f$factor),
+                      tags$td(f$detail),
+                      tags$td(class = "risk-factor-pts",
+                              sprintf("+%d", f$points))
+                    )
+                  })
+                )
               )
-            )
+            }
           }
         )
       ),
