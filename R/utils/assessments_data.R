@@ -108,7 +108,7 @@ render_histogram_plot <- function(percentages) {
   h <- hist(percentages, breaks = breaks, plot = FALSE)
   plot(h, main = "", xlab = "", ylab = "", axes = FALSE,
        xlim = c(0, 100), col = "#F5F5F5", border = "#000000",
-       freq = TRUE)
+       freq = FALSE)
 
   # Grade boundary lines
   boundaries <- c(50, 65, 75, 85)
@@ -120,7 +120,7 @@ render_histogram_plot <- function(percentages) {
        cex.axis = 0.8, padj = -1)
 
   # Grade labels at top
-  y_top <- max(h$counts) * 0.95
+  y_top <- max(h$density) * 0.95
   label_pos <- c(25, 57.5, 70, 80, 92.5)
   label_txt <- c("F", "P", "CR", "D", "HD")
   text(label_pos, rep(y_top, 5), label_txt, col = "#AAAAAA",
