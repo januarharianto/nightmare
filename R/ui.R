@@ -57,6 +57,12 @@ ui <- page_fillable(
       `data-view` = "assessments",
       onclick = "Shiny.setInputValue('active_view', 'assessments', {priority: 'event'})",
       "Assessments"
+    ),
+    tags$div(
+      class = "sidebar-item",
+      `data-view` = "notes",
+      onclick = "Shiny.setInputValue('active_view', 'notes', {priority: 'event'})",
+      "Notes"
     )
   ),
 

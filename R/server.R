@@ -9,9 +9,11 @@ source("R/utils/import/folder_loader.R")
 source("R/utils/ui_helpers.R")
 source("R/utils/extensions_data.R")
 source("R/utils/assessments_data.R")
+source("R/utils/notes_data.R")
 source("R/modules/search_module.R")
 source("R/modules/extensions_module.R")
 source("R/modules/assessments_module.R")
+source("R/modules/notes_module.R")
 
 server <- function(input, output, session) {
 
@@ -21,6 +23,7 @@ server <- function(input, output, session) {
   activeView <- reactiveVal("student")
   currentUnit <- reactiveVal(NULL)
   dataSources <- reactiveVal(list(canvas = FALSE, consids = FALSE, plans = FALSE))
+  studentNotes <- reactiveVal(list())
 
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
@@ -48,6 +51,7 @@ server <- function(input, output, session) {
       studentData(consolidated)
       isLoaded(TRUE)
       currentUnit(unit)
+      studentNotes(load_student_notes(data_dir, unit))
       save_last_unit(data_dir, unit)
 
       return(TRUE)
@@ -150,6 +154,11 @@ server <- function(input, output, session) {
       tags$div(
         class = "main-container",
         assessmentsModuleUI("assessments")
+      )
+    } else if (activeView() == "notes") {
+      tags$div(
+        class = "main-container",
+        notesModuleUI("notes")
       )
     }
   })
@@ -309,6 +318,120 @@ server <- function(input, output, session) {
   # Assessments module
   assessmentsModuleServer("assessments", studentData)
 
+  # Notes module
+  notesModuleServer("notes", studentData, studentNotes, currentUnit)
+
+  # Navigate to student from notes feed
+  observeEvent(input$navigate_to_student, {
+    selectedStudentId(input$navigate_to_student)
+  })
+
+  # Save a new note
+  observeEvent(input$save_note, {
+    req(input$save_note)
+    info <- input$save_note
+    unit <- currentUnit()
+    if (is.null(unit)) return()
+
+    updated <- add_note(studentNotes(), info$student_id, info$category, info$text)
+    studentNotes(updated)
+    save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
+  })
+
+  # Delete a note
+  observeEvent(input$delete_note, {
+    req(input$delete_note)
+    info <- input$delete_note
+    unit <- currentUnit()
+    if (is.null(unit)) return()
+
+    updated <- delete_note(studentNotes(), info$student_id, info$note_id)
+    studentNotes(updated)
+    save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
+  })
+
+  # Edit a note — show modal with pre-filled values
+  observeEvent(input$edit_note, {
+    req(input$edit_note)
+    info <- input$edit_note
+    notes <- studentNotes()
+    sid <- as.character(info$student_id)
+    note <- NULL
+    if (!is.null(notes[[sid]])) {
+      for (n in notes[[sid]]) {
+        if (identical(n$id, info$note_id)) { note <- n; break }
+      }
+    }
+    if (is.null(note)) return()
+
+    # Build tag buttons for modal
+    modal_tag_buttons <- lapply(names(NOTE_TAGS), function(tag_key) {
+      tag_info <- NOTE_TAGS[[tag_key]]
+      sel_class <- if (identical(tag_key, note$category)) " selected" else ""
+      tags$button(
+        class = paste0("notes-tag-btn", sel_class),
+        `data-tag` = tag_key,
+        `data-description` = tag_info$description,
+        type = "button",
+        onclick = sprintf(
+          "document.querySelectorAll('#edit-note-modal .notes-tag-btn').forEach(function(b){b.classList.remove('selected')});this.classList.add('selected');document.querySelector('#edit-note-modal .notes-tag-description').textContent=this.dataset.description;"
+        ),
+        tag_info$label
+      )
+    })
+
+    showModal(modalDialog(
+      id = "edit-note-modal",
+      title = "Edit Note",
+      tags$div(
+        id = "edit-note-modal",
+        tags$div(class = "notes-tag-selector", modal_tag_buttons),
+        tags$div(class = "notes-tag-description",
+          if (!is.null(NOTE_TAGS[[note$category]])) NOTE_TAGS[[note$category]]$description else ""
+        ),
+        tags$textarea(
+          id = "edit_note_text",
+          class = "notes-textarea",
+          rows = "4",
+          style = "width:100%; margin-top:8px;",
+          note$text
+        ),
+        tags$input(type = "hidden", id = "edit_note_sid", value = sid),
+        tags$input(type = "hidden", id = "edit_note_id", value = note$id)
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_edit_note", "Save", class = "btn-dark")
+      ),
+      easyClose = TRUE
+    ))
+  })
+
+  # Confirm edit note
+  observeEvent(input$confirm_edit_note, {
+    # Read values from modal via JS
+    shinyjs::runjs("
+      var sel = document.querySelector('#edit-note-modal .notes-tag-btn.selected');
+      var cat = sel ? sel.dataset.tag : 'general';
+      var text = document.getElementById('edit_note_text').value;
+      var sid = document.getElementById('edit_note_sid').value;
+      var nid = document.getElementById('edit_note_id').value;
+      Shiny.setInputValue('confirm_edit_note_data', {student_id: sid, note_id: nid, category: cat, text: text}, {priority: 'event'});
+    ")
+  })
+
+  observeEvent(input$confirm_edit_note_data, {
+    req(input$confirm_edit_note_data)
+    info <- input$confirm_edit_note_data
+    unit <- currentUnit()
+    if (is.null(unit)) return()
+
+    updated <- edit_note(studentNotes(), info$student_id, info$note_id, info$category, info$text)
+    studentNotes(updated)
+    save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
+    removeModal()
+  })
+
   # Student detail panel
   output$student_detail_panel <- renderUI({
     # Show blank until data is loaded
@@ -330,7 +453,9 @@ server <- function(input, output, session) {
     }
 
     student <- student[1, ]
-    build_student_detail_view(student, studentData())
+    sid <- as.character(student$student_id)
+    notes_for_student <- studentNotes()[[sid]] %||% list()
+    build_student_detail_view(student, studentData(), notes_for_student)
   })
 
 }

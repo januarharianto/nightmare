@@ -1259,3 +1259,307 @@ label.search-label {
   background-color: #999999;
 }
 
+/* ============================================
+   NOTES CARD (Student Detail View)
+   ============================================ */
+
+.notes-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.notes-form {
+  padding-bottom: 8px;
+}
+
+.notes-tag-selector {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.notes-tag-btn {
+  border: 1px solid #CCCCCC;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #666666;
+  font-family: inherit;
+}
+
+.notes-tag-btn:hover {
+  background: #F5F5F5;
+  color: #333333;
+}
+
+.notes-tag-btn.selected {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.notes-tag-description {
+  font-size: 11px;
+  font-style: italic;
+  color: #AAAAAA;
+  min-height: 16px;
+  margin-bottom: 6px;
+}
+
+.notes-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.notes-textarea {
+  flex: 1;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid #CCCCCC;
+  padding: 8px;
+  resize: vertical;
+}
+
+.notes-textarea:focus {
+  outline: 2px solid #000000;
+}
+
+.notes-save-btn {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.notes-save-btn:hover {
+  background-color: #333333;
+}
+
+.notes-list {
+  border-top: 1px solid #EEEEEE;
+}
+
+.note-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #EEEEEE;
+}
+
+.note-item:last-child {
+  border-bottom: none;
+}
+
+.note-item-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.note-item-timestamp {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #AAAAAA;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.note-item-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.note-action-btn {
+  border: 1px solid #CCCCCC;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #666666;
+  font-family: inherit;
+}
+
+.note-action-btn:hover {
+  background: #F5F5F5;
+  color: #333333;
+}
+
+.note-delete-btn:hover {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.note-item-text {
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #000000;
+  line-height: 1.4;
+}
+
+/* Notes tag badges (inline) */
+.notes-tag-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid #CCCCCC;
+  background: #F5F5F5;
+  color: #666666;
+}
+
+.notes-tag-follow-up {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.notes-tag-at-risk {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.notes-tag-contacted {
+  background: #F5F5F5;
+  color: #000000;
+  border-color: #CCCCCC;
+}
+
+.notes-tag-resolved {
+  background: #FFFFFF;
+  color: #AAAAAA;
+  border-color: #CCCCCC;
+}
+
+.notes-tag-general {
+  background: #F5F5F5;
+  color: #666666;
+  border-color: #CCCCCC;
+}
+
+/* ============================================
+   NOTES VIEW (Sidebar Page)
+   ============================================ */
+
+.notes-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.notes-toolbar {
+  padding: 8px 12px;
+  border-bottom: 1px solid #CCCCCC;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notes-filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #AAAAAA;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.notes-filter-tags {
+  display: inline-flex;
+}
+
+.notes-filter-btn {
+  border: 1px solid #CCCCCC;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #666666;
+  font-family: inherit;
+}
+
+.notes-filter-btn + .notes-filter-btn {
+  border-left: none;
+}
+
+.notes-filter-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.notes-filter-btn.active + .notes-filter-btn {
+  border-left: 1px solid #CCCCCC;
+}
+
+.notes-feed-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.notes-feed-item {
+  padding: 12px;
+  border-bottom: 1px solid #EEEEEE;
+  cursor: pointer;
+}
+
+.notes-feed-item:hover {
+  background-color: #F5F5F5;
+}
+
+.notes-feed-item-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.notes-feed-student {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.notes-feed-timestamp {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #AAAAAA;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-left: auto;
+}
+
+.notes-feed-text {
+  font-size: 12px;
+  color: #666666;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+

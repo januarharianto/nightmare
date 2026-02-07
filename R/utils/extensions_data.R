@@ -1,6 +1,29 @@
 # Extensions data utilities for NIGHTMARE
 # Pure data-processing functions — no Shiny reactives or side effects.
 
+# Ensure .nightmare/ directory exists inside a unit's data folder.
+# Returns the path to the .nightmare/ directory.
+ensure_nightmare_dir <- function(data_dir, unit) {
+  nightmare_dir <- file.path(data_dir, unit, ".nightmare")
+  if (!dir.exists(nightmare_dir)) dir.create(nightmare_dir, recursive = TRUE)
+  nightmare_dir
+}
+
+# Migrate .match_overrides.json from old location to .nightmare/ subfolder.
+# Only moves if old file exists and new file does not.
+migrate_match_overrides <- function(data_dir, unit) {
+  old_path <- file.path(data_dir, unit, ".match_overrides.json")
+  if (!file.exists(old_path)) return(invisible(NULL))
+
+  nightmare_dir <- ensure_nightmare_dir(data_dir, unit)
+  new_path <- file.path(nightmare_dir, "match_overrides.json")
+  if (!file.exists(new_path)) {
+    file.copy(old_path, new_path)
+    file.remove(old_path)
+  }
+  invisible(new_path)
+}
+
 # Parse a plan extension value string into a number of days.
 # Handles formats like "Up to 1 week", "7 days", "2 weeks", bare numbers.
 # Returns NA if the value can't be parsed (e.g. "yes", "x", or unrecognised text).
@@ -215,7 +238,7 @@ apply_match_overrides <- function(match_result, overrides) {
   list(matched = matched, unmatched = unmatched, ambiguous = ambiguous)
 }
 
-# Save match overrides to a JSON dotfile in the unit's data folder.
+# Save match overrides to .nightmare/match_overrides.json in the unit's data folder.
 # overrides: named list of spec_cons_name -> canvas_name (NA for skipped).
 save_match_overrides <- function(data_dir, unit, overrides) {
   folder <- file.path(data_dir, unit)
@@ -230,16 +253,19 @@ save_match_overrides <- function(data_dir, unit, overrides) {
     overrides = overrides_json
   )
 
-  path <- file.path(folder, ".match_overrides.json")
+  path <- file.path(ensure_nightmare_dir(data_dir, unit), "match_overrides.json")
   writeLines(toJSON(payload, auto_unbox = TRUE, null = "null", pretty = TRUE), path)
   invisible(path)
 }
 
-# Load match overrides from a JSON dotfile.
+# Load match overrides from .nightmare/match_overrides.json.
+# Migrates from old location if needed.
 # Returns a named list (spec_cons_name -> canvas_name, or NA for skipped).
 # Returns empty list if the file is missing or corrupt.
 load_match_overrides <- function(data_dir, unit) {
-  path <- file.path(data_dir, unit, ".match_overrides.json")
+  migrate_match_overrides(data_dir, unit)
+
+  path <- file.path(data_dir, unit, ".nightmare", "match_overrides.json")
   if (!file.exists(path)) return(list())
 
   tryCatch({
