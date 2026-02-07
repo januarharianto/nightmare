@@ -226,20 +226,20 @@ server <- function(input, output, session) {
         # Data source indicators
         tags$div(
           class = "metadata-item",
-          tags$span(class = "metadata-label", "Sources:"),
+          tags$span(class = "metadata-label", "Data Sources:"),
           tags$div(
             class = "source-tags",
             tags$span(
               class = paste("source-tag", if (meta$sources$canvas) "active" else "inactive"),
-              "Grades"
+              if (meta$sources$canvas) "Canvas Gradebook" else "Canvas Gradebook"
             ),
             tags$span(
               class = paste("source-tag", if (meta$sources$consids) "active" else "inactive"),
-              "Consids"
+              if (meta$sources$consids) "Special Considerations" else "Special Considerations"
             ),
             tags$span(
               class = paste("source-tag", if (meta$sources$plans) "active" else "inactive"),
-              "Plans"
+              if (meta$sources$plans) "Academic Plans" else "Academic Plans"
             )
           )
         )
