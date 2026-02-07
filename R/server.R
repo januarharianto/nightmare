@@ -136,19 +136,8 @@ server <- function(input, output, session) {
       # Student view with search and detail panels
       tags$div(
         class = "main-container",
-
-        # Left Column (40%) - Search-focused
-        tags$div(
-          class = "left-column",
-
-          searchModuleUI("search")
-        ),
-
-        # Right Column (60%)
-        tags$div(
-          class = "right-column",
-          uiOutput("student_detail_panel")
-        )
+        searchModuleUI("search"),
+        tags$div(class = "student-content", uiOutput("student_detail_panel"))
       )
     } else if (activeView() == "extensions") {
       # Extensions view (placeholder)
