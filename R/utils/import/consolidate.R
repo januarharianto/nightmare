@@ -2,8 +2,6 @@
 #'
 #' Merge student data from multiple sources
 
-library(dplyr)
-
 #' Detect unit code from Canvas data
 #'
 #' @param canvas_data data.frame from import_canvas_grades
@@ -196,10 +194,6 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
         plan_adjustments
       ),
 
-      # Metadata
-      total_approved_extension_days = 0L,  # Will be calculated by extensions.R
-      last_updated = Sys.time(),
-      data_sources = list(c("canvas", "special_consids", "plans"))
     )
 
   message(sprintf("Consolidated data for %d students", nrow(consolidated)))

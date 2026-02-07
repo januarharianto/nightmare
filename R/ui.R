@@ -1,12 +1,5 @@
 # UI Definition for NIGHTMARE - Clinical Minimal Design
 
-library(shiny)
-library(bslib)
-library(shinyjs)
-
-# Source modules
-source("R/modules/search_module.R")
-
 ui <- page_fillable(
   theme = bs_theme(
     version = 5,

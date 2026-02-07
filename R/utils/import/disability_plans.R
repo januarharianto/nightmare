@@ -2,8 +2,6 @@
 #'
 #' Import and process disability plans Excel files
 
-library(readxl)
-
 #' Import Disability Plans
 #'
 #' @param file_path Path to disability plans Excel file

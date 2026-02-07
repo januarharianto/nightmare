@@ -2,9 +2,6 @@
 #'
 #' Detect data source type based on column signatures
 
-library(readr)
-library(readxl)
-
 #' Detect file type based on column signatures
 #'
 #' @param file_path Path to CSV or Excel file

@@ -2,9 +2,6 @@
 #'
 #' Import and process special considerations CSV files
 
-library(dplyr)
-library(readr)
-
 #' Import Special Considerations
 #'
 #' @param file_path Path to special considerations CSV file

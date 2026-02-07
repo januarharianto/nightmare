@@ -1,7 +1,5 @@
 # Server Logic for NIGHTMARE
 
-source("R/dependencies.R")
-source("R/config.R")
 source("R/utils/import/canvas.R")
 source("R/utils/import/special_consids.R")
 source("R/utils/import/disability_plans.R")
@@ -10,8 +8,6 @@ source("R/utils/import/file_detection.R")
 source("R/utils/import/folder_loader.R")
 source("R/utils/ui_helpers.R")
 source("R/modules/search_module.R")
-
-load_nightmare_dependencies()
 
 server <- function(input, output, session) {
 

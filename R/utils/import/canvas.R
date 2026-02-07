@@ -2,10 +2,6 @@
 #'
 #' Import and process Canvas gradebook CSV exports
 
-library(dplyr)
-library(readr)
-library(stringr)
-
 #' Import Canvas Gradebook
 #'
 #' @param file_path Path to Canvas gradebook CSV file
@@ -121,16 +117,6 @@ import_canvas_grades <- function(file_path) {
     })
 
     do.call(rbind, assignments_list)
-  })
-
-  # Category scores (placeholder - would need additional parsing if available)
-  students$category_scores <- lapply(1:nrow(students), function(i) {
-    data.frame(
-      category_name = character(),
-      current_score = numeric(),
-      final_score = numeric(),
-      stringsAsFactors = FALSE
-    )
   })
 
   # Extract academic year from test student row (before filtering)
