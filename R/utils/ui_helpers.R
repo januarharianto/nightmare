@@ -40,9 +40,9 @@ build_student_detail_view <- function(student) {
               has_score <- completed[!is.na(completed$score), ]
               n_completed <- nrow(has_score)
               n_ongoing <- sum(assignments$is_ongoing)
-              avg_pct <- if (n_completed > 0) round(mean(has_score$percentage, na.rm = TRUE), 0) else NA
-              n_at_risk <- sum(!is.na(completed$score) & completed$percentage < 50) +
+              n_failing <- sum(!is.na(completed$score) & completed$percentage < 50) +
                 sum(is.na(completed$score))
+              n_spec_cons <- nrow(student$special_consids[[1]])
 
               all_ongoing <- n_total == n_ongoing
 
@@ -57,16 +57,14 @@ build_student_detail_view <- function(student) {
                     )
                   ),
                   tags$div(
-                    tags$div(class = "stat-label", "Average"),
+                    tags$div(class = "stat-label", "Failing"),
                     tags$div(class = "stat-value",
-                      if (all_ongoing || is.na(avg_pct)) "--" else sprintf("%d%%", avg_pct)
+                      if (all_ongoing) "--" else as.character(n_failing)
                     )
                   ),
                   tags$div(
-                    tags$div(class = "stat-label", "At Risk"),
-                    tags$div(class = "stat-value",
-                      if (all_ongoing) "--" else as.character(n_at_risk)
-                    )
+                    tags$div(class = "stat-label", "Spec Cons"),
+                    tags$div(class = "stat-value", as.character(n_spec_cons))
                   )
                 ),
 
@@ -187,33 +185,39 @@ build_student_detail_view <- function(student) {
                 tags$div(
                   class = "consids-summary",
                   tags$div(
-                    tags$div(class = "stat-label", "Approved"),
-                    tags$div(class = "stat-value", as.character(n_approved))
-                  ),
-                  if (n_pending > 0) {
+                    class = "consids-summary-primary",
                     tags$div(
-                      tags$div(class = "stat-label", "Pending"),
-                      tags$div(class = "stat-value consids-pending-value",
-                               as.character(n_pending))
-                    )
-                  },
+                      tags$div(class = "stat-label", "Approved"),
+                      tags$div(class = "stat-value", as.character(n_approved))
+                    ),
+                    if (n_pending > 0) {
+                      tags$div(
+                        tags$div(class = "stat-label", "Pending"),
+                        tags$div(class = "stat-value consids-pending-value",
+                                 as.character(n_pending))
+                      )
+                    }
+                  ),
                   tags$div(
-                    tags$div(class = "stat-label", "Extensions"),
-                    tags$div(class = "stat-value", as.character(nrow(extensions)))
-                  ),
-                  if (nrow(replacements) > 0) {
+                    class = "consids-summary-breakdown",
                     tags$div(
-                      tags$div(class = "stat-label", "Repl. Exams"),
-                      tags$div(class = "stat-value consids-alert",
-                               as.character(nrow(replacements)))
-                    )
-                  },
-                  if (nrow(mark_adj) > 0) {
-                    tags$div(
-                      tags$div(class = "stat-label", "Mark Adj."),
-                      tags$div(class = "stat-value", as.character(nrow(mark_adj)))
-                    )
-                  }
+                      tags$div(class = "stat-label", "Extensions"),
+                      tags$div(class = "stat-value", as.character(nrow(extensions)))
+                    ),
+                    if (nrow(replacements) > 0 || nrow(pending_no_outcome) > 0) {
+                      tags$div(
+                        tags$div(class = "stat-label", "Repl. Exams"),
+                        tags$div(class = "stat-value",
+                                 as.character(nrow(replacements) + nrow(pending_no_outcome)))
+                      )
+                    },
+                    if (nrow(mark_adj) > 0) {
+                      tags$div(
+                        tags$div(class = "stat-label", "Mark Adj."),
+                        tags$div(class = "stat-value", as.character(nrow(mark_adj)))
+                      )
+                    }
+                  )
                 ),
 
                 # Replacement Exams group (shown first — most actionable)

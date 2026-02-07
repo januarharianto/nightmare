@@ -913,13 +913,17 @@ label.search-label {
   color: #000000;
 }
 
-.consids-summary .stat-value.consids-alert {
-  color: #000000;
-  background-color: #000000;
-  color: #FFFFFF;
-  padding: 1px 6px;
-  font-size: 12px;
+.consids-summary-primary,
+.consids-summary-breakdown {
+  display: flex;
+  gap: 16px;
 }
+
+.consids-summary-breakdown {
+  border-left: 1px solid #CCC;
+  padding-left: 16px;
+}
+
 
 .consids-group-header {
   font-size: 11px;
