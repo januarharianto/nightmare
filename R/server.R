@@ -8,7 +8,6 @@ source("R/utils/import/disability_plans.R")
 source("R/utils/import/consolidate.R")
 source("R/utils/import/file_detection.R")
 source("R/utils/import/folder_loader.R")
-source("R/utils/risk_scoring.R")
 source("R/utils/ui_helpers.R")
 source("R/modules/search_module.R")
 
@@ -45,7 +44,6 @@ server <- function(input, output, session) {
       consolidated <- consolidate_student_data(
         imported$canvas, imported$consids, imported$plans
       )
-      consolidated <- apply_risk_scoring(consolidated)
 
       studentData(consolidated)
       isLoaded(TRUE)

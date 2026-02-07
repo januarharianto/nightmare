@@ -19,50 +19,6 @@ build_student_detail_view <- function(student) {
     tags$div(
       class = "detail-cards-grid",
 
-      # Risk Assessment Section (first — most actionable)
-      tags$div(
-        class = "detail-section",
-        tags$div(class = "detail-section-header", "Risk Assessment"),
-        tags$div(
-          class = "detail-section-content",
-          tags$div(
-            class = "risk-score-display",
-            tags$span(
-              class = paste0("risk-badge ", tolower(student$risk_category)),
-              student$risk_category
-            ),
-            tags$span(class = "score", sprintf("%.0f", student$risk_score)),
-            tags$span(class = "score-label", "/ 100")
-          ),
-
-          # Risk factors table
-          {
-            factors_df <- student$risk_factors[[1]]
-            if (nrow(factors_df) > 0) {
-              tags$table(
-                class = "detail-table risk-factors-table",
-                tags$thead(tags$tr(
-                  tags$th("Factor"),
-                  tags$th("Detail"),
-                  tags$th("Pts")
-                )),
-                tags$tbody(
-                  lapply(1:nrow(factors_df), function(i) {
-                    f <- factors_df[i, ]
-                    tags$tr(
-                      tags$td(class = "risk-factor-name", f$factor),
-                      tags$td(f$detail),
-                      tags$td(class = "risk-factor-pts",
-                              sprintf("+%d", f$points))
-                    )
-                  })
-                )
-              )
-            }
-          }
-        )
-      ),
-
       # Assessments Section
       tags$div(
         class = "detail-section",
