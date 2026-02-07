@@ -9,21 +9,11 @@ NIGHTMARE_CONFIG <- list(
   ),
 
   data = list(
-    sample_data_dir = "_sample-data",
-    canvas_file = "canvas gradebook.csv",
-    consids_file = "special considerations.csv",
-    plans_file = "plans.xlsx",
-    default_unit = "BIOL2022"
-  ),
-
-  backup = list(
-    dir = "backups",
-    auto_interval_minutes = 5
+    data_dir = "data"
   ),
 
   notifications = list(
-    duration_message = 5,
-    duration_undo_redo = 3
+    duration_message = 5
   ),
 
   risk_scoring = list(
