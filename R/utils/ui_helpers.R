@@ -315,7 +315,9 @@ build_student_detail_view <- function(student) {
                             !is.na(e$closing_date) &&
                             as.Date(e$extension_date) > as.Date(e$closing_date)
                           warning_tag <- if (past_closing) {
-                            tags$span(class = "consids-past-closing", "Past closing")
+                            state_label <- if (e$approved) "Approved" else "Pending"
+                            tags$span(class = "consids-past-closing",
+                                      paste("Past closing \u2014", state_label))
                           } else {
                             ""
                           }
