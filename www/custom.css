@@ -1542,3 +1542,284 @@ label.search-label {
   line-height: 1.4;
 }
 
+/* ============================================
+   EXAMS VIEW
+   ============================================ */
+
+.exams-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.exams-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #AAAAAA;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Wizard Card */
+.exams-wizard-card {
+  max-width: 520px;
+  margin: 24px auto;
+  border: 1px solid #CCCCCC;
+  background: #FFFFFF;
+}
+
+.exams-wizard-card .shiny-input-container {
+  margin-bottom: 0;
+}
+
+.exams-wizard-card .shiny-input-container > label {
+  display: none;
+}
+
+.exams-wizard-card-body {
+  padding: 20px 24px;
+  font-size: 13px;
+}
+
+.exams-wizard-card-footer {
+  padding: 12px 24px;
+  border-top: 1px solid #EEEEEE;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Step Indicator */
+.exams-step-indicator {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px 24px 12px;
+  gap: 0;
+}
+
+.exams-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.exams-step-dot {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #CCCCCC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #CCCCCC;
+  background: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.exams-step-dot.active {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.exams-step-dot.completed {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.exams-step-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #AAAAAA;
+}
+
+.exams-step-item:has(.exams-step-dot.active) .exams-step-label,
+.exams-step-item:has(.exams-step-dot.completed) .exams-step-label {
+  color: #000000;
+}
+
+.exams-step-connector {
+  width: 32px;
+  height: 1px;
+  background: #CCCCCC;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+
+.exams-step-connector.completed {
+  background: #000000;
+}
+
+/* Upload Zone */
+.exams-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.exams-upload-zone .shiny-input-container {
+  width: 100% !important;
+}
+
+.exams-upload-prompt {
+  font-size: 14px;
+  color: #666666;
+  margin-bottom: 4px;
+}
+
+.exams-upload-formats {
+  font-size: 11px;
+  color: #AAAAAA;
+}
+
+/* Detected Source Badge */
+.exams-detected-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #F5F5F5;
+  border: 1px solid #CCCCCC;
+  color: #000000;
+  margin-top: 4px;
+}
+
+/* Wizard Buttons */
+.exams-wizard-btn {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.exams-wizard-btn:hover {
+  background-color: #333333;
+}
+
+.exams-wizard-btn-secondary {
+  background-color: #FFFFFF;
+  color: #000000;
+  border: 1px solid #CCCCCC;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.exams-wizard-btn-secondary:hover {
+  background-color: #F5F5F5;
+}
+
+/* Conflict Scroll */
+.exams-conflict-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Match Stats */
+.exams-match-stats {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #EEEEEE;
+  font-size: 12px;
+}
+
+.exams-match-stats .stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #AAAAAA;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.exams-match-stats .stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.exams-summary-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Conflict resolution toggle buttons */
+.conflict-btn {
+  border: 1px solid #CCCCCC;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #666666;
+  font-family: inherit;
+}
+
+.conflict-btn + .conflict-btn {
+  border-left: none;
+}
+
+.conflict-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.conflict-btn.active + .conflict-btn {
+  border-left: 1px solid #CCCCCC;
+}
+
+/* Special consideration badge in conflict table */
+.exam-speccon-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+}
+
+/* Exam sitting selector in student detail */
+.exam-sitting-select {
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid #CCCCCC;
+  padding: 2px 4px;
+  background: #FFFFFF;
+}
+
+.exam-sitting-select:focus {
+  outline: 2px solid #000000;
+}
+

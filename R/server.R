@@ -14,6 +14,9 @@ source("R/modules/search_module.R")
 source("R/modules/extensions_module.R")
 source("R/modules/assessments_module.R")
 source("R/modules/notes_module.R")
+source("R/utils/exam_data.R")
+source("R/utils/import/exam_import.R")
+source("R/modules/exams_module.R")
 
 server <- function(input, output, session) {
 
@@ -24,6 +27,7 @@ server <- function(input, output, session) {
   currentUnit <- reactiveVal(NULL)
   dataSources <- reactiveVal(list(canvas = FALSE, consids = FALSE, plans = FALSE))
   studentNotes <- reactiveVal(list())
+  examData <- reactiveVal(list(version = 1L, saved_at = NULL, assessments = list()))
 
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
@@ -52,6 +56,7 @@ server <- function(input, output, session) {
       isLoaded(TRUE)
       currentUnit(unit)
       studentNotes(load_student_notes(data_dir, unit))
+      examData(load_exam_data(data_dir, unit))
       save_last_unit(data_dir, unit)
 
       return(TRUE)
@@ -159,6 +164,11 @@ server <- function(input, output, session) {
       tags$div(
         class = "main-container",
         notesModuleUI("notes")
+      )
+    } else if (activeView() == "exams") {
+      tags$div(
+        class = "main-container",
+        examsModuleUI("exams")
       )
     }
   })
@@ -322,6 +332,9 @@ server <- function(input, output, session) {
   # Notes module
   notesModuleServer("notes", studentData, studentNotes, currentUnit)
 
+  # Exams module
+  examsModuleServer("exams", studentData, examData, currentUnit, dataSources)
+
   # Navigate to student from notes feed
   observeEvent(input$navigate_to_student, {
     selectedStudentId(input$navigate_to_student)
@@ -421,6 +434,21 @@ server <- function(input, output, session) {
     ")
   })
 
+  # Handle exam sitting change from student detail view
+  observeEvent(input$exam_sitting_change, {
+    req(input$exam_sitting_change)
+    info <- input$exam_sitting_change
+    unit <- currentUnit()
+    if (is.null(unit)) return()
+
+    exam <- examData()
+    resolutions <- list()
+    resolutions[[info$student_id]] <- as.integer(info$sitting_id)
+    exam <- resolve_conflicts(exam, info$assessment, resolutions)
+    examData(exam)
+    save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
+  })
+
   observeEvent(input$confirm_edit_note_data, {
     req(input$confirm_edit_note_data)
     info <- input$confirm_edit_note_data
@@ -456,7 +484,7 @@ server <- function(input, output, session) {
     student <- student[1, ]
     sid <- as.character(student$student_id)
     notes_for_student <- studentNotes()[[sid]] %||% list()
-    build_student_detail_view(student, studentData(), notes_for_student)
+    build_student_detail_view(student, studentData(), notes_for_student, examData())
   })
 
 }
