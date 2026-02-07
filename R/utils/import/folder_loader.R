@@ -40,7 +40,8 @@ load_folder <- function(folder_path, unit_filter = NULL) {
       if (!is.null(result$canvas)) {
         year_filter <- detect_year_from_canvas(result$canvas)
       }
-      result$consids <- import_special_considerations(f, unit_filter = unit_filter)
+      result$consids <- import_special_considerations(f, unit_filter = unit_filter,
+                                                       year_filter = year_filter)
     } else if (file_type == "plans" && is.null(result$plans)) {
       year_filter <- NULL
       if (!is.null(result$canvas)) {

@@ -9,8 +9,9 @@ library(readr)
 #'
 #' @param file_path Path to special considerations CSV file
 #' @param unit_filter Optional unit code to filter by (e.g., "BIOL2022")
+#' @param year_filter Optional year to filter by (e.g., "2025")
 #' @return data.frame with student_id and special considerations data
-import_special_considerations <- function(file_path, unit_filter = NULL) {
+import_special_considerations <- function(file_path, unit_filter = NULL, year_filter = NULL) {
   message("Importing special considerations from: ", file_path)
 
   # Read CSV
@@ -23,8 +24,14 @@ import_special_considerations <- function(file_path, unit_filter = NULL) {
   # Apply unit filter if provided
   if (!is.null(unit_filter)) {
     if ("availability" %in% names(data)) {
+      # Build pattern: match unit code and optionally year in the availability string
+      # Availability format: "BIOL2022-S2C-2025-ND-CC"
+      pattern <- unit_filter
+      if (!is.null(year_filter)) {
+        pattern <- paste0(unit_filter, ".*", year_filter)
+      }
       data <- data %>%
-        filter(grepl(unit_filter, availability, ignore.case = TRUE))
+        filter(grepl(pattern, availability, ignore.case = TRUE))
     } else {
       warning("No 'availability' column found for filtering by unit")
     }
@@ -51,6 +58,14 @@ import_special_considerations <- function(file_path, unit_filter = NULL) {
     ) %>%
     select(student_id, ticket_id, assessment_name, outcome_type,
            extension_date_raw, state, approved)
+
+  # Deduplicate: keep only the most recent ticket per student per assessment
+  # Sort by ticket_id descending (higher = more recent) then take first per group
+  consids_processed <- consids_processed %>%
+    arrange(student_id, assessment_name, desc(ticket_id)) %>%
+    group_by(student_id, assessment_name) %>%
+    slice(1) %>%
+    ungroup()
 
   # Group by student and create nested structure
   consids_by_student <- consids_processed %>%

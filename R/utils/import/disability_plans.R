@@ -90,6 +90,9 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
         value = character(),
         stringsAsFactors = FALSE
       )
+    } else {
+      # Deduplicate adjustments (same arrangement_type + value)
+      adjustments_df <- adjustments_df[!duplicated(adjustments_df[, c("arrangement_type", "value")]), ]
     }
 
     list(
