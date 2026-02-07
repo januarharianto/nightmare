@@ -1674,6 +1674,75 @@ label.search-label {
   width: 100% !important;
 }
 
+/* File input styling */
+.exams-upload-zone input[type="file"] {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+/* fileInput structure: .input-group > label.input-group-btn > span.btn + input.form-control */
+.exams-upload-zone .input-group {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #CCCCCC;
+  border-radius: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.exams-upload-zone .input-group .input-group-btn {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  float: none;
+}
+
+.exams-upload-zone .input-group .btn {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-family: inherit;
+  padding: 8px 16px;
+  margin: 0;
+  float: none;
+  line-height: 1.4;
+}
+
+.exams-upload-zone .input-group .btn:hover {
+  background-color: #333333;
+}
+
+.exams-upload-zone .input-group .form-control {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #666666;
+  flex: 1;
+  float: none;
+  height: auto;
+  padding: 8px 12px;
+  line-height: 1.4;
+}
+
+.exams-upload-zone .progress {
+  border-radius: 0;
+  height: 4px;
+  margin-top: 4px;
+}
+
+.exams-upload-zone .progress-bar {
+  background-color: #000000;
+  border-radius: 0;
+}
+
 .exams-upload-prompt {
   font-size: 14px;
   color: #666666;
