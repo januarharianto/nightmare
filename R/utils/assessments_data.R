@@ -90,3 +90,41 @@ render_density_plot <- function(percentages) {
 
   invisible(NULL)
 }
+
+# Draw a histogram for an assessment's percentage distribution.
+# Bins at grade boundaries: 0-50, 50-65, 65-75, 75-85, 85-100.
+# Black outline bars, #F5F5F5 fill, grade boundary lines, minimal axes.
+# Call inside renderPlot().
+render_histogram_plot <- function(percentages) {
+  if (length(percentages) < 2) {
+    plot.new()
+    text(0.5, 0.5, "Insufficient data", col = "#AAAAAA", cex = 1.2)
+    return(invisible(NULL))
+  }
+
+  breaks <- c(0, 50, 65, 75, 85, 100)
+
+  par(mar = c(2, 0, 0, 0), bg = "#FFFFFF")
+  h <- hist(percentages, breaks = breaks, plot = FALSE)
+  plot(h, main = "", xlab = "", ylab = "", axes = FALSE,
+       xlim = c(0, 100), col = "#F5F5F5", border = "#000000",
+       freq = TRUE)
+
+  # Grade boundary lines
+  boundaries <- c(50, 65, 75, 85)
+  abline(v = boundaries, lty = 2, col = "#CCCCCC")
+
+  # X-axis with boundary ticks only
+  axis(1, at = c(0, 50, 65, 75, 85, 100), labels = c(0, 50, 65, 75, 85, 100),
+       lwd = 0, lwd.ticks = 0.5, col.ticks = "#CCCCCC", col.axis = "#666666",
+       cex.axis = 0.8, padj = -1)
+
+  # Grade labels at top
+  y_top <- max(h$counts) * 0.95
+  label_pos <- c(25, 57.5, 70, 80, 92.5)
+  label_txt <- c("F", "P", "CR", "D", "HD")
+  text(label_pos, rep(y_top, 5), label_txt, col = "#AAAAAA",
+       cex = 0.75, font = 2)
+
+  invisible(NULL)
+}

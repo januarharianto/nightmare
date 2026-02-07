@@ -3,7 +3,31 @@
 
 assessmentsModuleUI <- function(id) {
   ns <- NS(id)
+  ns_id <- ns("plot_type")
   tags$div(class = "assessments-view",
+    tags$div(class = "assessments-toolbar",
+      tags$span(class = "assessments-label", "Plot Type"),
+      tags$div(class = "plot-type-toggle",
+        tags$button(
+          class = "plot-type-btn active",
+          `data-value` = "density",
+          onclick = sprintf(
+            "document.querySelectorAll('.plot-type-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s',this.dataset.value,{priority:'event'});",
+            ns_id
+          ),
+          "Density"
+        ),
+        tags$button(
+          class = "plot-type-btn",
+          `data-value` = "histogram",
+          onclick = sprintf(
+            "document.querySelectorAll('.plot-type-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s',this.dataset.value,{priority:'event'});",
+            ns_id
+          ),
+          "Histogram"
+        )
+      )
+    ),
     uiOutput(ns("assessments_grid"))
   )
 }
@@ -18,8 +42,11 @@ assessmentsModuleServer <- function(id, studentData) {
       extract_class_scores(data)
     })
 
+    plotType <- reactive(input$plot_type %||% "density")
+
     output$assessments_grid <- renderUI({
       scores <- classScores()
+      plot_type <- plotType()
       if (length(scores) == 0) {
         return(tags$div(class = "empty-state",
           tags$p("No completed assessments to display")
@@ -72,7 +99,11 @@ assessmentsModuleServer <- function(id, studentData) {
         info <- scores[[aname]]
         plot_id <- paste0("plot_", gsub("[^a-zA-Z0-9]", "_", aname))
         output[[plot_id]] <- renderPlot({
-          render_density_plot(info$scores)
+          if (plot_type == "histogram") {
+            render_histogram_plot(info$scores)
+          } else {
+            render_density_plot(info$scores)
+          }
         }, bg = "transparent")
       })
 

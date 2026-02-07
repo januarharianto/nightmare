@@ -1181,6 +1181,55 @@ label.search-label {
   padding: 0 12px 8px 12px;
 }
 
+/* Assessments Toolbar */
+.assessments-toolbar {
+  padding: 8px 12px;
+  border-bottom: 1px solid #CCCCCC;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.assessments-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #AAAAAA;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.plot-type-toggle {
+  display: inline-flex;
+}
+
+.plot-type-btn {
+  border: 1px solid #CCCCCC;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #666666;
+  font-family: inherit;
+}
+
+.plot-type-btn + .plot-type-btn {
+  border-left: none;
+}
+
+.plot-type-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
+.plot-type-btn.active + .plot-type-btn {
+  border-left: 1px solid #CCCCCC;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;
