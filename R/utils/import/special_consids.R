@@ -17,9 +17,10 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
   # Read CSV
   raw_data <- read_csv(file_path, show_col_types = FALSE)
 
-  # Filter to approved only
+  # Keep Approved and Pending (Pending shows in-progress considerations)
+  # Exclude Withdrawn and Not Approved
   data <- raw_data %>%
-    filter(state == "Approved")
+    filter(state %in% c("Approved", "Pending"))
 
   # Apply unit filter if provided
   if (!is.null(unit_filter)) {
@@ -58,7 +59,7 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
       outcome_type = as.character(safe_col(., "u_outcome_type", NA_character_)),
       classification = as.character(safe_col(., "classification", NA_character_)),
       state = as.character(state),
-      approved = TRUE,
+      approved = (state == "Approved"),
       # Parse extension_in_calendar_days as Date (DD-MM-YYYY format)
       extension_date = if ("extension_in_calendar_days" %in% names(.)) {
         as.Date(extension_in_calendar_days, format = "%d-%m-%Y")
@@ -82,14 +83,12 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
            assessment_category, assessment_type, outcome_type, classification,
            state, approved, extension_date, due_date, closing_date)
 
-  # Deduplicate: keep most recent ticket per student + assessment + outcome_type.
-  # A student can have BOTH a Simple Extension AND a Replacement exam for the
-  # same assessment, so we must include outcome_type in the grouping key.
+  # No dedup — each ticket is a unique consideration event.
+  # A student can have multiple replacement exams for the same assessment
+  # (each sitting generates a new ticket with its own due date).
+  # Sort by due_date so records appear in chronological order.
   consids_processed <- consids_processed %>%
-    arrange(student_id, assessment_name, outcome_type, desc(ticket_id)) %>%
-    group_by(student_id, assessment_name, outcome_type) %>%
-    slice(1) %>%
-    ungroup()
+    arrange(student_id, assessment_name, due_date, ticket_id)
 
   # Group by student and create nested structure
   consids_by_student <- consids_processed %>%
@@ -111,18 +110,19 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
         stringsAsFactors = FALSE
       )),
       total_extensions = sum(
-        outcome_type %in% c("Simple Extension", "Extension of time"),
+        approved & outcome_type %in% c("Simple Extension", "Extension of time"),
         na.rm = TRUE
       ),
       has_replacement_exam = any(
-        grepl("replacement.*exam", outcome_type, ignore.case = TRUE),
+        approved & grepl("replacement.*exam", outcome_type, ignore.case = TRUE),
         na.rm = TRUE
       ),
       has_mark_adjustment = any(
-        grepl("mark.*adjustment", outcome_type, ignore.case = TRUE),
+        approved & grepl("mark.*adjustment", outcome_type, ignore.case = TRUE),
         na.rm = TRUE
       ),
       total_consids = n(),
+      has_pending = any(state == "Pending", na.rm = TRUE),
       .groups = "drop"
     )
 

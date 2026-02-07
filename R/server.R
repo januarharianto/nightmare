@@ -52,11 +52,6 @@ server <- function(input, output, session) {
       currentUnit(unit)
       save_last_unit(data_dir, unit)
 
-      showNotification(
-        sprintf("Loaded %d students from %s", nrow(consolidated), unit),
-        type = "message",
-        duration = NIGHTMARE_CONFIG$notifications$duration_message
-      )
       return(TRUE)
     }, error = function(e) {
       showNotification(

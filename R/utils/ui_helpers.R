@@ -191,33 +191,52 @@ build_student_detail_view <- function(student) {
               tags$div(class = "empty-state",
                 tags$p("No special considerations"))
             } else {
-              # Split by outcome type groups
-              extensions <- consids[consids$outcome_type %in%
+              # Helper: format date or return "--"
+              fmt_date <- function(d) {
+                if (!is.na(d)) format(as.Date(d), "%d %b %Y") else "--"
+              }
+
+              # Split by outcome type groups (handle NA outcome_type)
+              has_outcome <- !is.na(consids$outcome_type)
+              extensions <- consids[has_outcome & consids$outcome_type %in%
                 c("Simple Extension", "Extension of time"), ]
-              replacements <- consids[grepl("replacement.*exam", consids$outcome_type,
-                                            ignore.case = TRUE), ]
-              mark_adj <- consids[grepl("mark.*adjustment", consids$outcome_type,
-                                        ignore.case = TRUE), ]
-              other_types <- c("Simple Extension", "Extension of time")
-              other <- consids[!consids$outcome_type %in% other_types &
+              replacements <- consids[has_outcome &
+                grepl("replacement.*exam", consids$outcome_type, ignore.case = TRUE), ]
+              mark_adj <- consids[has_outcome &
+                grepl("mark.*adjustment", consids$outcome_type, ignore.case = TRUE), ]
+              ext_types <- c("Simple Extension", "Extension of time")
+              other <- consids[has_outcome &
+                !(consids$outcome_type %in% ext_types) &
                 !grepl("replacement.*exam", consids$outcome_type, ignore.case = TRUE) &
                 !grepl("mark.*adjustment", consids$outcome_type, ignore.case = TRUE), ]
+              # Pending with no outcome type
+              pending_no_outcome <- consids[!has_outcome & consids$state == "Pending", ]
+
+              n_approved <- sum(consids$approved, na.rm = TRUE)
+              n_pending <- sum(consids$state == "Pending", na.rm = TRUE)
 
               tagList(
                 # Summary bar
                 tags$div(
                   class = "consids-summary",
                   tags$div(
-                    tags$div(class = "stat-label", "Total"),
-                    tags$div(class = "stat-value", as.character(n_consids))
+                    tags$div(class = "stat-label", "Approved"),
+                    tags$div(class = "stat-value", as.character(n_approved))
                   ),
+                  if (n_pending > 0) {
+                    tags$div(
+                      tags$div(class = "stat-label", "Pending"),
+                      tags$div(class = "stat-value consids-pending-value",
+                               as.character(n_pending))
+                    )
+                  },
                   tags$div(
                     tags$div(class = "stat-label", "Extensions"),
                     tags$div(class = "stat-value", as.character(nrow(extensions)))
                   ),
                   if (nrow(replacements) > 0) {
                     tags$div(
-                      tags$div(class = "stat-label", "Replacement Exams"),
+                      tags$div(class = "stat-label", "Repl. Exams"),
                       tags$div(class = "stat-value consids-alert",
                                as.character(nrow(replacements)))
                     )
@@ -231,24 +250,43 @@ build_student_detail_view <- function(student) {
                 ),
 
                 # Replacement Exams group (shown first — most actionable)
-                if (nrow(replacements) > 0) {
+                if (nrow(replacements) > 0 || nrow(pending_no_outcome) > 0) {
+                  exam_rows <- rbind(
+                    if (nrow(replacements) > 0) replacements else NULL,
+                    if (nrow(pending_no_outcome) > 0) pending_no_outcome else NULL
+                  )
+
                   tagList(
                     tags$div(class = "consids-group-header consids-alert-header",
-                             "Replacement Exams"),
+                             "Exam Considerations"),
                     tags$table(
                       class = "detail-table",
                       tags$thead(tags$tr(
                         tags$th("Assessment"),
-                        tags$th("Type"),
-                        tags$th("Ticket")
+                        tags$th("Due Date"),
+                        tags$th("Outcome"),
+                        tags$th("Status")
                       )),
                       tags$tbody(
-                        lapply(1:nrow(replacements), function(i) {
-                          r <- replacements[i, ]
+                        lapply(1:nrow(exam_rows), function(i) {
+                          r <- exam_rows[i, ]
+                          due_str <- fmt_date(r$due_date)
+                          outcome_str <- if (!is.na(r$outcome_type)) {
+                            r$outcome_type
+                          } else {
+                            "--"
+                          }
+                          state_class <- if (r$state == "Pending") {
+                            "consids-state-pending"
+                          } else {
+                            "consids-state-approved"
+                          }
+
                           tags$tr(
                             tags$td(r$assessment_name),
-                            tags$td(r$assessment_type),
-                            tags$td(r$ticket_id)
+                            tags$td(due_str),
+                            tags$td(outcome_str),
+                            tags$td(tags$span(class = state_class, r$state))
                           )
                         })
                       )
@@ -271,17 +309,8 @@ build_student_detail_view <- function(student) {
                       tags$tbody(
                         lapply(1:nrow(extensions), function(i) {
                           e <- extensions[i, ]
-                          ext_str <- if (!is.na(e$extension_date)) {
-                            format(e$extension_date, "%d %b %Y")
-                          } else {
-                            "--"
-                          }
-                          due_str <- if (!is.na(e$due_date)) {
-                            format(e$due_date, "%d %b %Y")
-                          } else {
-                            "--"
-                          }
-                          # Flag if extension goes past closing date
+                          ext_str <- fmt_date(e$extension_date)
+                          due_str <- fmt_date(e$due_date)
                           past_closing <- !is.na(e$extension_date) &&
                             !is.na(e$closing_date) &&
                             as.Date(e$extension_date) > as.Date(e$closing_date)
@@ -337,15 +366,20 @@ build_student_detail_view <- function(student) {
                       tags$thead(tags$tr(
                         tags$th("Assessment"),
                         tags$th("Outcome"),
-                        tags$th("Ticket")
+                        tags$th("Status")
                       )),
                       tags$tbody(
                         lapply(1:nrow(other), function(i) {
                           o <- other[i, ]
+                          state_class <- if (o$state == "Pending") {
+                            "consids-state-pending"
+                          } else {
+                            "consids-state-approved"
+                          }
                           tags$tr(
                             tags$td(o$assessment_name),
                             tags$td(o$outcome_type),
-                            tags$td(o$ticket_id)
+                            tags$td(tags$span(class = state_class, o$state))
                           )
                         })
                       )

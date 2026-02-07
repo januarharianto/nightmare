@@ -1233,6 +1233,28 @@ label.search-label {
   padding: 2px 6px;
 }
 
+.consids-state-approved {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #000000;
+}
+
+.consids-state-pending {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #FFFFFF;
+  background-color: #000000;
+  padding: 2px 6px;
+}
+
+.consids-pending-value {
+  color: #AAAAAA;
+}
+
 /* Search Results Container (scrollable) */
 .search-results-container {
   overflow-y: auto;

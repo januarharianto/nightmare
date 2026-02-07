@@ -135,6 +135,9 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
   if (!"total_consids" %in% names(consolidated)) {
     consolidated$total_consids <- 0L
   }
+  if (!"has_pending" %in% names(consolidated)) {
+    consolidated$has_pending <- FALSE
+  }
 
   # Handle disability plan columns
   if (!"has_disability_plan" %in% names(consolidated)) {
@@ -178,6 +181,7 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
       has_replacement_exam = ifelse(is.na(has_replacement_exam), FALSE, has_replacement_exam),
       has_mark_adjustment = ifelse(is.na(has_mark_adjustment), FALSE, has_mark_adjustment),
       total_consids = ifelse(is.na(total_consids), 0L, as.integer(total_consids)),
+      has_pending = ifelse(is.na(has_pending), FALSE, has_pending),
 
       # Disability plan defaults
       has_disability_plan = ifelse(is.na(has_disability_plan), FALSE, has_disability_plan),
