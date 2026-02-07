@@ -32,7 +32,7 @@ ui <- page_fillable(
       ),
       tags$div(
         class = "navbar-subtitle",
-        HTML("<b>N</b>ew <b>I</b>nredibly <b>G</b>litchy <b>H</b>acking <b>T</b>ool to <b>M</b>anage <b>A</b>ll <b>R</b>ecords <b>E</b>ffortlessly... by Januar Harianto")
+        HTML("<b>N</b>ew <b>I</b>ncredibly <b>G</b>litchy <b>H</b>acking <b>T</b>ool to <b>M</b>anage <b>A</b>ll <b>R</b>ecords <b>E</b>ffortlessly... by Januar Harianto")
       )
     ),
   ),
