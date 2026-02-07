@@ -957,7 +957,11 @@ label.search-label {
   color: #EEEEEE;
 }
 
-/* Clickable unit switcher in metadata bar */
+/* Unit selector dropdown */
+.unit-selector {
+  position: relative;
+}
+
 .metadata-value-clickable {
   cursor: pointer;
 }
@@ -970,6 +974,41 @@ label.search-label {
   font-size: 10px;
   color: #AAAAAA;
   margin-left: 2px;
+}
+
+.unit-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: #FFFFFF;
+  border: 1px solid #CCCCCC;
+  z-index: 1001;
+  min-width: 140px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.unit-dropdown.open {
+  display: block;
+}
+
+.unit-dropdown-item {
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #333333;
+}
+
+.unit-dropdown-item:hover {
+  background-color: #F0F0F0;
+}
+
+.unit-dropdown-item.active {
+  font-weight: 700;
+  color: #000000;
 }
 
 /* Search Results Container (scrollable) */

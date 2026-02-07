@@ -173,6 +173,8 @@ server <- function(input, output, session) {
     }
 
     meta <- datasetMetadata()
+    folders <- scan_data_folders(NIGHTMARE_CONFIG$data$data_dir)
+    active <- currentUnit()
 
     tags$div(
       class = "metadata-panel",
@@ -180,13 +182,28 @@ server <- function(input, output, session) {
         class = "metadata-grid",
         # Row 1
         tags$div(
-          class = "metadata-item",
+          class = "metadata-item unit-selector",
           tags$span(class = "metadata-label", "Unit:"),
           tags$span(
             class = "metadata-value metadata-value-clickable",
-            onclick = "Shiny.setInputValue('switch_unit', Math.random(), {priority: 'event'})",
+            onclick = "document.getElementById('unit-dropdown').classList.toggle('open')",
             meta$unit,
             tags$span(class = "unit-dropdown-indicator", HTML("&#9662;"))
+          ),
+          # Inline dropdown
+          tags$div(
+            id = "unit-dropdown",
+            class = "unit-dropdown",
+            lapply(folders, function(f) {
+              tags$div(
+                class = paste("unit-dropdown-item", if (identical(f, active)) "active" else ""),
+                onclick = sprintf(
+                  "Shiny.setInputValue('unit_dropdown_select', '%s', {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
+                  f
+                ),
+                f
+              )
+            })
           )
         ),
         tags$div(
@@ -208,7 +225,19 @@ server <- function(input, output, session) {
           tags$span(class = "metadata-label", "Semester:"),
           tags$span(class = "metadata-value", meta$semester)
         )
-      )
+      ),
+      # Close dropdown on outside click (idempotent listener)
+      tags$script(HTML("
+        if (!window._unitDropdownListener) {
+          window._unitDropdownListener = true;
+          document.addEventListener('click', function(e) {
+            if (!e.target.closest('.unit-selector')) {
+              var dd = document.getElementById('unit-dropdown');
+              if (dd) dd.classList.remove('open');
+            }
+          });
+        }
+      "))
     )
   })
 
@@ -252,33 +281,10 @@ server <- function(input, output, session) {
     load_unit_data(input$folder_select)
   })
 
-  # Handle unit switcher click from metadata bar
-  observeEvent(input$switch_unit, {
-    data_dir <- NIGHTMARE_CONFIG$data$data_dir
-    folders <- scan_data_folders(data_dir)
-
-    if (length(folders) == 0) return()
-
-    selected <- currentUnit()
-    if (is.null(selected) || !(selected %in% folders)) selected <- folders[1]
-
-    showModal(modalDialog(
-      title = "Switch Unit",
-      selectInput("switch_unit_select", "Unit of Study", choices = folders, selected = selected),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton("switch_unit_confirm", "Switch", class = "btn-dark")
-      ),
-      easyClose = TRUE
-    ))
-  })
-
-  # Handle unit switch confirmation
-  observeEvent(input$switch_unit_confirm, {
-    removeModal()
-    new_unit <- input$switch_unit_select
+  # Handle unit selection from inline dropdown
+  observeEvent(input$unit_dropdown_select, {
+    new_unit <- input$unit_dropdown_select
     if (!is.null(new_unit) && new_unit != currentUnit()) {
-      # Reset state before loading new data
       studentData(data.frame())
       isLoaded(FALSE)
       load_unit_data(new_unit)
