@@ -140,3 +140,33 @@ render_histogram_plot <- function(percentages) {
 
   invisible(NULL)
 }
+
+# Compute percentile rank for a student's assessments against the class.
+# Returns a named numeric vector (0-100) keyed by assessment name.
+# Only completed assessments with scores get a rank.
+compute_percentile_ranks <- function(student, all_students) {
+  assignments <- student$assignments[[1]]
+  if (is.null(assignments) || nrow(assignments) == 0) return(numeric(0))
+
+  completed <- assignments[!assignments$is_ongoing & !is.na(assignments$score), ]
+  if (nrow(completed) == 0) return(numeric(0))
+
+  ranks <- vapply(seq_len(nrow(completed)), function(i) {
+    aname <- completed$name[i]
+    pct <- completed$percentage[i]
+
+    # Collect all class scores for this assessment
+    class_scores <- vapply(all_students$assignments, function(a) {
+      row <- a[a$name == aname, , drop = FALSE]
+      if (nrow(row) == 0 || is.na(row$percentage[1])) return(NA_real_)
+      row$percentage[1]
+    }, numeric(1))
+    class_scores <- class_scores[!is.na(class_scores)]
+
+    if (length(class_scores) < 2) return(NA_real_)
+    round(ecdf(class_scores)(pct) * 100)
+  }, numeric(1))
+
+  names(ranks) <- completed$name
+  ranks
+}

@@ -330,7 +330,7 @@ server <- function(input, output, session) {
     }
 
     student <- student[1, ]
-    build_student_detail_view(student)
+    build_student_detail_view(student, studentData())
   })
 
 }
