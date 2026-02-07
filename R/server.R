@@ -186,7 +186,7 @@ server <- function(input, output, session) {
             class = "metadata-value metadata-value-clickable",
             onclick = "document.getElementById('unit-dropdown').classList.toggle('open')",
             tags$span(meta$unit),
-            tags$span(class = "unit-dropdown-indicator", HTML("&#9662;")),
+            tags$span(class = "unit-dropdown-indicator", HTML("&#9660;")),
             # Inline dropdown
             tags$div(
               id = "unit-dropdown",
