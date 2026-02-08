@@ -269,6 +269,9 @@ p { margin-bottom: 8px; }
 }
 
 .detail-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 10px 12px;
   background-color: #F5F5F5;
   border-bottom: 1px solid #CCCCCC;
@@ -2144,11 +2147,6 @@ label.search-label {
 }
 
 /* Edit Mode Styles */
-.detail-section-header.editing-weights {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .weights-done-btn {
   background: #000;
@@ -2167,22 +2165,24 @@ label.search-label {
   background: #333;
 }
 
-.edit-weights-link {
-  font-size: 10px;
-  font-weight: 700;
+.detail-section-header .edit-weights-link {
+  font-size: 10px !important;
+  font-weight: 700 !important;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  color: #AAA;
+  color: #AAA !important;
   cursor: pointer;
   margin-left: 8px;
-  background: none;
-  border: none;
+  background: none !important;
+  border: none !important;
   font-family: inherit;
-  padding: 0;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
-.edit-weights-link:hover {
-  color: #000;
+.detail-section-header .edit-weights-link:hover {
+  color: #000 !important;
+  background: none !important;
 }
 
 .weight-input {
