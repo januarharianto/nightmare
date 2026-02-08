@@ -32,14 +32,19 @@ assessmentsModuleUI <- function(id) {
   )
 }
 
-assessmentsModuleServer <- function(id, studentData) {
+assessmentsModuleServer <- function(id, studentData, examData = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     classScores <- reactive({
       data <- studentData()
-      if (is.null(data) || nrow(data) == 0) return(list())
-      extract_class_scores(data)
+      canvas_scores <- if (!is.null(data) && nrow(data) > 0) extract_class_scores(data) else list()
+
+      # Merge exam scores if available
+      exam <- if (!is.null(examData)) examData() else NULL
+      exam_scores <- if (!is.null(exam)) extract_exam_class_scores(exam) else list()
+
+      c(canvas_scores, exam_scores)
     })
 
     plotType <- reactive(input$plot_type %||% "histogram")

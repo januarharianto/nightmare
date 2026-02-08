@@ -95,6 +95,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                     )
                   ),
                   tags$tbody(
+                    # Canvas assignment rows
                     lapply(1:nrow(assignments), function(i) {
                       a <- assignments[i, ]
                       has_sc <- !is.na(a$score)
@@ -141,7 +142,32 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                         tags$td(class = "assessment-pct", pct_display),
                         tags$td(status_html)
                       )
-                    })
+                    }),
+
+                    # Exam data rows (from uploaded assessments)
+                    if (!is.null(exam_data) && length(exam_data$assessments) > 0) {
+                      sid <- as.character(student$student_id)
+                      scores_df <- get_student_exam_scores(exam_data, sid)
+                      if (nrow(scores_df) > 0) {
+                        lapply(seq_len(nrow(scores_df)), function(i) {
+                          row <- scores_df[i, ]
+                          pct <- (row$score / row$max_points) * 100
+                          row_class <- if (pct < 50) "assessment-failing" else ""
+                          status_html <- if (pct < 50) {
+                            tags$span(class = "assessment-status status-failing", "Failing")
+                          } else {
+                            ""
+                          }
+                          tags$tr(
+                            class = row_class,
+                            tags$td(row$assessment),
+                            tags$td(sprintf("%g / %g", row$score, row$max_points)),
+                            tags$td(class = "assessment-pct", sprintf("%.0f%%", pct)),
+                            tags$td(status_html)
+                          )
+                        })
+                      }
+                    }
                   )
                 )
               )
@@ -623,73 +649,6 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
             }
 
             tagList(form, notes_list)
-          }
-        )
-      ),
-
-      # Exams Section (5th card)
-      tags$div(
-        class = "detail-section",
-        tags$div(class = "detail-section-header", "Exams"),
-        tags$div(
-          class = "detail-section-content",
-          {
-            if (is.null(exam_data) || length(exam_data$assessments) == 0) {
-              tags$div(class = "empty-state",
-                tags$p("No exam scores available"))
-            } else {
-              sid <- as.character(student$student_id)
-              scores_df <- get_student_exam_scores(exam_data, sid)
-
-              if (nrow(scores_df) == 0) {
-                tags$div(class = "empty-state",
-                  tags$p("No exam scores for this student"))
-              } else {
-                tags$table(class = "detail-table",
-                  tags$thead(tags$tr(
-                    tags$th("Assessment"),
-                    tags$th("Score"),
-                    tags$th("Sitting")
-                  )),
-                  tags$tbody(
-                    lapply(seq_len(nrow(scores_df)), function(i) {
-                      row <- scores_df[i, ]
-                      aname <- row$assessment
-                      all_sittings <- get_student_sittings(exam_data, aname, sid)
-
-                      sitting_cell <- if (nrow(all_sittings) > 1) {
-                        # Dropdown to switch sitting
-                        options <- lapply(seq_len(nrow(all_sittings)), function(j) {
-                          s <- all_sittings[j, ]
-                          label <- paste0("Sitting ", s$sitting_id, " (", s$score, ")")
-                          tags$option(
-                            value = s$sitting_id,
-                            selected = if (s$is_active) "selected" else NULL,
-                            label
-                          )
-                        })
-                        tags$select(
-                          class = "exam-sitting-select",
-                          onchange = sprintf(
-                            "Shiny.setInputValue('exam_sitting_change',{student_id:'%s',assessment:'%s',sitting_id:this.value},{priority:'event'});",
-                            sid, aname
-                          ),
-                          options
-                        )
-                      } else {
-                        paste0("Sitting ", row$sitting_id)
-                      }
-
-                      tags$tr(
-                        tags$td(aname),
-                        tags$td(sprintf("%g / %g", row$score, row$max_points)),
-                        tags$td(sitting_cell)
-                      )
-                    })
-                  )
-                )
-              }
-            }
           }
         )
       )

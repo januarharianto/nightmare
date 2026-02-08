@@ -191,6 +191,45 @@ get_student_sittings <- function(exam_data, name, student_id) {
   result
 }
 
+# Extract class-level percentage scores per assessment (for Analytics view).
+# Returns a named list matching the format of extract_class_scores():
+# list(name, max_points, scores = numeric vector of percentages)
+extract_exam_class_scores <- function(exam_data) {
+  if (is.null(exam_data$assessments) || length(exam_data$assessments) == 0) return(list())
+
+  result <- list()
+  for (aname in names(exam_data$assessments)) {
+    a <- exam_data$assessments[[aname]]
+    mp <- a$max_points
+    if (is.null(mp) || mp <= 0) next
+
+    # Collect active score for each student as a percentage
+    pcts <- vapply(names(a$active_sitting), function(sid) {
+      active_id <- a$active_sitting[[sid]]
+      score <- NULL
+      for (s in a$sittings) {
+        if (s$sitting_id == active_id && !is.null(s$scores[[sid]])) {
+          score <- s$scores[[sid]]
+          break
+        }
+      }
+      if (is.null(score)) return(NA_real_)
+      (score / mp) * 100
+    }, numeric(1))
+
+    pcts <- pcts[!is.na(pcts)]
+    if (length(pcts) == 0) next
+
+    result[[aname]] <- list(
+      name = aname,
+      max_points = mp,
+      scores = pcts
+    )
+  }
+
+  result
+}
+
 # Summary table: assessment, max_points, sittings_count, students_count, last_upload
 get_exam_summary <- function(exam_data) {
   empty <- data.frame(

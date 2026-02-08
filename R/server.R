@@ -327,7 +327,7 @@ server <- function(input, output, session) {
   extensionsModuleServer("extensions", studentData, dataSources, currentUnit)
 
   # Assessments module
-  assessmentsModuleServer("assessments", studentData)
+  assessmentsModuleServer("assessments", studentData, examData)
 
   # Notes module
   notesModuleServer("notes", studentData, studentNotes, currentUnit)
