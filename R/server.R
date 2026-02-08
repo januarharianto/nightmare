@@ -59,6 +59,12 @@ server <- function(input, output, session) {
       examData(load_exam_data(data_dir, unit))
       save_last_unit(data_dir, unit)
 
+      # Default to first student alphabetically
+      if (nrow(consolidated) > 0) {
+        sorted <- consolidated[order(consolidated$name), ]
+        selectedStudentId(as.character(sorted$student_id[1]))
+      }
+
       return(TRUE)
     }, error = function(e) {
       showNotification(
