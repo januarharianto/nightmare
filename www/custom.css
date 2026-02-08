@@ -1935,6 +1935,20 @@ label.search-label {
 }
 
 /* Special consideration badge in conflict table */
+.exam-source-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #F5F5F5;
+  color: #888888;
+  border: 1px solid #CCCCCC;
+  vertical-align: middle;
+}
+
 .exam-speccon-badge {
   display: inline-block;
   padding: 2px 6px;

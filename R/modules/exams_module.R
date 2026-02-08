@@ -692,8 +692,17 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
           tags$tbody(
             lapply(seq_len(nrow(summary_df)), function(i) {
               row <- summary_df[i, ]
+              # Source type tag
+              src_label <- if (grepl("gradescope", row$source_type, ignore.case = TRUE)) {
+                "Gradescope"
+              } else {
+                "Manual"
+              }
               tags$tr(
-                tags$td(row$assessment),
+                tags$td(
+                  row$assessment,
+                  tags$span(class = "exam-source-tag", src_label)
+                ),
                 tags$td(as.character(row$max_points)),
                 tags$td(as.character(row$sittings_count)),
                 tags$td(as.character(row$students_count)),

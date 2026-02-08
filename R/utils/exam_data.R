@@ -230,11 +230,12 @@ extract_exam_class_scores <- function(exam_data) {
   result
 }
 
-# Summary table: assessment, max_points, sittings_count, students_count, last_upload
+# Summary table: assessment, max_points, sittings_count, students_count, last_upload, source_type
 get_exam_summary <- function(exam_data) {
   empty <- data.frame(
     assessment = character(), max_points = numeric(), sittings_count = integer(),
-    students_count = integer(), last_upload = character(), stringsAsFactors = FALSE
+    students_count = integer(), last_upload = character(), source_type = character(),
+    stringsAsFactors = FALSE
   )
 
   if (is.null(exam_data$assessments) || length(exam_data$assessments) == 0) return(empty)
@@ -249,9 +250,16 @@ get_exam_summary <- function(exam_data) {
       if (length(dates) > 0) max(dates) else ""
     } else ""
 
+    # Collect unique source types across sittings
+    src_types <- if (n_sittings > 0) {
+      unique(vapply(a$sittings, function(s) s$source_type %||% "manual", character(1)))
+    } else "manual"
+    source_type <- paste(src_types, collapse = ",")
+
     data.frame(
       assessment = aname, max_points = a$max_points, sittings_count = n_sittings,
-      students_count = n_students, last_upload = last_upload, stringsAsFactors = FALSE
+      students_count = n_students, last_upload = last_upload, source_type = source_type,
+      stringsAsFactors = FALSE
     )
   })
 
