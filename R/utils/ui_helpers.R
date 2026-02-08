@@ -151,7 +151,6 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
             class = "detail-section-content",
             {
               assignments <- student$assignments[[1]]
-              percentiles <- if (!is.null(all_students)) compute_percentile_ranks(student, all_students) else numeric(0)
 
               if (nrow(assignments) == 0) {
                 tags$div(
@@ -190,14 +189,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                     tags$div(
                       tags$div(class = "stat-label", "Spec Cons"),
                       tags$div(class = "stat-value", as.character(n_spec_cons))
-                    ),
-                    if (length(percentiles) > 0) {
-                      overall_pctl <- round(median(percentiles, na.rm = TRUE))
-                      tags$div(
-                        tags$div(class = "stat-label", "Percentile"),
-                        tags$div(class = "stat-value", paste0(overall_pctl, "%"))
-                      )
-                    }
+                    )
                   ),
 
                   if (all_ongoing) {
