@@ -156,35 +156,103 @@ p { margin-bottom: 8px; }
   min-height: 0;
 }
 
-/* Student Detail Header */
-.student-detail-header {
-  padding: 12px;
-  border-bottom: 2px solid #000000;
-  margin-bottom: 12px;
-  background-color: #FFFFFF;
+/* Student Detail Banner */
+.student-content .student-detail-header {
+  padding: 16px !important;
+  border-bottom: 2px solid #000000 !important;
+  margin-bottom: 12px !important;
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
 }
 
-.student-detail-header .name {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 4px;
+.student-detail-header .student-banner-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  margin-bottom: 12px !important;
 }
 
-.student-detail-header .meta-inline {
-  display: flex;
-  gap: 0;
+.student-detail-header .student-banner-name {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.3px !important;
+  line-height: 1.1 !important;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #FFFFFF !important;
+}
+
+.student-detail-header .student-banner-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0;
+}
+
+.student-detail-header .student-nav-btn {
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  color: #FFFFFF !important;
+  border: 1px solid #666666 !important;
+  font-size: 16px !important;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0 !important;
+  line-height: 1;
+}
+
+.student-detail-header .student-nav-btn:hover:not([disabled]) {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #FFFFFF !important;
+}
+
+.student-detail-header .student-nav-btn[disabled] {
+  color: #444444 !important;
+  border-color: #333333 !important;
+  cursor: not-allowed;
+}
+
+.student-detail-header .student-nav-count {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #888888 !important;
+  letter-spacing: 0.3px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.student-detail-header .student-banner-meta {
+  display: flex !important;
+  gap: 24px !important;
   flex-wrap: wrap;
 }
 
-.student-detail-header .meta {
-  font-size: 12px;
-  color: #666666;
+.student-detail-header .student-banner-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
 }
 
-.student-detail-header .meta + .meta::before {
-  content: " · ";
-  color: #CCCCCC;
-  margin: 0 6px;
+.student-detail-header .student-banner-label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px;
+  color: #888888 !important;
+}
+
+.student-detail-header .student-banner-value {
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: #FFFFFF !important;
 }
 
 /* Detail Cards Grid */
