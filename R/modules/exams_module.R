@@ -595,6 +595,22 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       )
     }
 
+    # --- Delete assessment ---
+
+    observeEvent(input$delete_assessment, {
+      aname <- input$delete_assessment
+      exam <- examData()
+      if (!is.null(exam$assessments[[aname]])) {
+        exam$assessments[[aname]] <- NULL
+        examData(exam)
+        unit <- currentUnit()
+        if (!is.null(unit)) {
+          save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
+        }
+        showNotification(paste0("Deleted '", aname, "'"), type = "message")
+      }
+    })
+
     # --- Summary table ---
 
     output$exam_summary <- renderUI({
@@ -609,7 +625,7 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
 
       tags$div(
         tags$div(class = "exams-label", style = "padding: 12px 12px 4px 12px;",
-          "Uploaded Assessments"),
+          "Uploaded Marks"),
         tags$table(class = "detail-table",
           style = "margin: 0 12px; width: calc(100% - 24px);",
           tags$thead(tags$tr(
@@ -617,7 +633,8 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
             tags$th("Max Points"),
             tags$th("Sittings"),
             tags$th("Students"),
-            tags$th("Last Upload")
+            tags$th("Last Upload"),
+            tags$th("")
           )),
           tags$tbody(
             lapply(seq_len(nrow(summary_df)), function(i) {
@@ -627,7 +644,17 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
                 tags$td(as.character(row$max_points)),
                 tags$td(as.character(row$sittings_count)),
                 tags$td(as.character(row$students_count)),
-                tags$td(row$last_upload)
+                tags$td(row$last_upload),
+                tags$td(
+                  tags$button(
+                    class = "note-action-btn note-delete-btn",
+                    onclick = sprintf(
+                      "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
+                      ns("delete_assessment"), row$assessment
+                    ),
+                    "Delete"
+                  )
+                )
               )
             })
           )
