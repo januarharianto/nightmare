@@ -281,10 +281,16 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
           tags$span(class = "source-tag active", plan_val)
         }
 
+        sid <- tbl$.student_id[i]
+        nav_js <- sprintf(
+          "Shiny.setInputValue('navigate_to_student','%s',{priority:'event'});Shiny.setInputValue('active_view','student',{priority:'event'});",
+          sid
+        )
+
         tags$tr(class = row_class,
           tags$td(tbl$Ref[i]),
-          tags$td(tbl$Student[i]),
-          tags$td(tbl$UniKey[i]),
+          tags$td(tags$span(class = "ext-student-link", onclick = nav_js, tbl$Student[i])),
+          tags$td(tags$span(class = "ext-student-link", onclick = nav_js, tbl$UniKey[i])),
           tags$td(tbl$`Due Date`[i]),
           tags$td(tbl$`Extended To`[i]),
           tags$td(tbl$`+Days`[i]),

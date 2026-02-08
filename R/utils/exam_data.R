@@ -230,6 +230,45 @@ extract_exam_class_scores <- function(exam_data) {
   result
 }
 
+# Upload activity log: flat reverse-chronological list of all uploads.
+# Returns data.frame: assessment, sitting_id, upload_time, upload_date, source_type, source_file, num_scores, num_replaced
+get_upload_log <- function(exam_data) {
+  empty <- data.frame(
+    assessment = character(), sitting_id = integer(), upload_time = character(),
+    upload_date = character(), source_type = character(), source_file = character(),
+    num_scores = integer(), num_replaced = integer(), stringsAsFactors = FALSE
+  )
+
+  if (is.null(exam_data$assessments) || length(exam_data$assessments) == 0) return(empty)
+
+  rows <- list()
+  for (aname in names(exam_data$assessments)) {
+    a <- exam_data$assessments[[aname]]
+    for (s in a$sittings) {
+      rows[[length(rows) + 1]] <- data.frame(
+        assessment = aname,
+        sitting_id = as.integer(s$sitting_id),
+        upload_time = s$upload_time %||% "",
+        upload_date = s$upload_date %||% "",
+        source_type = s$source_type %||% "manual",
+        source_file = s$source_file %||% "",
+        num_scores = length(s$scores),
+        num_replaced = as.integer(s$num_replaced %||% 0L),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+
+  result <- do.call(rbind, rows)
+  if (is.null(result) || nrow(result) == 0) return(empty)
+
+  # Sort newest-first: prefer upload_time, fall back to upload_date
+  sort_key <- ifelse(result$upload_time != "", result$upload_time, result$upload_date)
+  result <- result[order(sort_key, decreasing = TRUE), ]
+  rownames(result) <- NULL
+  result
+}
+
 # Summary table: assessment, max_points, sittings_count, students_count, last_upload, source_type
 get_exam_summary <- function(exam_data) {
   empty <- data.frame(
