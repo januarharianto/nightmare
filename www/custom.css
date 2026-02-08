@@ -2210,6 +2210,20 @@ label.search-label {
   border-color: #000;
 }
 
+.due-date-input {
+  width: 120px;
+  padding: 2px 4px;
+  font-size: 12px;
+  border: 1px solid #CCC;
+  font-family: inherit;
+  background: #FFF;
+}
+
+.due-date-input:focus {
+  outline: 2px solid #000;
+  border-color: #000;
+}
+
 .weight-total-row td {
   font-weight: 700;
   border-top: 2px solid #000;

@@ -5,13 +5,14 @@
 # Returns a list with version, saved_at, weights.
 load_weights_data <- function(data_dir, unit) {
   path <- file.path(data_dir, unit, ".nightmare", "weights.json")
-  default <- list(version = 1L, saved_at = NULL, weights = list())
+  default <- list(version = 1L, saved_at = NULL, weights = list(), due_dates = list())
 
   if (!file.exists(path)) return(default)
 
   tryCatch({
     payload <- fromJSON(path, simplifyVector = FALSE)
     if (is.null(payload$weights)) return(default)
+    if (is.null(payload$due_dates)) payload$due_dates <- list()
     payload
   }, error = function(e) {
     default
@@ -22,7 +23,7 @@ load_weights_data <- function(data_dir, unit) {
 save_weights_data <- function(data_dir, unit, weights_data) {
   nightmare_dir <- ensure_nightmare_dir(data_dir, unit)
 
-  weights_data$version <- 1L
+  weights_data$version <- 2L
   weights_data$saved_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
   path <- file.path(nightmare_dir, "weights.json")
@@ -30,12 +31,26 @@ save_weights_data <- function(data_dir, unit, weights_data) {
   invisible(path)
 }
 
+# Compute assessment status from due date and score presence.
+# Returns "ongoing", "completed", or "missing".
+compute_assessment_status <- function(due_date, has_score) {
+  if (is.null(due_date) || is.na(due_date) || due_date == "") {
+    return(if (isTRUE(has_score)) "completed" else "missing")
+  }
+  parsed <- tryCatch(as.Date(due_date), error = function(e) NA)
+  if (is.na(parsed)) {
+    return(if (isTRUE(has_score)) "completed" else "missing")
+  }
+  if (parsed >= Sys.Date()) return("ongoing")
+  if (isTRUE(has_score)) "completed" else "missing"
+}
+
 # Calculate projected grade for a student given assessment weights.
 # weights: named list (assessment_name -> weight percentage)
 # canvas_assignments: data.frame of student's Canvas assignments
 # exam_data: exam data list (from load_exam_data)
 # student_id: student identifier
-calculate_projected_grade <- function(weights, canvas_assignments, exam_data, student_id) {
+calculate_projected_grade <- function(weights, canvas_assignments, exam_data, student_id, due_dates = list()) {
   completed_points <- 0
   completed_weight <- 0
   total_weight <- 0
@@ -66,7 +81,7 @@ calculate_projected_grade <- function(weights, canvas_assignments, exam_data, st
       match_idx <- which(canvas_assignments$name == aname)
       if (length(match_idx) > 0) {
         row <- canvas_assignments[match_idx[1], ]
-        if (!is.na(row$score) && !isTRUE(row$is_ongoing)) {
+        if (!is.na(row$score) && compute_assessment_status(due_dates[[aname]], !is.na(row$score)) == "completed") {
           score_pct <- row$percentage
         }
       }

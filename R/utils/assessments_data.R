@@ -5,7 +5,7 @@
 # Returns a named list of data.frames, keyed by assignment name.
 # Each data.frame has: name, max_points, scores (numeric vector of percentages).
 # Only includes completed assessments (is_ongoing == FALSE).
-extract_class_scores <- function(data) {
+extract_class_scores <- function(data, due_dates = list()) {
   if (is.null(data) || nrow(data) == 0) return(list())
   if (!"assignments" %in% names(data)) return(list())
 
@@ -13,8 +13,13 @@ extract_class_scores <- function(data) {
   ref <- data$assignments[[1]]
   if (is.null(ref) || nrow(ref) == 0) return(list())
 
-  # Only completed assessments
-  completed <- ref[!ref$is_ongoing, , drop = FALSE]
+  # Only completed assessments (using due-date-based status)
+  # Use has_score=TRUE to test whether the assessment *would* be completed
+  # (i.e. due date is in the past or not set) — individual student scores checked later
+  statuses <- vapply(seq_len(nrow(ref)), function(i) {
+    compute_assessment_status(due_dates[[ref$name[i]]], TRUE)
+  }, character(1))
+  completed <- ref[statuses == "completed", , drop = FALSE]
   if (nrow(completed) == 0) return(list())
 
   result <- list()
@@ -148,7 +153,7 @@ compute_percentile_ranks <- function(student, all_students) {
   assignments <- student$assignments[[1]]
   if (is.null(assignments) || nrow(assignments) == 0) return(numeric(0))
 
-  completed <- assignments[!assignments$is_ongoing & !is.na(assignments$score), ]
+  completed <- assignments[!is.na(assignments$score), ]
   if (nrow(completed) == 0) return(numeric(0))
 
   ranks <- vapply(seq_len(nrow(completed)), function(i) {

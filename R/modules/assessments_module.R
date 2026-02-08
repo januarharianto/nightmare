@@ -32,13 +32,14 @@ assessmentsModuleUI <- function(id) {
   )
 }
 
-assessmentsModuleServer <- function(id, studentData, examData = NULL) {
+assessmentsModuleServer <- function(id, studentData, examData = NULL, weightsData = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     classScores <- reactive({
       data <- studentData()
-      canvas_scores <- if (!is.null(data) && nrow(data) > 0) extract_class_scores(data) else list()
+      wd <- if (!is.null(weightsData)) weightsData() else list(due_dates = list())
+      canvas_scores <- if (!is.null(data) && nrow(data) > 0) extract_class_scores(data, wd$due_dates) else list()
 
       # Merge exam scores if available
       exam <- if (!is.null(examData)) examData() else NULL

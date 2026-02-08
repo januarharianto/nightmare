@@ -71,6 +71,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
       # Assessments Section
       {
         weights <- if (!is.null(weights_data)) weights_data$weights else list()
+        due_dates <- if (!is.null(weights_data)) weights_data$due_dates else list()
 
         # Section header depends on edit mode
         assess_header <- if (editing_weights) {
@@ -95,7 +96,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
         projection_strip <- NULL
         if (!is.null(weights_data) && length(weights_data$weights) > 0) {
           projection <- calculate_projected_grade(
-            weights, student$assignments[[1]], exam_data, as.character(student$student_id)
+            weights, student$assignments[[1]], exam_data, as.character(student$student_id), due_dates
           )
           if (projection$completed_weight > 0) {
             risk <- calculate_risk_level(projection)
@@ -158,14 +159,15 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                   tags$p("No assessment data available")
                 )
               } else {
-                # Compute summary stats
-                completed <- assignments[!assignments$is_ongoing, ]
+                # Compute summary stats using due-date-based status
                 n_total <- nrow(assignments)
-                has_score <- completed[!is.na(completed$score), ]
-                n_completed <- nrow(has_score)
-                n_ongoing <- sum(assignments$is_ongoing)
-                n_failing <- sum(!is.na(completed$score) & completed$percentage < 50) +
-                  sum(is.na(completed$score))
+                statuses <- vapply(seq_len(n_total), function(i) {
+                  compute_assessment_status(due_dates[[assignments$name[i]]], !is.na(assignments$score[i]))
+                }, character(1))
+                n_completed <- sum(statuses == "completed")
+                n_ongoing <- sum(statuses == "ongoing")
+                n_failing <- sum(statuses == "completed" & assignments$percentage < 50) +
+                  sum(statuses == "missing")
                 n_spec_cons <- nrow(student$special_consids[[1]])
 
                 all_ongoing <- n_total == n_ongoing
@@ -215,8 +217,9 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                       lapply(1:nrow(assignments), function(i) {
                         a <- assignments[i, ]
                         has_sc <- !is.na(a$score)
-                        ongoing <- isTRUE(a$is_ongoing)
-                        missing <- !has_sc && !ongoing
+                        status <- compute_assessment_status(due_dates[[a$name]], has_sc)
+                        ongoing <- status == "ongoing"
+                        missing <- status == "missing"
 
                         # Score column
                         score_display <- if (has_sc) {
@@ -272,6 +275,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                           mp <- a$max_points
                           row <- if (nrow(scores_df) > 0) scores_df[scores_df$assessment == aname, , drop = FALSE] else scores_df
                           has_score <- nrow(row) > 0
+                          exam_status <- compute_assessment_status(due_dates[[aname]], has_score)
 
                           # Source type tag
                           src_types <- unique(vapply(a$sittings, function(s) s$source_type %||% "manual", character(1)))
@@ -280,7 +284,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
 
                           if (has_score) {
                             pct <- (row$score[1] / mp) * 100
-                            row_class <- if (pct < 50) "assessment-failing" else ""
+                            row_class <- if (exam_status == "ongoing") "assessment-pending" else if (pct < 50) "assessment-failing" else ""
                             tags$tr(
                               class = row_class,
                               tags$td(aname, src_tag),
@@ -297,11 +301,13 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                               }
                             )
                           } else {
+                            no_score_class <- if (exam_status == "ongoing") "assessment-pending" else "assessment-missing"
+                            no_score_label <- if (exam_status == "ongoing") "--" else "Missing"
                             tags$tr(
-                              class = "assessment-missing",
+                              class = no_score_class,
                               tags$td(aname, src_tag),
-                              tags$td(sprintf("-- / %g", mp)),
-                              tags$td(class = "assessment-pct", "Missing"),
+                              tags$td(if (exam_status == "ongoing") "--" else sprintf("-- / %g", mp)),
+                              tags$td(class = "assessment-pct", no_score_label),
                               if (editing_weights) {
                                 tags$td(
                                   tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",

@@ -11,9 +11,12 @@ examsModuleUI <- function(id) {
   )
 }
 
-examsModuleServer <- function(id, studentData, examData, currentUnit, dataSources) {
+examsModuleServer <- function(id, studentData, examData, currentUnit, dataSources, weightsData = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Edit mode toggle for assessment config
+    editingConfig <- reactiveVal(FALSE)
 
     # Wizard state (steps: 1=Upload, 2=Columns, 3=Name, 4=Review)
     wizardStep <- reactiveVal(1L)
@@ -666,10 +669,38 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
 
     # --- Summary table ---
 
+    # Toggle config editing mode
+    observeEvent(input$toggle_edit_config, {
+      editingConfig(!editingConfig())
+    })
+
     output$exam_summary <- renderUI({
       exam <- examData()
       summary_df <- get_exam_summary(exam)
       data <- studentData()
+      editing <- editingConfig()
+      wd <- if (!is.null(weightsData)) weightsData() else list(weights = list(), due_dates = list())
+      weights <- wd$weights
+      due_dates <- wd$due_dates
+
+      # Edit/Done toggle button
+      edit_toggle <- if (editing) {
+        tags$button(class = "weights-done-btn",
+          onclick = sprintf(
+            "var ws=document.querySelectorAll('.weight-input');var ds=document.querySelectorAll('.due-date-input');var w={};var d={};ws.forEach(function(el){var v=parseFloat(el.value);if(!isNaN(v)&&v>0)w[el.dataset.assessment]=v;});ds.forEach(function(el){if(el.value)d[el.dataset.assessment]=el.value;});Shiny.setInputValue('save_assessment_config',JSON.stringify({weights:w,due_dates:d}),{priority:'event'});Shiny.setInputValue('%s',true,{priority:'event'});",
+            ns("toggle_edit_config")
+          ),
+          "Done"
+        )
+      } else {
+        tags$button(class = "edit-weights-link",
+          onclick = sprintf(
+            "Shiny.setInputValue('%s', true, {priority: 'event'})",
+            ns("toggle_edit_config")
+          ),
+          "Edit"
+        )
+      }
 
       # --- Auto-detected Assessments (from Canvas) ---
       canvas_section <- NULL
@@ -680,7 +711,6 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
           canvas_rows <- lapply(seq_len(nrow(ref)), function(i) {
             aname <- ref$name[i]
             max_pts <- ref$max_points[i]
-            ongoing <- isTRUE(ref$is_ongoing[i])
 
             # Count students with scores
             n_scored <- sum(vapply(data$assignments, function(a) {
@@ -688,19 +718,90 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
               nrow(row) > 0 && !is.na(row$score[1])
             }, logical(1)))
 
-            status_label <- if (ongoing) {
-              tags$span(class = "exam-source-tag", "Ongoing")
-            } else {
-              tags$span(class = "exam-source-tag", "Completed")
-            }
-
-            tags$tr(
-              if (ongoing) list(class = "assessment-pending"),
-              tags$td(aname, status_label),
-              tags$td(as.character(max_pts)),
-              tags$td(sprintf("%d / %d", n_scored, n_students))
+            # Status from due dates
+            any_scored <- n_scored > 0
+            status <- compute_assessment_status(due_dates[[aname]], any_scored)
+            status_label <- tags$span(class = "exam-source-tag",
+              if (status == "ongoing") "Ongoing" else if (status == "completed") "Completed" else "Missing"
             )
+
+            row_class <- if (status == "ongoing") "assessment-pending" else ""
+
+            if (editing) {
+              tags$tr(
+                class = row_class,
+                tags$td(aname),
+                tags$td(as.character(max_pts)),
+                tags$td(sprintf("%d / %d", n_scored, n_students)),
+                tags$td(
+                  tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
+                    `data-assessment` = aname,
+                    value = if (!is.null(weights[[aname]])) weights[[aname]] else "",
+                    placeholder = "\u2014"
+                  )
+                ),
+                tags$td(
+                  tags$input(type = "date", class = "due-date-input",
+                    `data-assessment` = aname,
+                    value = if (!is.null(due_dates[[aname]])) due_dates[[aname]] else ""
+                  )
+                ),
+                tags$td(status_label)
+              )
+            } else {
+              weight_display <- if (!is.null(weights[[aname]])) paste0(weights[[aname]], "%") else "\u2014"
+              due_display <- if (!is.null(due_dates[[aname]]) && due_dates[[aname]] != "") {
+                format(as.Date(due_dates[[aname]]), "%d %b %Y")
+              } else {
+                "\u2014"
+              }
+
+              tags$tr(
+                class = row_class,
+                tags$td(aname),
+                tags$td(as.character(max_pts)),
+                tags$td(sprintf("%d / %d", n_scored, n_students)),
+                tags$td(weight_display),
+                tags$td(due_display),
+                tags$td(status_label)
+              )
+            }
           })
+
+          # Weight total footer (edit mode only)
+          canvas_footer <- NULL
+          if (editing) {
+            # Compute total across all assessments (canvas + uploaded)
+            canvas_footer <- tagList(
+              tags$tfoot(
+                tags$tr(class = "weight-total-row",
+                  tags$td(style = "text-align: right;", "Total"),
+                  tags$td(""),
+                  tags$td(""),
+                  tags$td(id = "weight-total-display", sprintf("%.0f / 100%%", sum(unlist(weights)))),
+                  tags$td(""),
+                  tags$td("")
+                )
+              ),
+              tags$script(HTML("
+                document.querySelectorAll('.weight-input').forEach(function(el) {
+                  el.addEventListener('input', function() {
+                    var total = 0;
+                    document.querySelectorAll('.weight-input').forEach(function(inp) {
+                      var v = parseFloat(inp.value);
+                      if (!isNaN(v)) total += v;
+                    });
+                    var display = document.getElementById('weight-total-display');
+                    if (display) {
+                      display.textContent = total.toFixed(0) + ' / 100%';
+                      if (total > 100) display.classList.add('weight-total-over');
+                      else display.classList.remove('weight-total-over');
+                    }
+                  });
+                });
+              "))
+            )
+          }
 
           canvas_section <- tags$div(
             tags$div(class = "exams-label", style = "padding: 12px 12px 4px 12px;",
@@ -711,9 +812,13 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
               tags$thead(tags$tr(
                 tags$th("Assessment"),
                 tags$th("Max Points"),
-                tags$th("Scored")
+                tags$th("Scored"),
+                tags$th(if (editing) "Weight" else "Weight"),
+                tags$th(if (editing) "Due Date" else "Due Date"),
+                tags$th("Status")
               )),
-              tags$tbody(canvas_rows)
+              tags$tbody(canvas_rows),
+              canvas_footer
             )
           )
         }
@@ -722,6 +827,76 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       # --- Uploaded Assessments ---
       uploaded_section <- NULL
       if (nrow(summary_df) > 0) {
+        uploaded_rows <- lapply(seq_len(nrow(summary_df)), function(i) {
+          row <- summary_df[i, ]
+          aname <- row$assessment
+          src_label <- if (grepl("gradescope", row$source_type, ignore.case = TRUE)) "Gradescope" else "Manual"
+
+          any_scored <- row$students_count > 0
+          status <- compute_assessment_status(due_dates[[aname]], any_scored)
+          status_label <- tags$span(class = "exam-source-tag",
+            if (status == "ongoing") "Ongoing" else if (status == "completed") "Completed" else "Missing"
+          )
+
+          if (editing) {
+            tags$tr(
+              tags$td(aname, tags$span(class = "exam-source-tag", src_label)),
+              tags$td(as.character(row$max_points)),
+              tags$td(as.character(row$students_count)),
+              tags$td(
+                tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
+                  `data-assessment` = aname,
+                  value = if (!is.null(weights[[aname]])) weights[[aname]] else "",
+                  placeholder = "\u2014"
+                )
+              ),
+              tags$td(
+                tags$input(type = "date", class = "due-date-input",
+                  `data-assessment` = aname,
+                  value = if (!is.null(due_dates[[aname]])) due_dates[[aname]] else ""
+                )
+              ),
+              tags$td(status_label),
+              tags$td(
+                tags$button(
+                  class = "note-action-btn note-delete-btn",
+                  onclick = sprintf(
+                    "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
+                    ns("delete_assessment"), aname
+                  ),
+                  "Delete"
+                )
+              )
+            )
+          } else {
+            weight_display <- if (!is.null(weights[[aname]])) paste0(weights[[aname]], "%") else "\u2014"
+            due_display <- if (!is.null(due_dates[[aname]]) && due_dates[[aname]] != "") {
+              format(as.Date(due_dates[[aname]]), "%d %b %Y")
+            } else {
+              "\u2014"
+            }
+
+            tags$tr(
+              tags$td(aname, tags$span(class = "exam-source-tag", src_label)),
+              tags$td(as.character(row$max_points)),
+              tags$td(as.character(row$students_count)),
+              tags$td(weight_display),
+              tags$td(due_display),
+              tags$td(status_label),
+              tags$td(
+                tags$button(
+                  class = "note-action-btn note-delete-btn",
+                  onclick = sprintf(
+                    "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
+                    ns("delete_assessment"), aname
+                  ),
+                  "Delete"
+                )
+              )
+            )
+          }
+        })
+
         uploaded_section <- tags$div(
           tags$div(class = "exams-label", style = "padding: 12px 12px 4px 12px;",
             "Uploaded Assessments"),
@@ -730,42 +905,13 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
             tags$thead(tags$tr(
               tags$th("Assessment"),
               tags$th("Max Points"),
-              tags$th("Sittings"),
               tags$th("Students"),
-              tags$th("Last Upload"),
+              tags$th("Weight"),
+              tags$th("Due Date"),
+              tags$th("Status"),
               tags$th("")
             )),
-            tags$tbody(
-              lapply(seq_len(nrow(summary_df)), function(i) {
-                row <- summary_df[i, ]
-                # Source type tag
-                src_label <- if (grepl("gradescope", row$source_type, ignore.case = TRUE)) {
-                  "Gradescope"
-                } else {
-                  "Manual"
-                }
-                tags$tr(
-                  tags$td(
-                    row$assessment,
-                    tags$span(class = "exam-source-tag", src_label)
-                  ),
-                  tags$td(as.character(row$max_points)),
-                  tags$td(as.character(row$sittings_count)),
-                  tags$td(as.character(row$students_count)),
-                  tags$td(row$last_upload),
-                  tags$td(
-                    tags$button(
-                      class = "note-action-btn note-delete-btn",
-                      onclick = sprintf(
-                        "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
-                        ns("delete_assessment"), row$assessment
-                      ),
-                      "Delete"
-                    )
-                  )
-                )
-              })
-            )
+            tags$tbody(uploaded_rows)
           )
         )
       }
@@ -776,7 +922,14 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
         ))
       }
 
-      tags$div(canvas_section, uploaded_section)
+      tags$div(
+        tags$div(class = "detail-section-header", style = "padding: 12px 12px 0 12px;",
+          "Assessments",
+          edit_toggle
+        ),
+        canvas_section,
+        uploaded_section
+      )
     })
   })
 }

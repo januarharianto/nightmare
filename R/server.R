@@ -337,13 +337,13 @@ server <- function(input, output, session) {
   extensionsModuleServer("extensions", studentData, dataSources, currentUnit)
 
   # Assessments module
-  assessmentsModuleServer("assessments", studentData, examData)
+  assessmentsModuleServer("assessments", studentData, examData, weightsData)
 
   # Notes module
   notesModuleServer("notes", studentData, studentNotes, currentUnit)
 
   # Exams module
-  examsModuleServer("exams", studentData, examData, currentUnit, dataSources)
+  examsModuleServer("exams", studentData, examData, currentUnit, dataSources, weightsData)
 
   # Navigate to student from notes feed
   observeEvent(input$navigate_to_student, {
@@ -464,18 +464,39 @@ server <- function(input, output, session) {
     editingWeights(!editingWeights())
   })
 
-  # Save weights from client-side JSON
+  # Save weights from client-side JSON (student detail view)
   observeEvent(input$save_weights, {
     req(input$save_weights)
     weights_json <- input$save_weights
     weights_list <- fromJSON(weights_json, simplifyVector = FALSE)
-    # Convert values to numeric
     weights_list <- lapply(weights_list, as.numeric)
 
     current <- weightsData()
     current$weights <- weights_list
+    # Preserve existing due_dates
     weightsData(current)
     editingWeights(FALSE)
+
+    unit <- currentUnit()
+    if (!is.null(unit)) {
+      save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
+    }
+  })
+
+  # Save assessment config from Assessments tab (weights + due dates)
+  observeEvent(input$save_assessment_config, {
+    req(input$save_assessment_config)
+    config_json <- input$save_assessment_config
+    config <- fromJSON(config_json, simplifyVector = FALSE)
+
+    current <- weightsData()
+    if (!is.null(config$weights)) {
+      current$weights <- lapply(config$weights, as.numeric)
+    }
+    if (!is.null(config$due_dates)) {
+      current$due_dates <- config$due_dates
+    }
+    weightsData(current)
 
     unit <- currentUnit()
     if (!is.null(unit)) {
