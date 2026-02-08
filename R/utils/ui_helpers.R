@@ -253,10 +253,10 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                           tags$td(class = "assessment-pct", pct_display),
                           if (editing_weights) {
                             tags$td(
-                              tags$input(type = "number", class = "weight-input",
+                              tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
                                 `data-assessment` = a$name,
                                 value = if (!is.null(weights[[a$name]])) weights[[a$name]] else "",
-                                placeholder = "\u2014", min = "0", max = "100", step = "1"
+                                placeholder = "\u2014"
                               )
                             )
                           }
@@ -288,10 +288,10 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                               tags$td(class = "assessment-pct", sprintf("%.0f%%", pct)),
                               if (editing_weights) {
                                 tags$td(
-                                  tags$input(type = "number", class = "weight-input",
+                                  tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
                                     `data-assessment` = aname,
                                     value = if (!is.null(weights[[aname]])) weights[[aname]] else "",
-                                    placeholder = "\u2014", min = "0", max = "100", step = "1"
+                                    placeholder = "\u2014"
                                   )
                                 )
                               }
@@ -304,10 +304,10 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                               tags$td(class = "assessment-pct", "Missing"),
                               if (editing_weights) {
                                 tags$td(
-                                  tags$input(type = "number", class = "weight-input",
+                                  tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
                                     `data-assessment` = aname,
                                     value = if (!is.null(weights[[aname]])) weights[[aname]] else "",
-                                    placeholder = "\u2014", min = "0", max = "100", step = "1"
+                                    placeholder = "\u2014"
                                   )
                                 )
                               }
