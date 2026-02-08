@@ -203,6 +203,11 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                         row <- if (nrow(scores_df) > 0) scores_df[scores_df$assessment == aname, , drop = FALSE] else scores_df
                         has_score <- nrow(row) > 0
 
+                        # Source type tag
+                        src_types <- unique(vapply(a$sittings, function(s) s$source_type %||% "manual", character(1)))
+                        src_label <- if (any(src_types == "gradescope")) "Gradescope" else "Manual"
+                        src_tag <- tags$span(class = "exam-source-tag", src_label)
+
                         if (has_score) {
                           pct <- (row$score[1] / mp) * 100
                           row_class <- if (pct < 50) "assessment-failing" else ""
@@ -213,7 +218,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                           }
                           tags$tr(
                             class = row_class,
-                            tags$td(aname),
+                            tags$td(aname, src_tag),
                             tags$td(sprintf("%g / %g", row$score[1], mp)),
                             tags$td(class = "assessment-pct", sprintf("%.0f%%", pct)),
                             tags$td(status_html)
@@ -221,7 +226,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                         } else {
                           tags$tr(
                             class = "assessment-missing",
-                            tags$td(aname),
+                            tags$td(aname, src_tag),
                             tags$td(sprintf("-- / %g", mp)),
                             tags$td(class = "assessment-pct", "Missing"),
                             tags$td(tags$span(class = "assessment-status status-missing", "Missing"))
