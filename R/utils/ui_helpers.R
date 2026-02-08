@@ -100,11 +100,20 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
           if (projection$completed_weight > 0) {
             risk <- calculate_risk_level(projection)
             pct_completed <- projection$completed_weight / projection$total_weight * 100
+            current_pct <- projection$completed_points / projection$total_weight * 100
+            max_pct <- projection$max_possible / projection$total_weight * 100
             projection_strip <- tags$div(class = "grade-projection-strip",
               tags$div(class = "grade-projection-top",
                 tags$div(class = "grade-projection-left",
-                  tags$span(class = "grade-projection-label", "Projected"),
-                  tags$span(class = "grade-projection-value", sprintf("%.1f%%", projection$projected_pct))
+                  tags$div(class = "grade-projection-pair",
+                    tags$span(class = "grade-projection-label", "Current"),
+                    tags$span(class = "grade-projection-value", sprintf("%.1f%%", current_pct))
+                  ),
+                  tags$div(class = "grade-projection-pair",
+                    tags$span(class = "grade-projection-label", "Range"),
+                    tags$span(class = "grade-projection-value grade-projection-range",
+                      sprintf("%.1f%% \u2013 %.1f%%", current_pct, max_pct))
+                  )
                 ),
                 tags$div(class = "risk-info-wrapper",
                   tags$span(class = paste("risk-badge", paste0("risk-", risk$level)), risk$label),

@@ -2013,7 +2013,17 @@ label.search-label {
 .grade-projection-left {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 24px;
+}
+
+.grade-projection-pair {
+  display: flex;
+  flex-direction: column;
+}
+
+.grade-projection-range {
+  font-size: 16px !important;
+  color: #666666 !important;
 }
 
 /* Risk Badges */
