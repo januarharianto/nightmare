@@ -25,21 +25,12 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
     maxPoints <- reactiveVal(NULL)
     newSittingId <- reactiveVal(NULL)
 
-    # Determine active steps based on source type
+    # All flows use 4 steps
     get_steps <- function() {
-      detected <- detectedSource()
-      if (!is.null(detected) && detected$type == "gradescope") {
-        # Skip columns step for gradescope
-        list(
-          nums = c(1L, 3L, 4L),
-          labels = c("Upload", "Name", "Review")
-        )
-      } else {
-        list(
-          nums = c(1L, 2L, 3L, 4L),
-          labels = c("Upload", "Columns", "Name", "Review")
-        )
-      }
+      list(
+        nums = c(1L, 2L, 3L, 4L),
+        labels = c("Upload", "Columns", "Name", "Review")
+      )
     }
 
     # Build the wizard card wrapper with step indicator and footer
@@ -112,14 +103,7 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       tryCatch({
         detected <- detect_exam_source(file_path)
         detectedSource(detected)
-
-        if (detected$type == "gradescope") {
-          scores <- parse_gradescope_export(file_path)
-          parsedScores(scores)
-          wizardStep(3L)  # Skip column mapping
-        } else {
-          wizardStep(2L)  # Show column mapping
-        }
+        wizardStep(2L)  # Both types go to column mapping
       }, error = function(e) {
         showNotification(paste("Error reading file:", e$message), type = "error")
       })
@@ -179,41 +163,60 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       render_wizard_card(1L, content, footer)
     }
 
-    # --- Step 2: Column mapping (manual sources) ---
+    # --- Step 2: Column mapping ---
 
     render_column_mapping <- function() {
       detected <- detectedSource()
       if (is.null(detected)) return(NULL)
 
       headers <- detected$headers
-      preview <- detected$preview
+      is_gradescope <- detected$type == "gradescope"
+      header_choices <- c("Select..." = "", headers)
 
-      content <- tags$div(
-        tags$div(
-          style = "display: flex; gap: 16px; margin-bottom: 12px;",
+      # Build column pickers based on source type
+      if (is_gradescope) {
+        pickers <- tags$div(
+          tags$div(class = "exams-detected-badge", style = "margin-bottom: 12px;",
+            "Gradescope detected"),
           tags$div(
-            style = "flex: 1;",
-            tags$span(class = "exams-label", "Student ID Column"),
-            selectInput(ns("id_col"), label = NULL, choices = headers, width = "100%")
-          ),
-          tags$div(
-            style = "flex: 1;",
-            tags$span(class = "exams-label", "Score Column"),
-            selectInput(ns("score_col"), label = NULL, choices = headers, width = "100%")
-          )
-        ),
-        tags$div(class = "exams-label", "Preview"),
-        tags$table(class = "detail-table",
-          tags$thead(tags$tr(lapply(headers, tags$th))),
-          tags$tbody(
-            lapply(seq_len(min(nrow(preview), 3)), function(i) {
-              tags$tr(lapply(as.character(preview[i, ]), function(v) {
-                tags$td(if (is.na(v)) "" else v)
-              }))
-            })
+            style = "display: flex; gap: 16px; margin-bottom: 12px;",
+            tags$div(
+              style = "flex: 1;",
+              tags$span(class = "exams-label", "Score Column"),
+              selectInput(ns("score_col"), label = NULL, choices = header_choices, width = "100%")
+            ),
+            tags$div(
+              style = "flex: 1;",
+              tags$span(class = "exams-label", "Max Marks Column"),
+              selectInput(ns("max_col"), label = NULL, choices = header_choices, width = "100%")
+            )
           )
         )
-      )
+      } else {
+        pickers <- tags$div(
+          tags$div(
+            style = "display: flex; gap: 16px; margin-bottom: 12px;",
+            tags$div(
+              style = "flex: 1;",
+              tags$span(class = "exams-label", "Student ID Column"),
+              selectInput(ns("id_col"), label = NULL, choices = header_choices, width = "100%")
+            ),
+            tags$div(
+              style = "flex: 1;",
+              tags$span(class = "exams-label", "Score Column"),
+              selectInput(ns("score_col"), label = NULL, choices = header_choices, width = "100%")
+            )
+          ),
+          tags$div(
+            style = "margin-bottom: 12px;",
+            tags$span(class = "exams-label", "Max Marks"),
+            numericInput(ns("manual_max_points"), label = NULL, value = NA, min = 1,
+                         width = "100%")
+          )
+        )
+      }
+
+      content <- pickers
 
       footer <- tags$div(style = "display: contents;",
         cancel_btn(),
@@ -231,11 +234,44 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
     }
 
     observeEvent(input$confirm_columns, {
-      req(input$exam_file, input$id_col, input$score_col)
+      req(input$exam_file)
+      detected <- detectedSource()
+      is_gradescope <- !is.null(detected) && detected$type == "gradescope"
+
+      score_col <- input$score_col
+      if (is.null(score_col) || score_col == "") {
+        showNotification("Please select a score column", type = "warning")
+        return()
+      }
+
       tryCatch({
-        scores <- parse_manual_columns(
-          input$exam_file$datapath, input$id_col, input$score_col
-        )
+        if (is_gradescope) {
+          max_col <- input$max_col
+          if (is.null(max_col) || max_col == "") {
+            showNotification("Please select a max marks column", type = "warning")
+            return()
+          }
+          scores <- parse_gradescope_export(
+            input$exam_file$datapath, score_col
+          )
+          mp <- extract_max_marks(input$exam_file$datapath, max_col)
+          maxPoints(mp)
+        } else {
+          id_col <- input$id_col
+          if (is.null(id_col) || id_col == "") {
+            showNotification("Please select a student ID column", type = "warning")
+            return()
+          }
+          mp <- input$manual_max_points
+          if (is.null(mp) || is.na(mp) || mp < 1) {
+            showNotification("Please enter max marks", type = "warning")
+            return()
+          }
+          scores <- parse_manual_columns(
+            input$exam_file$datapath, id_col, score_col
+          )
+          maxPoints(mp)
+        }
         parsedScores(scores)
         wizardStep(3L)
       }, error = function(e) {
@@ -256,19 +292,10 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
 
       content <- tags$div(
         tags$div(
-          style = "display: flex; gap: 16px; margin-bottom: 12px;",
-          tags$div(
-            style = "flex: 1;",
-            tags$span(class = "exams-label", "Assessment"),
-            selectInput(ns("assessment_choice"), label = NULL,
-                        choices = name_choices, width = "100%")
-          ),
-          tags$div(
-            style = "flex: 1;",
-            tags$span(class = "exams-label", "Max Points"),
-            numericInput(ns("max_points"), label = NULL, value = 100, min = 1,
-                         width = "100%")
-          )
+          style = "margin-bottom: 12px;",
+          tags$span(class = "exams-label", "Assessment"),
+          selectInput(ns("assessment_choice"), label = NULL,
+                      choices = name_choices, width = "100%")
         ),
         uiOutput(ns("new_name_input"))
       )
@@ -316,9 +343,8 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       }
 
       assessmentName(trimws(aname))
-      maxPoints(input$max_points %||% 100)
 
-      # Update max_points from existing assessment if selecting existing
+      # Use max_points from existing assessment if selecting existing
       if (choice != "__new__") {
         exam <- examData()
         existing <- exam$assessments[[choice]]

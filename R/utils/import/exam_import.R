@@ -24,9 +24,9 @@ detect_exam_source <- function(file_path) {
   list(type = source_type, headers = headers, preview = raw)
 }
 
-# Parse a Gradescope export: auto-map SID + Total Score columns.
-# Returns a named list (SID -> score).
-parse_gradescope_export <- function(file_path) {
+# Parse a Gradescope export with user-chosen score column.
+# SID column is auto-detected. Returns a named list (SID -> score).
+parse_gradescope_export <- function(file_path, score_col) {
   ext <- tolower(tools::file_ext(file_path))
 
   raw <- if (ext %in% c("xlsx", "xls")) {
@@ -37,15 +37,12 @@ parse_gradescope_export <- function(file_path) {
 
   headers_lower <- tolower(names(raw))
 
-  # Find SID column
+  # Find SID column (auto-detected)
   sid_idx <- which(headers_lower %in% c("sid", "student id"))
   if (length(sid_idx) == 0) stop("No SID column found in Gradescope export")
   sid_col <- names(raw)[sid_idx[1]]
 
-  # Find Total Score column
-  total_idx <- which(grepl("total\\s*score", headers_lower))
-  if (length(total_idx) == 0) stop("No Total Score column found in Gradescope export")
-  score_col <- names(raw)[total_idx[1]]
+  if (!score_col %in% names(raw)) stop(paste("Column not found:", score_col))
 
   sids <- as.character(raw[[sid_col]])
   scores <- suppressWarnings(as.numeric(raw[[score_col]]))
@@ -56,6 +53,24 @@ parse_gradescope_export <- function(file_path) {
   scores <- scores[valid]
 
   setNames(as.list(scores), sids)
+}
+
+# Extract max marks from a Gradescope column (first non-NA numeric value).
+extract_max_marks <- function(file_path, max_col) {
+  ext <- tolower(tools::file_ext(file_path))
+
+  raw <- if (ext %in% c("xlsx", "xls")) {
+    readxl::read_excel(file_path, n_max = 5)
+  } else {
+    readr::read_csv(file_path, n_max = 5, show_col_types = FALSE)
+  }
+
+  if (!max_col %in% names(raw)) stop(paste("Column not found:", max_col))
+
+  vals <- suppressWarnings(as.numeric(raw[[max_col]]))
+  vals <- vals[!is.na(vals)]
+  if (length(vals) == 0) stop("No numeric values found in max marks column")
+  vals[1]
 }
 
 # Parse manual columns: extract specified id and score columns.
