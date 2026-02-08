@@ -1974,3 +1974,239 @@ label.search-label {
   outline: 2px solid #000000;
 }
 
+/* ============================================
+   GRADE PROJECTION & ASSESSMENT WEIGHTS
+   ============================================ */
+
+/* Grade Projection Strip */
+.grade-projection-strip {
+  padding: 12px;
+  border-bottom: 1px solid #EEE;
+  background: #FFFFFF;
+}
+
+.grade-projection-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.grade-projection-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #AAAAAA;
+}
+
+.grade-projection-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+  margin-left: 8px;
+}
+
+.grade-projection-left {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Risk Badges */
+.risk-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.risk-badge.risk-low {
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px solid #CCC;
+}
+
+.risk-badge.risk-moderate {
+  background: #F5F5F5;
+  color: #000000;
+  border: 1px solid #CCC;
+}
+
+.risk-badge.risk-high {
+  background: #EEE;
+  color: #000000;
+  border: 1px solid #000;
+}
+
+.risk-badge.risk-critical {
+  background: #000;
+  color: #FFF;
+  border: 1px solid #000;
+}
+
+/* Risk Info Button */
+.risk-info-btn {
+  background: none;
+  border: 1px solid #CCC;
+  color: #AAA;
+  font-size: 11px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 700;
+  margin-left: 6px;
+  font-family: inherit;
+  padding: 0;
+}
+
+.risk-info-btn:hover {
+  color: #000;
+  border-color: #000;
+}
+
+/* Risk Info Popover */
+.risk-info-popover {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  background: #FFF;
+  border: 1px solid #CCC;
+  padding: 16px;
+  z-index: 100;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #000;
+}
+
+.risk-info-popover.open {
+  display: block;
+}
+
+.risk-info-popover h4 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #AAA;
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.risk-info-popover p {
+  margin-bottom: 8px;
+}
+
+.risk-info-popover .risk-threshold-table {
+  width: 100%;
+  font-size: 11px;
+  border-collapse: collapse;
+}
+
+.risk-info-popover .risk-threshold-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #EEE;
+}
+
+/* Risk Info Wrapper */
+.risk-info-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Progress Bar */
+.grade-progress-bar {
+  height: 4px;
+  background: #EEE;
+  width: 100%;
+}
+
+.grade-progress-fill {
+  height: 100%;
+  background: #000;
+  transition: width 0.3s;
+}
+
+.grade-progress-label {
+  font-size: 10px;
+  color: #AAA;
+  margin-top: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Edit Mode Styles */
+.detail-section-header.editing-weights {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weights-done-btn {
+  background: #000;
+  color: #FFF;
+  border: none;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.weights-done-btn:hover {
+  background: #333;
+}
+
+.edit-weights-link {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #AAA;
+  cursor: pointer;
+  margin-left: 8px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.edit-weights-link:hover {
+  color: #000;
+}
+
+.weight-input {
+  width: 50px;
+  padding: 2px 4px;
+  font-size: 12px;
+  border: 1px solid #CCC;
+  text-align: right;
+  font-family: inherit;
+  background: #FFF;
+}
+
+.weight-input:focus {
+  outline: 2px solid #000;
+  border-color: #000;
+}
+
+.weight-total-row td {
+  font-weight: 700;
+  border-top: 2px solid #000;
+  padding-top: 8px;
+}
+
+.weight-total-row .weight-total-over {
+  color: #CC0000;
+}
+

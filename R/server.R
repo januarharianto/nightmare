@@ -15,6 +15,7 @@ source("R/modules/extensions_module.R")
 source("R/modules/assessments_module.R")
 source("R/modules/notes_module.R")
 source("R/utils/exam_data.R")
+source("R/utils/weights_data.R")
 source("R/utils/import/exam_import.R")
 source("R/modules/exams_module.R")
 
@@ -28,6 +29,8 @@ server <- function(input, output, session) {
   dataSources <- reactiveVal(list(canvas = FALSE, consids = FALSE, plans = FALSE))
   studentNotes <- reactiveVal(list())
   examData <- reactiveVal(list(version = 1L, saved_at = NULL, assessments = list()))
+  weightsData <- reactiveVal(list(version = 1L, saved_at = NULL, weights = list()))
+  editingWeights <- reactiveVal(FALSE)
 
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
@@ -57,6 +60,7 @@ server <- function(input, output, session) {
       currentUnit(unit)
       studentNotes(load_student_notes(data_dir, unit))
       examData(load_exam_data(data_dir, unit))
+      weightsData(load_weights_data(data_dir, unit))
       save_last_unit(data_dir, unit)
 
       # Default to first student alphabetically
@@ -455,6 +459,30 @@ server <- function(input, output, session) {
     save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
   })
 
+  # Toggle weight editing mode
+  observeEvent(input$toggle_edit_weights, {
+    editingWeights(!editingWeights())
+  })
+
+  # Save weights from client-side JSON
+  observeEvent(input$save_weights, {
+    req(input$save_weights)
+    weights_json <- input$save_weights
+    weights_list <- fromJSON(weights_json, simplifyVector = FALSE)
+    # Convert values to numeric
+    weights_list <- lapply(weights_list, as.numeric)
+
+    current <- weightsData()
+    current$weights <- weights_list
+    weightsData(current)
+    editingWeights(FALSE)
+
+    unit <- currentUnit()
+    if (!is.null(unit)) {
+      save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
+    }
+  })
+
   observeEvent(input$confirm_edit_note_data, {
     req(input$confirm_edit_note_data)
     info <- input$confirm_edit_note_data
@@ -490,7 +518,7 @@ server <- function(input, output, session) {
     student <- student[1, ]
     sid <- as.character(student$student_id)
     notes_for_student <- studentNotes()[[sid]] %||% list()
-    build_student_detail_view(student, studentData(), notes_for_student, examData())
+    build_student_detail_view(student, studentData(), notes_for_student, examData(), weightsData(), editingWeights())
   })
 
 }

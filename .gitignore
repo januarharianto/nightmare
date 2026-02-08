@@ -1,6 +1,8 @@
 # Markdown files - exclude all except key documentation
 *.md
 !README.md
+!CLAUDE.md
+!docs/**/*.md
 
 # Sensitive student data - NEVER COMMIT
 _sample-data/
