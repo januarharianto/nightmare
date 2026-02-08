@@ -144,14 +144,18 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                       )
                     }),
 
-                    # Exam data rows (from uploaded assessments)
+                    # Exam data rows (all uploaded assessments, missing if no score)
                     if (!is.null(exam_data) && length(exam_data$assessments) > 0) {
                       sid <- as.character(student$student_id)
                       scores_df <- get_student_exam_scores(exam_data, sid)
-                      if (nrow(scores_df) > 0) {
-                        lapply(seq_len(nrow(scores_df)), function(i) {
-                          row <- scores_df[i, ]
-                          pct <- (row$score / row$max_points) * 100
+                      lapply(names(exam_data$assessments), function(aname) {
+                        a <- exam_data$assessments[[aname]]
+                        mp <- a$max_points
+                        row <- if (nrow(scores_df) > 0) scores_df[scores_df$assessment == aname, , drop = FALSE] else scores_df
+                        has_score <- nrow(row) > 0
+
+                        if (has_score) {
+                          pct <- (row$score[1] / mp) * 100
                           row_class <- if (pct < 50) "assessment-failing" else ""
                           status_html <- if (pct < 50) {
                             tags$span(class = "assessment-status status-failing", "Failing")
@@ -160,13 +164,21 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                           }
                           tags$tr(
                             class = row_class,
-                            tags$td(row$assessment),
-                            tags$td(sprintf("%g / %g", row$score, row$max_points)),
+                            tags$td(aname),
+                            tags$td(sprintf("%g / %g", row$score[1], mp)),
                             tags$td(class = "assessment-pct", sprintf("%.0f%%", pct)),
                             tags$td(status_html)
                           )
-                        })
-                      }
+                        } else {
+                          tags$tr(
+                            class = "assessment-missing",
+                            tags$td(aname),
+                            tags$td(sprintf("-- / %g", mp)),
+                            tags$td(class = "assessment-pct", "Missing"),
+                            tags$td(tags$span(class = "assessment-status status-missing", "Missing"))
+                          )
+                        }
+                      })
                     }
                   )
                 )
