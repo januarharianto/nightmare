@@ -94,6 +94,18 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       )
     }
 
+    # Back button goes to previous step
+    back_btn <- function(target_step) {
+      tags$button(
+        class = "exams-wizard-btn-secondary",
+        onclick = sprintf(
+          "Shiny.setInputValue('%s', %d, {priority: 'event'})",
+          ns("wizard_back"), target_step
+        ),
+        "Back"
+      )
+    }
+
     # --- File upload triggers wizard ---
 
     observeEvent(input$exam_file, {
@@ -107,6 +119,12 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       }, error = function(e) {
         showNotification(paste("Error reading file:", e$message), type = "error")
       })
+    })
+
+    # --- Back ---
+
+    observeEvent(input$wizard_back, {
+      wizardStep(as.integer(input$wizard_back))
     })
 
     # --- Cancel ---
@@ -220,13 +238,16 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
 
       footer <- tags$div(style = "display: contents;",
         cancel_btn(),
-        tags$button(
-          class = "exams-wizard-btn",
-          onclick = sprintf(
-            "Shiny.setInputValue('%s', true, {priority: 'event'})",
-            ns("confirm_columns")
-          ),
-          "Next"
+        tags$div(style = "display: flex; gap: 8px;",
+          back_btn(1L),
+          tags$button(
+            class = "exams-wizard-btn",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', true, {priority: 'event'})",
+              ns("confirm_columns")
+            ),
+            "Next"
+          )
         )
       )
 
@@ -302,13 +323,16 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
 
       footer <- tags$div(style = "display: contents;",
         cancel_btn(),
-        tags$button(
-          class = "exams-wizard-btn",
-          onclick = sprintf(
-            "Shiny.setInputValue('%s', true, {priority: 'event'})",
-            ns("confirm_naming")
-          ),
-          "Next"
+        tags$div(style = "display: flex; gap: 8px;",
+          back_btn(2L),
+          tags$button(
+            class = "exams-wizard-btn",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', true, {priority: 'event'})",
+              ns("confirm_naming")
+            ),
+            "Next"
+          )
         )
       )
 
@@ -539,7 +563,10 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
 
       footer <- tags$div(style = "display: contents;",
         cancel_btn(),
-        confirm_btn
+        tags$div(style = "display: flex; gap: 8px;",
+          back_btn(3L),
+          confirm_btn
+        )
       )
 
       render_wizard_card(4L, content, footer)
