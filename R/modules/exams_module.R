@@ -669,59 +669,114 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
     output$exam_summary <- renderUI({
       exam <- examData()
       summary_df <- get_exam_summary(exam)
+      data <- studentData()
 
-      if (nrow(summary_df) == 0) {
+      # --- Auto-detected Assessments (from Canvas) ---
+      canvas_section <- NULL
+      if (!is.null(data) && nrow(data) > 0 && "assignments" %in% names(data)) {
+        ref <- data$assignments[[1]]
+        if (!is.null(ref) && nrow(ref) > 0) {
+          n_students <- nrow(data)
+          canvas_rows <- lapply(seq_len(nrow(ref)), function(i) {
+            aname <- ref$name[i]
+            max_pts <- ref$max_points[i]
+            ongoing <- isTRUE(ref$is_ongoing[i])
+
+            # Count students with scores
+            n_scored <- sum(vapply(data$assignments, function(a) {
+              row <- a[a$name == aname, , drop = FALSE]
+              nrow(row) > 0 && !is.na(row$score[1])
+            }, logical(1)))
+
+            status_label <- if (ongoing) {
+              tags$span(class = "exam-source-tag", "Ongoing")
+            } else {
+              tags$span(class = "exam-source-tag", "Completed")
+            }
+
+            tags$tr(
+              if (ongoing) list(class = "assessment-pending"),
+              tags$td(aname, status_label),
+              tags$td(as.character(max_pts)),
+              tags$td(sprintf("%d / %d", n_scored, n_students))
+            )
+          })
+
+          canvas_section <- tags$div(
+            tags$div(class = "exams-label", style = "padding: 12px 12px 4px 12px;",
+              "Auto-detected Assessments",
+              tags$span(class = "exam-source-tag", "Canvas")),
+            tags$table(class = "detail-table",
+              style = "margin: 0 12px; width: calc(100% - 24px);",
+              tags$thead(tags$tr(
+                tags$th("Assessment"),
+                tags$th("Max Points"),
+                tags$th("Scored")
+              )),
+              tags$tbody(canvas_rows)
+            )
+          )
+        }
+      }
+
+      # --- Uploaded Assessments ---
+      uploaded_section <- NULL
+      if (nrow(summary_df) > 0) {
+        uploaded_section <- tags$div(
+          tags$div(class = "exams-label", style = "padding: 12px 12px 4px 12px;",
+            "Uploaded Assessments"),
+          tags$table(class = "detail-table",
+            style = "margin: 0 12px; width: calc(100% - 24px);",
+            tags$thead(tags$tr(
+              tags$th("Assessment"),
+              tags$th("Max Points"),
+              tags$th("Sittings"),
+              tags$th("Students"),
+              tags$th("Last Upload"),
+              tags$th("")
+            )),
+            tags$tbody(
+              lapply(seq_len(nrow(summary_df)), function(i) {
+                row <- summary_df[i, ]
+                # Source type tag
+                src_label <- if (grepl("gradescope", row$source_type, ignore.case = TRUE)) {
+                  "Gradescope"
+                } else {
+                  "Manual"
+                }
+                tags$tr(
+                  tags$td(
+                    row$assessment,
+                    tags$span(class = "exam-source-tag", src_label)
+                  ),
+                  tags$td(as.character(row$max_points)),
+                  tags$td(as.character(row$sittings_count)),
+                  tags$td(as.character(row$students_count)),
+                  tags$td(row$last_upload),
+                  tags$td(
+                    tags$button(
+                      class = "note-action-btn note-delete-btn",
+                      onclick = sprintf(
+                        "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
+                        ns("delete_assessment"), row$assessment
+                      ),
+                      "Delete"
+                    )
+                  )
+                )
+              })
+            )
+          )
+        )
+      }
+
+      if (is.null(canvas_section) && is.null(uploaded_section)) {
         return(tags$div(class = "empty-state",
-          tags$p("No exam scores uploaded yet")
+          tags$p("No assessments detected")
         ))
       }
 
-      tags$div(
-        tags$div(class = "exams-label", style = "padding: 12px 12px 4px 12px;",
-          "Uploaded Marks"),
-        tags$table(class = "detail-table",
-          style = "margin: 0 12px; width: calc(100% - 24px);",
-          tags$thead(tags$tr(
-            tags$th("Assessment"),
-            tags$th("Max Points"),
-            tags$th("Sittings"),
-            tags$th("Students"),
-            tags$th("Last Upload"),
-            tags$th("")
-          )),
-          tags$tbody(
-            lapply(seq_len(nrow(summary_df)), function(i) {
-              row <- summary_df[i, ]
-              # Source type tag
-              src_label <- if (grepl("gradescope", row$source_type, ignore.case = TRUE)) {
-                "Gradescope"
-              } else {
-                "Manual"
-              }
-              tags$tr(
-                tags$td(
-                  row$assessment,
-                  tags$span(class = "exam-source-tag", src_label)
-                ),
-                tags$td(as.character(row$max_points)),
-                tags$td(as.character(row$sittings_count)),
-                tags$td(as.character(row$students_count)),
-                tags$td(row$last_upload),
-                tags$td(
-                  tags$button(
-                    class = "note-action-btn note-delete-btn",
-                    onclick = sprintf(
-                      "Shiny.setInputValue('%s', '%s', {priority: 'event'})",
-                      ns("delete_assessment"), row$assessment
-                    ),
-                    "Delete"
-                  )
-                )
-              )
-            })
-          )
-        )
-      )
+      tags$div(canvas_section, uploaded_section)
     })
   })
 }
