@@ -139,8 +139,7 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                     tags$tr(
                       tags$th("Assessment"),
                       tags$th("Score"),
-                      tags$th("Percentage"),
-                      tags$th("Status")
+                      tags$th("Percentage")
                     )
                   ),
                   tags$tbody(
@@ -169,27 +168,21 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                         "Missing"
                       }
 
-                      # Status column and row class
-                      if (ongoing) {
-                        row_class <- "assessment-pending"
-                        status_html <- tags$span(class = "assessment-status status-pending", "Pending")
+                      row_class <- if (ongoing) {
+                        "assessment-pending"
                       } else if (missing) {
-                        row_class <- "assessment-missing"
-                        status_html <- tags$span(class = "assessment-status status-missing", "Missing")
+                        "assessment-missing"
                       } else if (a$percentage < 50) {
-                        row_class <- "assessment-failing"
-                        status_html <- tags$span(class = "assessment-status status-failing", "Failing")
+                        "assessment-failing"
                       } else {
-                        row_class <- ""
-                        status_html <- ""
+                        ""
                       }
 
                       tags$tr(
                         class = row_class,
                         tags$td(a$name),
                         tags$td(score_display),
-                        tags$td(class = "assessment-pct", pct_display),
-                        tags$td(status_html)
+                        tags$td(class = "assessment-pct", pct_display)
                       )
                     }),
 
@@ -211,25 +204,18 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
                         if (has_score) {
                           pct <- (row$score[1] / mp) * 100
                           row_class <- if (pct < 50) "assessment-failing" else ""
-                          status_html <- if (pct < 50) {
-                            tags$span(class = "assessment-status status-failing", "Failing")
-                          } else {
-                            ""
-                          }
                           tags$tr(
                             class = row_class,
                             tags$td(aname, src_tag),
                             tags$td(sprintf("%g / %g", row$score[1], mp)),
-                            tags$td(class = "assessment-pct", sprintf("%.0f%%", pct)),
-                            tags$td(status_html)
+                            tags$td(class = "assessment-pct", sprintf("%.0f%%", pct))
                           )
                         } else {
                           tags$tr(
                             class = "assessment-missing",
                             tags$td(aname, src_tag),
                             tags$td(sprintf("-- / %g", mp)),
-                            tags$td(class = "assessment-pct", "Missing"),
-                            tags$td(tags$span(class = "assessment-status status-missing", "Missing"))
+                            tags$td(class = "assessment-pct", "Missing")
                           )
                         }
                       })
