@@ -13,4 +13,5 @@ source("R/ui.R")
 source("R/server.R")
 
 # Create and run the Shiny app
-shinyApp(ui = ui, server = server)
+app <- shinyApp(ui = ui, server = server)
+shiny::runApp(app, launch.browser = TRUE)

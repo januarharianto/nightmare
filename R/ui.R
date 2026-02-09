@@ -13,9 +13,12 @@ ui <- page_fillable(
 
   # Custom CSS and shinyjs
   useShinyjs(),
-  tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
-    tags$script(src = "search-keyboard.js")
+  htmltools::htmlDependency(
+    name = "nightmare",
+    version = NIGHTMARE_CONFIG$ui$version,
+    src = c(file = normalizePath("www")),
+    stylesheet = "custom.css",
+    script = "search-keyboard.js"
   ),
 
   # Top Navbar
