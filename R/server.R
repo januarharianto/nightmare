@@ -10,6 +10,7 @@ source("R/utils/import/file_detection.R")
 source("R/utils/import/folder_loader.R")
 source("R/utils/ui_detail_assessments.R")
 source("R/utils/ui_detail_consids.R")
+source("R/utils/plans_data.R")
 source("R/utils/ui_detail_plans.R")
 source("R/utils/ui_detail_notes.R")
 source("R/utils/ui_student_detail.R")
@@ -23,6 +24,7 @@ source("R/modules/notes_module.R")
 source("R/utils/exam_data.R")
 source("R/utils/weights_data.R")
 source("R/utils/import/exam_import.R")
+source("R/modules/plans_module.R")
 source("R/modules/exams_module.R")
 
 server <- function(input, output, session) {
@@ -180,6 +182,11 @@ server <- function(input, output, session) {
       tags$div(
         class = "main-container",
         notesModuleUI("notes")
+      )
+    } else if (activeView() == "plans") {
+      tags$div(
+        class = "main-container",
+        plansModuleUI("plans")
       )
     } else if (activeView() == "exams") {
       tags$div(
@@ -349,6 +356,9 @@ server <- function(input, output, session) {
 
   # Notes module
   notesModuleServer("notes", studentData, studentNotes, currentUnit)
+
+  # Plans module
+  plansModuleServer("plans", studentData, dataSources)
 
   # Exams module
   examsModuleServer("exams", studentData, examData, currentUnit, dataSources, weightsData)
