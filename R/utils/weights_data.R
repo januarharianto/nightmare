@@ -34,7 +34,7 @@ save_weights_data <- function(data_dir, unit, weights_data) {
 # Returns "ongoing", "completed", or "missing".
 compute_assessment_status <- function(due_date, has_score) {
   if (is.null(due_date) || is.na(due_date) || due_date == "") {
-    return(if (isTRUE(has_score)) "completed" else "missing")
+    return(if (isTRUE(has_score)) "completed" else "ongoing")
   }
   parsed <- tryCatch(as.Date(due_date), error = function(e) NA)
   if (is.na(parsed)) {
