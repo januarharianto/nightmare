@@ -489,6 +489,12 @@ server <- function(input, output, session) {
     weights_list <- fromJSON(weights_json, simplifyVector = FALSE)
     weights_list <- lapply(weights_list, as.numeric)
 
+    total <- sum(unlist(weights_list), na.rm = TRUE)
+    if (total > 100) {
+      showNotification(sprintf("Weights total %.0f%% exceeds 100%%. Please adjust.", total), type = "warning")
+      return()
+    }
+
     current <- weightsData()
     current$weights <- weights_list
     # Preserve existing due_dates
@@ -509,7 +515,13 @@ server <- function(input, output, session) {
 
     current <- weightsData()
     if (!is.null(config$weights)) {
-      current$weights <- lapply(config$weights, as.numeric)
+      new_weights <- lapply(config$weights, as.numeric)
+      total <- sum(unlist(new_weights), na.rm = TRUE)
+      if (total > 100) {
+        showNotification(sprintf("Weights total %.0f%% exceeds 100%%. Please adjust.", total), type = "warning")
+        return()
+      }
+      current$weights <- new_weights
     }
     if (!is.null(config$due_dates)) {
       current$due_dates <- config$due_dates
