@@ -73,7 +73,8 @@ ui <- page_fillable(
       `data-view` = "exams",
       onclick = "Shiny.setInputValue('active_view', 'exams', {priority: 'event'})",
       "Assessments"
-    )
+    ),
+    uiOutput("sidebar_sources")
   ),
 
   # Dataset metadata panel (top bar)

@@ -250,26 +250,6 @@ server <- function(input, output, session) {
           tags$span(class = "metadata-label", "Semester:"),
           tags$span(class = "metadata-value", meta$semester)
         ),
-        # Data source indicators
-        tags$div(
-          class = "metadata-item",
-          tags$span(class = "metadata-label", "Data Sources:"),
-          tags$div(
-            class = "source-tags",
-            tags$span(
-              class = paste("source-tag", if (meta$sources$canvas) "active" else "inactive"),
-              if (meta$sources$canvas) "Canvas Gradebook" else "Canvas Gradebook"
-            ),
-            tags$span(
-              class = paste("source-tag", if (meta$sources$consids) "active" else "inactive"),
-              if (meta$sources$consids) "Special Considerations" else "Special Considerations"
-            ),
-            tags$span(
-              class = paste("source-tag", if (meta$sources$plans) "active" else "inactive"),
-              if (meta$sources$plans) "Academic Plans" else "Academic Plans"
-            )
-          )
-        )
       ),
       # Close dropdown on outside click (idempotent listener)
       tags$script(HTML("
@@ -283,6 +263,28 @@ server <- function(input, output, session) {
           });
         }
       "))
+    )
+  })
+
+  # Sidebar data source indicators
+  output$sidebar_sources <- renderUI({
+    if (!isLoaded()) return(NULL)
+    sources <- dataSources()
+    tags$div(
+      class = "sidebar-sources",
+      tags$div(class = "sidebar-sources-label", "Sources"),
+      tags$div(
+        class = paste("source-tag", if (sources$canvas) "active" else "inactive"),
+        "Canvas"
+      ),
+      tags$div(
+        class = paste("source-tag", if (sources$consids) "active" else "inactive"),
+        "Spec Cons"
+      ),
+      tags$div(
+        class = paste("source-tag", if (sources$plans) "active" else "inactive"),
+        "Plans"
+      )
     )
   })
 
