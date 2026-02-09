@@ -1,6 +1,5 @@
-#' File Type Detection for NIGHTMARE
-#'
-#' Detect data source type based on column signatures
+# -- file_detection.R ----------------------------------------------
+# Detect data source type (Canvas, consids, plans) from column signatures.
 
 #' Detect file type based on column signatures
 #'

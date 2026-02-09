@@ -1,5 +1,5 @@
-# Exam import utilities for NIGHTMARE
-# File parsing for Gradescope and manual exam score exports.
+# -- exam_import.R -------------------------------------------------
+# Parse Gradescope and manual exam score exports for upload wizard.
 
 # Detect exam source type by reading headers.
 # Returns list(type = "gradescope"|"manual", headers = character(), preview = data.frame())

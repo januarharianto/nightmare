@@ -1,5 +1,5 @@
-# Assessments Module for NIGHTMARE
-# Class-level mark distribution view with density plots and grade breakdowns.
+# -- assessments_module.R ------------------------------------------
+# Class-level mark distribution: density plots and grade breakdowns.
 
 assessmentsModuleUI <- function(id) {
   ns <- NS(id)

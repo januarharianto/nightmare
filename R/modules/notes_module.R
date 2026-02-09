@@ -1,4 +1,4 @@
-# Notes Module for NIGHTMARE
+# -- notes_module.R ------------------------------------------------
 # Sidebar view: browse all student notes with category filtering.
 
 notesModuleUI <- function(id) {

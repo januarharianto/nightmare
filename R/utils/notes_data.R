@@ -1,5 +1,5 @@
-# Notes data utilities for NIGHTMARE
-# Pure data-processing functions — no Shiny reactives or side effects.
+# -- notes_data.R --------------------------------------------------
+# Note CRUD, NOTE_TAGS definitions, JSON persistence.
 
 # Tag dictionary: category -> list(label, description)
 NOTE_TAGS <- list(
@@ -43,8 +43,7 @@ save_student_notes <- function(data_dir, unit, notes) {
   )
 
   path <- file.path(nightmare_dir, "student_notes.json")
-  writeLines(toJSON(payload, auto_unbox = TRUE, null = "null", pretty = TRUE), path)
-  invisible(path)
+  save_json(path, payload)
 }
 
 # Add a note for a student. Returns updated notes list.

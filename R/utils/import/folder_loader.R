@@ -1,5 +1,5 @@
-# Folder-based data loading for NIGHTMARE
-# Scans a folder for CSV/Excel files, auto-detects types, and imports them
+# -- folder_loader.R -----------------------------------------------
+# Scan unit folders for CSV/Excel files, auto-detect types, and import.
 
 #' Scan data directory for unit subfolders containing data files
 #'

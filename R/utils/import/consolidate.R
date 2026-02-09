@@ -1,6 +1,5 @@
-#' Data Consolidation for NIGHTMARE
-#'
-#' Merge student data from multiple sources
+# -- consolidate.R -------------------------------------------------
+# Left-join Canvas + special considerations + disability plans.
 
 #' Detect unit code from Canvas data
 #'

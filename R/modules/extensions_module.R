@@ -1,5 +1,5 @@
-# Extensions Module for NIGHTMARE
-# Assessment-level view of special consideration extensions
+# -- extensions_module.R -------------------------------------------
+# Special considerations view + SEAMS2 export.
 
 extensionsModuleUI <- function(id) {
   ns <- NS(id)

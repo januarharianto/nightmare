@@ -1,6 +1,5 @@
-#' Canvas Gradebook Import for NIGHTMARE
-#'
-#' Import and process Canvas gradebook CSV exports
+# -- canvas.R -----------------------------------------------------
+# Import and process Canvas gradebook CSV exports.
 
 #' Import Canvas Gradebook
 #'

@@ -1,13 +1,5 @@
-# Extensions data utilities for NIGHTMARE
-# Pure data-processing functions — no Shiny reactives or side effects.
-
-# Ensure .nightmare/ directory exists inside a unit's data folder.
-# Returns the path to the .nightmare/ directory.
-ensure_nightmare_dir <- function(data_dir, unit) {
-  nightmare_dir <- file.path(data_dir, unit, ".nightmare")
-  if (!dir.exists(nightmare_dir)) dir.create(nightmare_dir, recursive = TRUE)
-  nightmare_dir
-}
+# -- extensions_data.R ---------------------------------------------
+# Extension matching, overrides, and SEAMS2 data processing.
 
 # Migrate .match_overrides.json from old location to .nightmare/ subfolder.
 # Only moves if old file exists and new file does not.
@@ -254,8 +246,7 @@ save_match_overrides <- function(data_dir, unit, overrides) {
   )
 
   path <- file.path(ensure_nightmare_dir(data_dir, unit), "match_overrides.json")
-  writeLines(toJSON(payload, auto_unbox = TRUE, null = "null", pretty = TRUE), path)
-  invisible(path)
+  save_json(path, payload)
 }
 
 # Load match overrides from .nightmare/match_overrides.json.

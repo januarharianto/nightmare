@@ -1,5 +1,5 @@
-# Search Module for NIGHTMARE
-# List-based search results (no dropdown)
+# -- search_module.R -----------------------------------------------
+# Student search with list-based results and keyboard navigation.
 
 searchModuleUI <- function(id) {
   ns <- NS(id)

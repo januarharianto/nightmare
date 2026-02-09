@@ -1,6 +1,5 @@
-#' Disability Plans Import for NIGHTMARE
-#'
-#' Import and process disability plans Excel files
+# -- disability_plans.R --------------------------------------------
+# Import and process disability plans Excel files (headers row 3).
 
 #' Import Disability Plans
 #'

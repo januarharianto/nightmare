@@ -1,4 +1,5 @@
-# Configuration for NIGHTMARE application
+# -- config.R -----------------------------------------------------
+# Application configuration: paths, version, feature flags.
 
 NIGHTMARE_CONFIG <- list(
   ui = list(

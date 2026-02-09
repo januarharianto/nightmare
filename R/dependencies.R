@@ -1,4 +1,5 @@
-# Central library loading for NIGHTMARE
+# -- dependencies.R ------------------------------------------------
+# Central library loading — all library() calls live here.
 
 load_nightmare_dependencies <- function() {
   library(shiny)

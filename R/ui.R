@@ -1,4 +1,5 @@
-# UI Definition for NIGHTMARE - Clinical Minimal Design
+# -- ui.R ---------------------------------------------------------
+# UI definition: layout, navigation, output placeholders.
 
 ui <- page_fillable(
   theme = bs_theme(

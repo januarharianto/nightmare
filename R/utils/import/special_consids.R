@@ -1,6 +1,5 @@
-#' Special Considerations Import for NIGHTMARE
-#'
-#' Import and process special considerations CSV files
+# -- special_consids.R ---------------------------------------------
+# Import and process special considerations CSV files.
 
 #' Import Special Considerations
 #'

@@ -42,16 +42,31 @@ Each student row has nested list-columns: `assignments`, `special_consids`, `pla
 | File | Role |
 |------|------|
 | `R/server.R` | Main server: reactive state, module orchestration, event handling |
-| `R/utils/ui_helpers.R` | Builds student detail view (not a module — called directly) |
+| `R/utils/storage.R` | Shared persistence: `ensure_nightmare_dir()`, `save_json()` |
+| `R/utils/ui_student_detail.R` | Student detail banner + orchestrator calling 4 card builders |
+| `R/utils/ui_detail_assessments.R` | Assessments card: weights, projections, score table |
+| `R/utils/ui_detail_consids.R` | Special considerations card |
+| `R/utils/ui_detail_plans.R` | Support plans card: disability plan adjustments |
+| `R/utils/ui_detail_notes.R` | Notes card: tag selector, input form, notes list |
 | `R/utils/import/consolidate.R` | Merges all data sources via left joins |
 | `R/utils/weights_data.R` | Grade projection + risk calculation (Arnold & Pistilli model) |
 | `R/utils/exam_data.R` | Exam sittings lifecycle, conflict resolution |
 | `R/utils/notes_data.R` | Note CRUD, NOTE_TAGS definitions, JSON persistence |
 | `R/modules/search_module.R` | Student search (only true Shiny module with NS/moduleServer) |
 | `R/modules/extensions_module.R` | Special considerations view + SEAMS2 export |
-| `R/modules/exams_module.R` | Exam upload wizard (4-step) |
+| `R/modules/exams_module.R` | Exam upload module: UI, reactive state, event handlers |
+| `R/modules/exams_wizard.R` | Wizard step renderers (sourced with `local = TRUE`) |
+| `R/modules/exams_summary.R` | Summary table + config editing (sourced with `local = TRUE`) |
 | `www/custom.css` | All styling |
 | `www/search-keyboard.js` | Arrow key navigation for search results (jQuery) |
+
+### Function Discovery
+
+```bash
+grep -rn "^[a-zA-Z_].*<- function" R/ --include="*.R"
+```
+
+**Non-obvious placements:** `compute_assessment_status()` lives in `weights_data.R`, `match_assessments()` lives in `extensions_data.R`.
 
 ### Storage Layer
 
@@ -76,7 +91,7 @@ Clinical minimal aesthetic — no deviations:
 
 - All `library()` calls go in `R/dependencies.R` only — never in individual files
 - Shiny modules use `NS(id)` / `moduleServer(id, ...)` pattern
-- `ui_helpers.R` builds the student detail view as a plain function (not a module)
+- `ui_student_detail.R` orchestrates the student detail view via 4 card builders (not a module)
 - jQuery is available via Shiny (used in `search-keyboard.js`)
 
 ## Gotchas

@@ -1,12 +1,18 @@
-# Server Logic for NIGHTMARE
+# -- server.R -----------------------------------------------------
+# Main server: reactive state, module orchestration, event handling.
 
+source("R/utils/storage.R")
 source("R/utils/import/canvas.R")
 source("R/utils/import/special_consids.R")
 source("R/utils/import/disability_plans.R")
 source("R/utils/import/consolidate.R")
 source("R/utils/import/file_detection.R")
 source("R/utils/import/folder_loader.R")
-source("R/utils/ui_helpers.R")
+source("R/utils/ui_detail_assessments.R")
+source("R/utils/ui_detail_consids.R")
+source("R/utils/ui_detail_plans.R")
+source("R/utils/ui_detail_notes.R")
+source("R/utils/ui_student_detail.R")
 source("R/utils/extensions_data.R")
 source("R/utils/assessments_data.R")
 source("R/utils/notes_data.R")

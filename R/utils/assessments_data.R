@@ -1,5 +1,5 @@
-# Assessments data utilities for NIGHTMARE
-# Pure data-processing functions — no Shiny reactives or side effects.
+# -- assessments_data.R --------------------------------------------
+# Canvas assignment extraction and class-level score aggregation.
 
 # Extract class-level scores per completed assessment.
 # Returns a named list of data.frames, keyed by assignment name.

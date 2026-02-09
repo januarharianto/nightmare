@@ -1,5 +1,5 @@
-# Assessment weight utilities for NIGHTMARE
-# Pure data-processing functions — no Shiny reactives or side effects.
+# -- weights_data.R ------------------------------------------------
+# Grade projection + risk calculation (Arnold & Pistilli model).
 
 # Load weights data from .nightmare/weights.json.
 # Returns a list with version, saved_at, weights.
@@ -27,8 +27,7 @@ save_weights_data <- function(data_dir, unit, weights_data) {
   weights_data$saved_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
   path <- file.path(nightmare_dir, "weights.json")
-  writeLines(toJSON(weights_data, auto_unbox = TRUE, null = "null", pretty = TRUE), path)
-  invisible(path)
+  save_json(path, weights_data)
 }
 
 # Compute assessment status from due date and score presence.

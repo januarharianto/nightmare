@@ -1,5 +1,5 @@
-# Exam data utilities for NIGHTMARE
-# Pure data-processing functions — no Shiny reactives or side effects.
+# -- exam_data.R ---------------------------------------------------
+# Exam sittings lifecycle, conflict resolution, summary queries.
 
 # Load exam data from .nightmare/exams.json.
 # Returns a list with version, saved_at, assessments.
@@ -26,8 +26,7 @@ save_exam_data <- function(data_dir, unit, exam_data) {
   exam_data$saved_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
   path <- file.path(nightmare_dir, "exams.json")
-  writeLines(toJSON(exam_data, auto_unbox = TRUE, null = "null", pretty = TRUE), path)
-  invisible(path)
+  save_json(path, exam_data)
 }
 
 # Add a sitting to an assessment. Creates the assessment if it doesn't exist.
