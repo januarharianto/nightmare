@@ -141,7 +141,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                   tags$th("Assessment"),
                   tags$th("Score"),
                   tags$th("Percentage"),
-                  if (editing_weights) tags$th("Weight")
+                  tags$th("Weight")
                 )
               ),
               tags$tbody(
@@ -181,6 +181,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                     ""
                   }
 
+                  w_val <- weights[[a$name]]
                   tags$tr(
                     class = row_class,
                     tags$td(a$name),
@@ -190,9 +191,13 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                       tags$td(
                         tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
                           `data-assessment` = a$name,
-                          value = if (!is.null(weights[[a$name]])) weights[[a$name]] else "",
+                          value = if (!is.null(w_val)) w_val else "",
                           placeholder = "\u2014"
                         )
+                      )
+                    } else {
+                      tags$td(class = "assessment-weight",
+                        if (!is.null(w_val)) paste0(w_val, "%") else "\u2014"
                       )
                     }
                   )
@@ -214,6 +219,21 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                     src_label <- if (any(src_types == "gradescope")) "Gradescope" else "Manual"
                     src_tag <- tags$span(class = "exam-source-tag", src_label)
 
+                    ew_val <- weights[[aname]]
+                    weight_td <- if (editing_weights) {
+                      tags$td(
+                        tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
+                          `data-assessment` = aname,
+                          value = if (!is.null(ew_val)) ew_val else "",
+                          placeholder = "\u2014"
+                        )
+                      )
+                    } else {
+                      tags$td(class = "assessment-weight",
+                        if (!is.null(ew_val)) paste0(ew_val, "%") else "\u2014"
+                      )
+                    }
+
                     if (has_score) {
                       pct <- (row$score[1] / mp) * 100
                       row_class <- if (exam_status == "ongoing") "assessment-pending" else if (pct < 50) "assessment-failing" else ""
@@ -222,15 +242,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                         tags$td(aname, src_tag),
                         tags$td(sprintf("%g / %g", row$score[1], mp)),
                         tags$td(class = "assessment-pct", sprintf("%.0f%%", pct)),
-                        if (editing_weights) {
-                          tags$td(
-                            tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
-                              `data-assessment` = aname,
-                              value = if (!is.null(weights[[aname]])) weights[[aname]] else "",
-                              placeholder = "\u2014"
-                            )
-                          )
-                        }
+                        weight_td
                       )
                     } else {
                       no_score_class <- if (exam_status == "ongoing") "assessment-pending" else "assessment-missing"
@@ -240,15 +252,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                         tags$td(aname, src_tag),
                         tags$td(if (exam_status == "ongoing") "--" else sprintf("-- / %g", mp)),
                         tags$td(class = "assessment-pct", no_score_label),
-                        if (editing_weights) {
-                          tags$td(
-                            tags$input(type = "text", class = "weight-input", inputmode = "numeric", pattern = "[0-9]*",
-                              `data-assessment` = aname,
-                              value = if (!is.null(weights[[aname]])) weights[[aname]] else "",
-                              placeholder = "\u2014"
-                            )
-                          )
-                        }
+                        weight_td
                       )
                     }
                   })

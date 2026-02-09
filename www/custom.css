@@ -496,6 +496,7 @@ button i { margin-right: 4px; }
 /* assessment-summary base from utility; specific padding */
 .assessment-summary { padding: 10px 0; margin-bottom: 8px; }
 
+.assessment-weight { color: #AAA; font-size: 12px; }
 .assessment-pending td { color: #AAA; }
 .assessment-failing .assessment-pct,
 .assessment-missing .assessment-pct { color: #000; font-weight: 700; }
