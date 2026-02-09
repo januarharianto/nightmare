@@ -4,6 +4,21 @@
 PLAN_GROUPS <- c("Extensions", "Exam Accommodations", "Presentation",
                  "Classroom Support", "Placement", "Other")
 
+# Short display labels for groups (used in filter buttons + list renderer)
+PLAN_GROUP_LABELS <- c(
+  "Extensions" = "Extensions",
+  "Exam Accommodations" = "Exam Accomm.",
+  "Presentation" = "Presentation",
+  "Classroom Support" = "Classroom",
+  "Placement" = "Placement",
+  "Other" = "Other"
+)
+
+# Check if a plan value is a simple yes/flag with no specific data.
+is_yes_only <- function(val) {
+  tolower(trimws(val)) %in% c("yes", "y", "true", "x")
+}
+
 # Classify a single plan adjustment into one of the 6 groups.
 # Priority order matches the mask chain in build_plans_card().
 classify_plan_adjustment <- function(category, arrangement_type) {
@@ -44,13 +59,25 @@ format_plan_value <- function(val, arrangement) {
   v
 }
 
+# Format a single adjustment row into a display string.
+format_adjustment_detail <- function(val, arrangement_type) {
+  cleaned <- clean_arrangement_name(arrangement_type)
+  if (is_yes_only(val)) {
+    cleaned
+  } else {
+    paste0(cleaned, " (", format_plan_value(val, arrangement_type), ")")
+  }
+}
+
 # Flatten all plan adjustments across students into a single data.frame.
-# Returns: student_id, name, sis_login_id, category, arrangement_type, value, group
+# Returns: student_id, name, sis_login_id, category, arrangement_type, value,
+#          group, display_detail, name_lower, sid_lower, login_lower
 flatten_all_plans <- function(data) {
   empty <- data.frame(
     student_id = character(), name = character(), sis_login_id = character(),
     category = character(), arrangement_type = character(),
-    value = character(), group = character(),
+    value = character(), group = character(), display_detail = character(),
+    name_lower = character(), sid_lower = character(), login_lower = character(),
     stringsAsFactors = FALSE
   )
 
@@ -72,6 +99,7 @@ flatten_all_plans <- function(data) {
   arr_vec <- character(n_est)
   val_vec <- character(n_est)
   grp_vec <- character(n_est)
+  detail_vec <- character(n_est)
   k <- 0L
 
   for (i in seq_len(nrow(plan_students))) {
@@ -93,6 +121,7 @@ flatten_all_plans <- function(data) {
         arr_vec <- c(arr_vec, character(n_est))
         val_vec <- c(val_vec, character(n_est))
         grp_vec <- c(grp_vec, character(n_est))
+        detail_vec <- c(detail_vec, character(n_est))
       }
       sid_vec[k] <- s_id
       name_vec[k] <- s_name
@@ -101,19 +130,27 @@ flatten_all_plans <- function(data) {
       arr_vec[k] <- adj$arrangement_type[j]
       val_vec[k] <- adj$value[j]
       grp_vec[k] <- classify_plan_adjustment(adj$category[j], adj$arrangement_type[j])
+      detail_vec[k] <- format_adjustment_detail(adj$value[j], adj$arrangement_type[j])
     }
   }
 
   if (k == 0L) return(empty)
 
-  data.frame(
-    student_id = sid_vec[seq_len(k)],
-    name = name_vec[seq_len(k)],
-    sis_login_id = login_vec[seq_len(k)],
-    category = cat_vec[seq_len(k)],
-    arrangement_type = arr_vec[seq_len(k)],
-    value = val_vec[seq_len(k)],
-    group = grp_vec[seq_len(k)],
+  idx <- seq_len(k)
+  result <- data.frame(
+    student_id = sid_vec[idx],
+    name = name_vec[idx],
+    sis_login_id = login_vec[idx],
+    category = cat_vec[idx],
+    arrangement_type = arr_vec[idx],
+    value = val_vec[idx],
+    group = grp_vec[idx],
+    display_detail = detail_vec[idx],
     stringsAsFactors = FALSE
   )
+  # Pre-compute lowercase columns for search
+  result$name_lower <- tolower(result$name)
+  result$sid_lower <- tolower(result$student_id)
+  result$login_lower <- tolower(result$sis_login_id)
+  result
 }

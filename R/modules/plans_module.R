@@ -17,11 +17,6 @@ plansModuleUI <- function(id) {
       "All"
     ),
     lapply(PLAN_GROUPS, function(grp) {
-      # Short display labels for buttons
-      btn_label <- switch(grp,
-        "Exam Accommodations" = "Exam Acc.",
-        grp
-      )
       tags$button(
         class = "plans-filter-btn",
         `data-value` = grp,
@@ -29,7 +24,7 @@ plansModuleUI <- function(id) {
           "document.querySelectorAll('.plans-filter-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s','%s',{priority:'event'});",
           ns_id, grp
         ),
-        btn_label
+        PLAN_GROUP_LABELS[[grp]]
       )
     })
   )
@@ -75,9 +70,9 @@ plansModuleServer <- function(id, studentData, dataSources) {
       }
       q <- searchTerm()
       if (nzchar(q) && nrow(flat) > 0) {
-        match <- grepl(q, tolower(flat$name), fixed = TRUE) |
-          grepl(q, tolower(flat$student_id), fixed = TRUE) |
-          grepl(q, tolower(flat$sis_login_id), fixed = TRUE)
+        match <- grepl(q, flat$name_lower, fixed = TRUE) |
+          grepl(q, flat$sid_lower, fixed = TRUE) |
+          grepl(q, flat$login_lower, fixed = TRUE)
         flat <- flat[match, , drop = FALSE]
       }
       flat
@@ -94,7 +89,7 @@ plansModuleServer <- function(id, studentData, dataSources) {
       showing <- length(unique(filtered$student_id))
       adj_count <- nrow(filtered)
 
-      showing_label <- if (grp == "all") "Showing" else grp
+      showing_label <- if (grp == "all") "Showing" else PLAN_GROUP_LABELS[[grp]]
 
       tags$div(class = "plans-summary",
         tags$div(class = "stat-item",
@@ -125,8 +120,16 @@ plansModuleServer <- function(id, studentData, dataSources) {
 
       filtered <- filteredPlans()
       if (nrow(filtered) == 0) {
-        return(tags$div(class = "empty-state",
-          tags$p("No students match the selected filter")))
+        q <- searchTerm()
+        grp <- groupFilter()
+        msg <- if (nzchar(q)) {
+          paste0("No students matching '", q, "'")
+        } else if (grp != "all") {
+          paste0("No students with ", PLAN_GROUP_LABELS[[grp]], " adjustments")
+        } else {
+          "No students with academic plans"
+        }
+        return(tags$div(class = "empty-state", tags$p(msg)))
       }
 
       # Split once, sort by name
@@ -141,33 +144,14 @@ plansModuleServer <- function(id, studentData, dataSources) {
         adj_count <- nrow(srows)
 
         # Build one line per group present for this student
-        groups_present <- unique(srows$group)
-        # Order by PLAN_GROUPS
-        groups_present <- intersect(PLAN_GROUPS, groups_present)
+        groups_present <- intersect(PLAN_GROUPS, unique(srows$group))
 
         group_lines <- lapply(groups_present, function(grp) {
           grows <- srows[srows$group == grp, , drop = FALSE]
-          details <- vapply(seq_len(nrow(grows)), function(j) {
-            cleaned <- clean_arrangement_name(grows$arrangement_type[j])
-            val <- trimws(grows$value[j])
-            is_yes <- tolower(val) %in% c("yes", "y", "true", "x")
-            if (is_yes) {
-              cleaned
-            } else {
-              paste0(cleaned, " (", format_plan_value(val, grows$arrangement_type[j]), ")")
-            }
-          }, character(1))
-
-          # Short label
-          grp_label <- switch(grp,
-            "Exam Accommodations" = "Exam Accomm.",
-            "Classroom Support" = "Classroom",
-            grp
-          )
-
           tags$div(class = "plans-item-group",
-            tags$span(class = "plans-item-group-label", grp_label),
-            tags$span(class = "plans-item-group-detail", paste(details, collapse = ", "))
+            tags$span(class = "plans-item-group-label", PLAN_GROUP_LABELS[[grp]]),
+            tags$span(class = "plans-item-group-detail",
+              paste(grows$display_detail, collapse = ", "))
           )
         })
 

@@ -2,11 +2,6 @@
 # Support plans card for student detail view: disability plan adjustments.
 
 build_plans_card <- function(student) {
-  # Helper: determine if value is a simple yes/flag or has specific data
-  is_yes_only <- function(val) {
-    tolower(trimws(val)) %in% c("yes", "y", "true", "x")
-  }
-
   tags$div(
     class = "detail-section",
     tags$div(class = "detail-section-header", "Support Plans"),
