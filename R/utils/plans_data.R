@@ -47,56 +47,73 @@ format_plan_value <- function(val, arrangement) {
 # Flatten all plan adjustments across students into a single data.frame.
 # Returns: student_id, name, sis_login_id, category, arrangement_type, value, group
 flatten_all_plans <- function(data) {
-  if (is.null(data) || nrow(data) == 0) {
-    return(data.frame(
-      student_id = character(), name = character(), sis_login_id = character(),
-      category = character(), arrangement_type = character(),
-      value = character(), group = character(),
-      stringsAsFactors = FALSE
-    ))
-  }
+  empty <- data.frame(
+    student_id = character(), name = character(), sis_login_id = character(),
+    category = character(), arrangement_type = character(),
+    value = character(), group = character(),
+    stringsAsFactors = FALSE
+  )
 
-  plan_students <- data[isTRUE(data$has_disability_plan) |
-                        vapply(data$has_disability_plan, isTRUE, logical(1)), ]
+  if (is.null(data) || nrow(data) == 0) return(empty)
 
-  if (nrow(plan_students) == 0) {
-    return(data.frame(
-      student_id = character(), name = character(), sis_login_id = character(),
-      category = character(), arrangement_type = character(),
-      value = character(), group = character(),
-      stringsAsFactors = FALSE
-    ))
-  }
+  has_plan <- vapply(data$has_disability_plan, isTRUE, logical(1))
+  plan_students <- data[has_plan, ]
 
-  rows <- list()
+  if (nrow(plan_students) == 0) return(empty)
+
+  has_login <- "sis_login_id" %in% names(plan_students)
+
+  # Pre-allocate vectors instead of building data.frames row by row
+  n_est <- nrow(plan_students) * 4L  # rough estimate
+  sid_vec <- character(n_est)
+  name_vec <- character(n_est)
+  login_vec <- character(n_est)
+  cat_vec <- character(n_est)
+  arr_vec <- character(n_est)
+  val_vec <- character(n_est)
+  grp_vec <- character(n_est)
+  k <- 0L
+
   for (i in seq_len(nrow(plan_students))) {
-    student <- plan_students[i, ]
-    adj <- student$plan_adjustments[[1]]
+    adj <- plan_students$plan_adjustments[[i]]
     if (is.null(adj) || nrow(adj) == 0) next
 
+    s_id <- as.character(plan_students$student_id[i])
+    s_name <- plan_students$name[i]
+    s_login <- if (has_login) plan_students$sis_login_id[i] else ""
+
     for (j in seq_len(nrow(adj))) {
-      grp <- classify_plan_adjustment(adj$category[j], adj$arrangement_type[j])
-      rows[[length(rows) + 1L]] <- data.frame(
-        student_id = as.character(student$student_id),
-        name = student$name,
-        sis_login_id = if ("sis_login_id" %in% names(student)) student$sis_login_id else "",
-        category = adj$category[j],
-        arrangement_type = adj$arrangement_type[j],
-        value = adj$value[j],
-        group = grp,
-        stringsAsFactors = FALSE
-      )
+      k <- k + 1L
+      if (k > length(sid_vec)) {
+        # Grow vectors
+        sid_vec <- c(sid_vec, character(n_est))
+        name_vec <- c(name_vec, character(n_est))
+        login_vec <- c(login_vec, character(n_est))
+        cat_vec <- c(cat_vec, character(n_est))
+        arr_vec <- c(arr_vec, character(n_est))
+        val_vec <- c(val_vec, character(n_est))
+        grp_vec <- c(grp_vec, character(n_est))
+      }
+      sid_vec[k] <- s_id
+      name_vec[k] <- s_name
+      login_vec[k] <- s_login
+      cat_vec[k] <- adj$category[j]
+      arr_vec[k] <- adj$arrangement_type[j]
+      val_vec[k] <- adj$value[j]
+      grp_vec[k] <- classify_plan_adjustment(adj$category[j], adj$arrangement_type[j])
     }
   }
 
-  if (length(rows) == 0) {
-    return(data.frame(
-      student_id = character(), name = character(), sis_login_id = character(),
-      category = character(), arrangement_type = character(),
-      value = character(), group = character(),
-      stringsAsFactors = FALSE
-    ))
-  }
+  if (k == 0L) return(empty)
 
-  do.call(rbind, rows)
+  data.frame(
+    student_id = sid_vec[seq_len(k)],
+    name = name_vec[seq_len(k)],
+    sis_login_id = login_vec[seq_len(k)],
+    category = cat_vec[seq_len(k)],
+    arrangement_type = arr_vec[seq_len(k)],
+    value = val_vec[seq_len(k)],
+    group = grp_vec[seq_len(k)],
+    stringsAsFactors = FALSE
+  )
 }

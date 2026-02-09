@@ -56,11 +56,12 @@ plansModuleServer <- function(id, studentData, dataSources) {
     ns <- session$ns
 
     groupFilter <- reactive(input$group_filter %||% "all")
-    searchTerm <- reactive({
+    searchTermRaw <- reactive({
       term <- input$search_box
       if (is.null(term) || term == "") return("")
       tolower(trimws(term))
     })
+    searchTerm <- searchTermRaw |> debounce(300)
 
     plansFlat <- reactive({
       flatten_all_plans(studentData())
@@ -128,15 +129,13 @@ plansModuleServer <- function(id, studentData, dataSources) {
           tags$p("No students match the selected filter")))
       }
 
-      # Group by student, sorted alphabetically
-      student_ids <- unique(filtered$student_id)
-      student_names <- vapply(student_ids, function(sid) {
-        filtered$name[filtered$student_id == sid][1]
-      }, character(1))
-      student_ids <- student_ids[order(student_names)]
+      # Split once, sort by name
+      by_student <- split(filtered, filtered$student_id)
+      student_names <- vapply(by_student, function(df) df$name[1], character(1))
+      by_student <- by_student[order(student_names)]
 
-      items <- lapply(student_ids, function(sid) {
-        srows <- filtered[filtered$student_id == sid, , drop = FALSE]
+      items <- lapply(by_student, function(srows) {
+        sid <- srows$student_id[1]
         sname <- srows$name[1]
         login <- srows$sis_login_id[1]
         adj_count <- nrow(srows)
