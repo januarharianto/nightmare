@@ -125,7 +125,7 @@ calculate_risk_level <- function(projection) {
     return(list(level = "none", label = "--"))
   }
 
-  if (projection$remaining_weight == 0) {
+  if (projection$remaining_weight <= 0) {
     if (projection$current_average >= 50) {
       return(list(level = "low", label = "Low"))
     } else {
