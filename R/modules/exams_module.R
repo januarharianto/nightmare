@@ -260,11 +260,11 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       exam <- examData()
       if (!is.null(exam$assessments[[aname]])) {
         exam$assessments[[aname]] <- NULL
-        examData(exam)
         unit <- currentUnit()
         if (!is.null(unit)) {
           save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
         }
+        examData(exam)
         showNotification(paste0("Deleted '", aname, "'"), type = "message")
       }
     })
