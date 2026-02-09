@@ -35,6 +35,11 @@ plansModuleUI <- function(id) {
   )
 
   tags$div(class = "plans-view",
+    tags$div(class = "plans-search-section",
+      tags$label("Search", class = "search-label", `for` = ns("search_box")),
+      textInput(ns("search_box"), label = NULL,
+                placeholder = "Search by Name, SID, or Unikey...", width = "100%")
+    ),
     tags$div(class = "plans-toolbar",
       tags$span(class = "plans-label", "Category"),
       tags$div(class = "plans-filter-tags", filter_buttons)
@@ -51,6 +56,11 @@ plansModuleServer <- function(id, studentData, dataSources) {
     ns <- session$ns
 
     groupFilter <- reactive(input$group_filter %||% "all")
+    searchTerm <- reactive({
+      term <- input$search_box
+      if (is.null(term) || term == "") return("")
+      tolower(trimws(term))
+    })
 
     plansFlat <- reactive({
       flatten_all_plans(studentData())
@@ -61,6 +71,13 @@ plansModuleServer <- function(id, studentData, dataSources) {
       grp <- groupFilter()
       if (grp != "all" && nrow(flat) > 0) {
         flat <- flat[flat$group == grp, , drop = FALSE]
+      }
+      q <- searchTerm()
+      if (nzchar(q) && nrow(flat) > 0) {
+        match <- grepl(q, tolower(flat$name), fixed = TRUE) |
+          grepl(q, tolower(flat$student_id), fixed = TRUE) |
+          grepl(q, tolower(flat$sis_login_id), fixed = TRUE)
+        flat <- flat[match, , drop = FALSE]
       }
       flat
     })
@@ -157,10 +174,6 @@ plansModuleServer <- function(id, studentData, dataSources) {
 
         tags$div(
           class = "plans-list-item",
-          onclick = sprintf(
-            "Shiny.setInputValue('navigate_to_student','%s',{priority:'event'});Shiny.setInputValue('active_view','student',{priority:'event'});",
-            sid
-          ),
           tags$div(class = "plans-item-header",
             tags$span(class = "plans-item-name", sname),
             tags$span(class = "plans-item-meta",
@@ -168,6 +181,14 @@ plansModuleServer <- function(id, studentData, dataSources) {
             ),
             tags$span(class = "plans-item-count",
               paste0(adj_count, " adj")
+            ),
+            tags$button(
+              class = "plans-view-btn",
+              onclick = sprintf(
+                "event.stopPropagation();Shiny.setInputValue('navigate_to_student','%s',{priority:'event'});Shiny.setInputValue('active_view','student',{priority:'event'});",
+                sid
+              ),
+              "View"
             )
           ),
           tagList(group_lines)

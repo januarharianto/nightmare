@@ -613,16 +613,24 @@ button i { margin-right: 4px; }
 
 /* === PLANS VIEW === */
 .plans-view { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; }
+
+.plans-search-section { padding: 4px 12px; background-color: #FFF; border-bottom: 1px solid #CCC; flex-shrink: 0; }
+.plans-search-section .shiny-input-container > label { display: none; }
+.plans-search-section input { width: 100%; padding: 12px; font-size: 14px; border: 1px solid #CCC; font-family: inherit; }
+.plans-search-section input:focus { outline: 2px solid #000; background-color: #FFF; }
+
 .plans-toolbar { padding: 8px 12px; border-bottom: 1px solid #CCC; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
 .plans-filter-tags { display: inline-flex; flex-wrap: wrap; }
 .plans-summary { padding: 10px 12px; flex-shrink: 0; }
 .plans-list-container { flex: 1; overflow-y: auto; min-height: 0; }
-.plans-list-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; }
+.plans-list-item { padding: 12px; border-bottom: 1px solid #EEE; }
 .plans-list-item:hover { background-color: #F5F5F5; }
 .plans-item-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .plans-item-name { font-size: 14px; font-weight: 600; color: #000; }
 .plans-item-meta { font-size: 12px; color: #666; }
-.plans-item-count { margin-left: auto; font-size: 10px; text-transform: uppercase; color: #AAA; font-weight: 700; letter-spacing: 0.5px; }
+.plans-item-count { font-size: 10px; text-transform: uppercase; color: #AAA; font-weight: 700; letter-spacing: 0.5px; }
+.plans-view-btn { margin-left: auto; flex-shrink: 0; border: 1px solid #CCC; padding: 2px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; background: #FFF; color: #666; font-family: inherit; }
+.plans-view-btn:hover { background: #000; color: #FFF; border-color: #000; }
 .plans-item-group { display: flex; align-items: baseline; gap: 8px; font-size: 12px; padding: 1px 0; }
 .plans-item-group-label { font-size: 10px; text-transform: uppercase; color: #AAA; font-weight: 700; letter-spacing: 0.5px; min-width: 100px; flex-shrink: 0; }
 .plans-item-group-detail { color: #333; }
