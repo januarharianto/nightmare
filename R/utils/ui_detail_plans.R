@@ -76,7 +76,7 @@ build_plans_card <- function(student) {
             tagList(
               tags$div(
                 class = "plan-group",
-                tags$div(class = "plan-group-header", g$label),
+                tags$div(class = "plan-group-header meta-label", g$label),
 
                 # Value rows (label-value flex layout)
                 if (nrow(value_rows) > 0) {

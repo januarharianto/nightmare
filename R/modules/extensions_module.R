@@ -3,14 +3,14 @@
 
 extensionsModuleUI <- function(id) {
   ns <- NS(id)
-  tags$div(class = "extensions-view",
+  tags$div(class = "extensions-view view-container",
     # Toolbar: assessment picker + export button
-    tags$div(class = "extensions-toolbar",
+    tags$div(class = "extensions-toolbar toolbar",
       tags$div(class = "extensions-picker",
-        tags$span(class = "extensions-label", "Assessment"),
+        tags$span(class = "extensions-label meta-label", "Assessment"),
         uiOutput(ns("assessment_picker"))
       ),
-      downloadButton(ns("export_seams2"), "Export SEAMS2", class = "btn-export-seams2")
+      downloadButton(ns("export_seams2"), "Export SEAMS2", class = "btn-primary btn-export-seams2")
     ),
 
     # Summary stats bar
@@ -20,7 +20,7 @@ extensionsModuleUI <- function(id) {
     uiOutput(ns("unmatched_banner")),
 
     # Extensions table (scrollable)
-    tags$div(class = "extensions-table-container",
+    tags$div(class = "extensions-table-container scroll-container",
       uiOutput(ns("extensions_table"))
     ),
 
@@ -159,7 +159,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
 
       avg_display <- if (is.na(stats$avg_days)) "\u2014" else sprintf("%.1f", stats$avg_days)
 
-      tags$div(class = "extensions-summary",
+      tags$div(class = "extensions-summary summary-bar",
         tags$div(
           tags$span(class = "stat-label", "TOTAL"),
           tags$span(class = "stat-value", stats$total)
@@ -338,7 +338,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
           )
         }
         modal_content <- tagList(modal_content,
-          tags$div(class = "match-section-header", "CURRENTLY MATCHED (MANUAL)"),
+          tags$div(class = "match-section-header meta-label", "CURRENTLY MATCHED (MANUAL)"),
           section_items
         )
       }
@@ -360,7 +360,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
           )
         }
         modal_content <- tagList(modal_content,
-          tags$div(class = "match-section-header", "AMBIGUOUS MATCHES"),
+          tags$div(class = "match-section-header meta-label", "AMBIGUOUS MATCHES"),
           section_items
         )
       }
@@ -381,7 +381,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
           )
         }
         modal_content <- tagList(modal_content,
-          tags$div(class = "match-section-header", "UNMATCHED ASSESSMENTS"),
+          tags$div(class = "match-section-header meta-label", "UNMATCHED ASSESSMENTS"),
           section_items
         )
       }

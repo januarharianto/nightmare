@@ -5,7 +5,7 @@ examsModuleUI <- function(id) {
   ns <- NS(id)
   tags$div(class = "exams-view",
     uiOutput(ns("wizard_overlay")),
-    tags$div(class = "exams-summary-container",
+    tags$div(class = "exams-summary-container scroll-container",
       uiOutput(ns("exam_summary"))
     )
   )

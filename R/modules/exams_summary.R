@@ -71,7 +71,7 @@ output$exam_summary <- renderUI({
         ),
         "Save"
       ),
-      tags$button(class = "exams-action-btn",
+      tags$button(class = "exams-action-btn btn-secondary",
         onclick = sprintf(
           "Shiny.setInputValue('%s', true, {priority: 'event'})",
           ns("toggle_edit_config")
@@ -81,14 +81,14 @@ output$exam_summary <- renderUI({
     )
   } else {
     tags$div(class = "exams-toolbar-actions",
-      tags$button(class = "exams-action-btn",
+      tags$button(class = "exams-action-btn btn-secondary",
         onclick = sprintf(
           "Shiny.setInputValue('%s', true, {priority: 'event'})",
           ns("open_wizard")
         ),
         "Upload Scores"
       ),
-      tags$button(class = "exams-action-btn",
+      tags$button(class = "exams-action-btn btn-secondary",
         onclick = sprintf(
           "Shiny.setInputValue('%s', true, {priority: 'event'})",
           ns("toggle_edit_config")
@@ -248,7 +248,7 @@ output$exam_summary <- renderUI({
     })
 
     log_section <- tags$div(class = "upload-log-section",
-      tags$div(class = "exams-label", "Upload History"),
+      tags$div(class = "exams-label meta-label", "Upload History"),
       log_items
     )
   }

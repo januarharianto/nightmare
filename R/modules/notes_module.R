@@ -8,7 +8,7 @@ notesModuleUI <- function(id) {
   # Build filter buttons from NOTE_TAGS
   filter_buttons <- tagList(
     tags$button(
-      class = "notes-filter-btn active",
+      class = "notes-filter-btn toggle-btn active",
       `data-value` = "all",
       onclick = sprintf(
         "document.querySelectorAll('.notes-filter-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s','all',{priority:'event'});",
@@ -19,7 +19,7 @@ notesModuleUI <- function(id) {
     lapply(names(NOTE_TAGS), function(tag_key) {
       tag_info <- NOTE_TAGS[[tag_key]]
       tags$button(
-        class = "notes-filter-btn",
+        class = "notes-filter-btn toggle-btn",
         `data-value` = tag_key,
         onclick = sprintf(
           "document.querySelectorAll('.notes-filter-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s','%s',{priority:'event'});",
@@ -30,12 +30,12 @@ notesModuleUI <- function(id) {
     })
   )
 
-  tags$div(class = "notes-view",
-    tags$div(class = "notes-toolbar",
-      tags$span(class = "notes-filter-label", "Filter"),
-      tags$div(class = "notes-filter-tags", filter_buttons)
+  tags$div(class = "notes-view view-container",
+    tags$div(class = "notes-toolbar toolbar",
+      tags$span(class = "notes-filter-label meta-label", "Filter"),
+      tags$div(class = "notes-filter-tags toggle-group", filter_buttons)
     ),
-    tags$div(class = "notes-feed-container",
+    tags$div(class = "notes-feed-container scroll-container",
       uiOutput(ns("notes_feed"))
     )
   )
@@ -87,7 +87,7 @@ notesModuleServer <- function(id, studentData, studentNotes, currentUnit) {
         )
 
         tags$div(
-          class = "notes-feed-item",
+          class = "notes-feed-item list-item",
           onclick = sprintf(
             "Shiny.setInputValue('navigate_to_student','%s',{priority:'event'});Shiny.setInputValue('active_view','student',{priority:'event'});",
             row$student_id
@@ -98,7 +98,7 @@ notesModuleServer <- function(id, studentData, studentNotes, currentUnit) {
               paste0(row$name, " (", row$student_id, ")")
             ),
             tags$span(class = paste0("notes-tag-badge notes-tag-", row$category), tag_label),
-            tags$span(class = "notes-feed-timestamp", ts_display)
+            tags$span(class = "notes-feed-timestamp meta-label", ts_display)
           ),
           tags$div(class = "notes-feed-text", row$text)
         )

@@ -279,7 +279,7 @@ server <- function(input, output, session) {
     sources <- dataSources()
     tags$div(
       class = "sidebar-sources",
-      tags$div(class = "sidebar-sources-label", "Sources"),
+      tags$div(class = "sidebar-sources-label meta-label", "Sources"),
       tags$div(
         class = paste("source-tag", if (sources$canvas) "active" else "inactive"),
         "Canvas"

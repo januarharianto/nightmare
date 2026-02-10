@@ -8,7 +8,7 @@ plansModuleUI <- function(id) {
   # Build filter buttons: All + 6 plan groups
   filter_buttons <- tagList(
     tags$button(
-      class = "plans-filter-btn active",
+      class = "plans-filter-btn toggle-btn active",
       `data-value` = "all",
       onclick = sprintf(
         "document.querySelectorAll('.plans-filter-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s','all',{priority:'event'});",
@@ -18,7 +18,7 @@ plansModuleUI <- function(id) {
     ),
     lapply(PLAN_GROUPS, function(grp) {
       tags$button(
-        class = "plans-filter-btn",
+        class = "plans-filter-btn toggle-btn",
         `data-value` = grp,
         onclick = sprintf(
           "document.querySelectorAll('.plans-filter-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s','%s',{priority:'event'});",
@@ -29,18 +29,18 @@ plansModuleUI <- function(id) {
     })
   )
 
-  tags$div(class = "plans-view",
+  tags$div(class = "plans-view view-container",
     tags$div(class = "plans-search-section",
-      tags$label("Search", class = "search-label", `for` = ns("search_box")),
+      tags$label("Search", class = "search-label meta-label", `for` = ns("search_box")),
       textInput(ns("search_box"), label = NULL,
                 placeholder = "Search by Name, SID, or Unikey...", width = "100%")
     ),
-    tags$div(class = "plans-toolbar",
-      tags$span(class = "plans-label", "Category"),
-      tags$div(class = "plans-filter-tags", filter_buttons)
+    tags$div(class = "plans-toolbar toolbar",
+      tags$span(class = "plans-label meta-label", "Category"),
+      tags$div(class = "plans-filter-tags toggle-group", filter_buttons)
     ),
     uiOutput(ns("plan_stats")),
-    tags$div(class = "plans-list-container",
+    tags$div(class = "plans-list-container scroll-container",
       uiOutput(ns("plans_list"))
     )
   )
@@ -91,7 +91,7 @@ plansModuleServer <- function(id, studentData, dataSources) {
 
       showing_label <- if (grp == "all") "Showing" else PLAN_GROUP_LABELS[[grp]]
 
-      tags$div(class = "plans-summary",
+      tags$div(class = "plans-summary summary-bar",
         tags$div(class = "stat-item",
           tags$span(class = "stat-label", "With Plans"),
           tags$span(class = "stat-value", with_plans)
@@ -149,20 +149,20 @@ plansModuleServer <- function(id, studentData, dataSources) {
         group_lines <- lapply(groups_present, function(grp) {
           grows <- srows[srows$group == grp, , drop = FALSE]
           tags$div(class = "plans-item-group",
-            tags$span(class = "plans-item-group-label", PLAN_GROUP_LABELS[[grp]]),
+            tags$span(class = "plans-item-group-label meta-label", PLAN_GROUP_LABELS[[grp]]),
             tags$span(class = "plans-item-group-detail",
               paste(grows$display_detail, collapse = ", "))
           )
         })
 
         tags$div(
-          class = "plans-list-item",
+          class = "plans-list-item list-item",
           tags$div(class = "plans-item-header",
             tags$span(class = "plans-item-name", sname),
             tags$span(class = "plans-item-meta",
               paste0(sid, if (nzchar(login)) paste0(" / ", login) else "")
             ),
-            tags$span(class = "plans-item-count",
+            tags$span(class = "plans-item-count meta-label",
               paste0(adj_count, " adj")
             ),
             tags$button(

@@ -9,7 +9,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
   assess_header <- if (editing_weights) {
     tags$div(class = "detail-section-header editing-weights",
       "Assessments \u2014 Editing Weights",
-      tags$button(class = "weights-done-btn",
+      tags$button(class = "weights-done-btn btn-primary",
         onclick = "var inputs=document.querySelectorAll('.weight-input');var w={};inputs.forEach(function(el){var v=parseFloat(el.value);if(!isNaN(v)&&v>0)w[el.dataset.assessment]=v;});Shiny.setInputValue('save_weights',JSON.stringify(w),{priority:'event'});",
         "Done"
       )
@@ -39,11 +39,11 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
         tags$div(class = "grade-projection-top",
           tags$div(class = "grade-projection-left",
             tags$div(class = "grade-projection-pair",
-              tags$span(class = "grade-projection-label", "Current"),
+              tags$span(class = "grade-projection-label meta-label", "Current"),
               tags$span(class = "grade-projection-value", sprintf("%.1f%%", current_pct))
             ),
             tags$div(class = "grade-projection-pair",
-              tags$span(class = "grade-projection-label", "Range"),
+              tags$span(class = "grade-projection-label meta-label", "Range"),
               tags$span(class = "grade-projection-value grade-projection-range",
                 sprintf("%.1f%% \u2013 %.1f%%", current_pct, max_pct))
             )
@@ -69,7 +69,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
             style = sprintf("width: %.1f%%", pct_completed)
           )
         ),
-        tags$div(class = "grade-progress-label",
+        tags$div(class = "grade-progress-label meta-label",
           sprintf("%.0f%% of grade assessed", pct_completed)
         )
       )
@@ -107,7 +107,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
           tagList(
             # Summary statistics
             tags$div(
-              class = "assessment-summary",
+              class = "assessment-summary summary-bar",
               tags$div(
                 tags$div(class = "stat-label", "Completed"),
                 tags$div(class = "stat-value",

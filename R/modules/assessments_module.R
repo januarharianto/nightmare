@@ -4,12 +4,12 @@
 assessmentsModuleUI <- function(id) {
   ns <- NS(id)
   ns_id <- ns("plot_type")
-  tags$div(class = "assessments-view",
-    tags$div(class = "assessments-toolbar",
-      tags$span(class = "assessments-label", "Plot Type"),
-      tags$div(class = "plot-type-toggle",
+  tags$div(class = "assessments-view view-container",
+    tags$div(class = "assessments-toolbar toolbar",
+      tags$span(class = "assessments-label meta-label", "Plot Type"),
+      tags$div(class = "plot-type-toggle toggle-group",
         tags$button(
-          class = "plot-type-btn active",
+          class = "plot-type-btn toggle-btn active",
           `data-value` = "histogram",
           onclick = sprintf(
             "document.querySelectorAll('.plot-type-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s',this.dataset.value,{priority:'event'});",
@@ -18,7 +18,7 @@ assessmentsModuleUI <- function(id) {
           "Histogram"
         ),
         tags$button(
-          class = "plot-type-btn",
+          class = "plot-type-btn toggle-btn",
           `data-value` = "density",
           onclick = sprintf(
             "document.querySelectorAll('.plot-type-btn').forEach(function(b){b.classList.remove('active')});this.classList.add('active');Shiny.setInputValue('%s',this.dataset.value,{priority:'event'});",

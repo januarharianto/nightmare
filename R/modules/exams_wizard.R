@@ -34,7 +34,7 @@ render_wizard_card <- function(current_step, content, footer) {
     indicator_items <- c(indicator_items, list(
       tags$div(class = "exams-step-item",
         tags$div(class = dot_class, as.character(i)),
-        tags$div(class = "exams-step-label", step_labels[i])
+        tags$div(class = "exams-step-label meta-label", step_labels[i])
       )
     ))
 
@@ -158,12 +158,12 @@ render_column_mapping <- function() {
         style = "display: flex; gap: 16px; margin-bottom: 12px;",
         tags$div(
           style = "flex: 1;",
-          tags$span(class = "exams-label", "Score Column"),
+          tags$span(class = "exams-label meta-label", "Score Column"),
           selectInput(ns("score_col"), label = NULL, choices = header_choices, width = "100%")
         ),
         tags$div(
           style = "flex: 1;",
-          tags$span(class = "exams-label", "Max Marks Column"),
+          tags$span(class = "exams-label meta-label", "Max Marks Column"),
           selectInput(ns("max_col"), label = NULL, choices = header_choices, width = "100%")
         )
       )
@@ -174,18 +174,18 @@ render_column_mapping <- function() {
         style = "display: flex; gap: 16px; margin-bottom: 12px;",
         tags$div(
           style = "flex: 1;",
-          tags$span(class = "exams-label", "Student ID Column"),
+          tags$span(class = "exams-label meta-label", "Student ID Column"),
           selectInput(ns("id_col"), label = NULL, choices = header_choices, width = "100%")
         ),
         tags$div(
           style = "flex: 1;",
-          tags$span(class = "exams-label", "Score Column"),
+          tags$span(class = "exams-label meta-label", "Score Column"),
           selectInput(ns("score_col"), label = NULL, choices = header_choices, width = "100%")
         )
       ),
       tags$div(
         style = "margin-bottom: 12px;",
-        tags$span(class = "exams-label", "Max Marks"),
+        tags$span(class = "exams-label meta-label", "Max Marks"),
         numericInput(ns("manual_max_points"), label = NULL, value = NA, min = 1,
                      width = "100%")
       )
@@ -199,7 +199,7 @@ render_column_mapping <- function() {
     tags$div(style = "display: flex; gap: 8px;",
       back_btn(1L),
       tags$button(
-        class = "exams-wizard-btn",
+        class = "exams-wizard-btn btn-primary",
         onclick = sprintf(
           "Shiny.setInputValue('%s', true, {priority: 'event'})",
           ns("confirm_columns")
@@ -226,7 +226,7 @@ render_assessment_naming <- function() {
   content <- tags$div(
     tags$div(
       style = "margin-bottom: 12px;",
-      tags$span(class = "exams-label", "Assessment"),
+      tags$span(class = "exams-label meta-label", "Assessment"),
       selectInput(ns("assessment_choice"), label = NULL,
                   choices = name_choices, width = "100%")
     ),
@@ -238,7 +238,7 @@ render_assessment_naming <- function() {
     tags$div(style = "display: flex; gap: 8px;",
       back_btn(2L),
       tags$button(
-        class = "exams-wizard-btn",
+        class = "exams-wizard-btn btn-primary",
         onclick = sprintf(
           "Shiny.setInputValue('%s', true, {priority: 'event'})",
           ns("confirm_naming")
@@ -257,7 +257,7 @@ output$new_name_input <- renderUI({
   }
   tags$div(
     style = "margin-bottom: 12px;",
-    tags$span(class = "exams-label", "Assessment Name"),
+    tags$span(class = "exams-label meta-label", "Assessment Name"),
     textInput(ns("new_assessment_name"), label = NULL, placeholder = "e.g. Final Exam",
               width = "100%")
   )
@@ -276,7 +276,7 @@ render_review_step <- function() {
   n_conflicts <- if (!is.null(conf)) nrow(conf) else 0L
 
   # Stats row
-  stats <- tags$div(class = "exams-match-stats",
+  stats <- tags$div(class = "exams-match-stats summary-bar",
     tags$div(
       tags$div(class = "stat-label", "Matched"),
       tags$div(class = "stat-value", as.character(n_matched))
@@ -315,7 +315,7 @@ render_review_step <- function() {
     sources <- dataSources()
 
     conflict_section <- tags$div(
-      tags$div(class = "exams-label", style = "margin-top: 12px;", "Conflicts"),
+      tags$div(class = "exams-label meta-label", style = "margin-top: 12px;", "Conflicts"),
       tags$div(class = "exams-conflict-scroll",
         tags$table(class = "detail-table",
           tags$thead(tags$tr(
@@ -366,10 +366,10 @@ render_review_step <- function() {
                 tags$td(as.character(row$new_score)),
                 tags$td(speccon_badge),
                 tags$td(
-                  tags$div(class = "plot-type-toggle",
+                  tags$div(class = "plot-type-toggle toggle-group",
                     tags$button(
                       id = btn_id_new,
-                      class = paste("conflict-btn", if (default_action == "new") "active" else ""),
+                      class = paste("conflict-btn toggle-btn", if (default_action == "new") "active" else ""),
                       `data-sid` = sid,
                       `data-action` = "new",
                       onclick = sprintf(
@@ -380,7 +380,7 @@ render_review_step <- function() {
                     ),
                     tags$button(
                       id = btn_id_old,
-                      class = paste("conflict-btn", if (default_action == "old") "active" else ""),
+                      class = paste("conflict-btn toggle-btn", if (default_action == "old") "active" else ""),
                       `data-sid` = sid,
                       `data-action` = "old",
                       onclick = sprintf(
@@ -400,7 +400,7 @@ render_review_step <- function() {
   }
 
   content <- tags$div(
-    tags$div(class = "exams-label",
+    tags$div(class = "exams-label meta-label",
       paste0("Review — ", assessmentName())
     ),
     stats,
@@ -411,7 +411,7 @@ render_review_step <- function() {
   # Confirm button: uses conflict JS if conflicts exist
   confirm_btn <- if (n_conflicts > 0) {
     tags$button(
-      class = "exams-wizard-btn",
+      class = "exams-wizard-btn btn-primary",
       onclick = sprintf(
         "var btns=document.querySelectorAll('.conflict-btn.active');var res={};btns.forEach(function(b){res[b.dataset.sid]=b.dataset.action;});Shiny.setInputValue('%s',res,{priority:'event'});",
         ns("confirm_conflicts")
@@ -420,7 +420,7 @@ render_review_step <- function() {
     )
   } else {
     tags$button(
-      class = "exams-wizard-btn",
+      class = "exams-wizard-btn btn-primary",
       onclick = sprintf(
         "Shiny.setInputValue('%s', true, {priority: 'event'})",
         ns("confirm_upload")

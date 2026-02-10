@@ -42,7 +42,7 @@ build_consids_card <- function(student) {
           tagList(
             # Summary bar
             tags$div(
-              class = "consids-summary",
+              class = "consids-summary summary-bar",
               tags$div(
                 class = "consids-summary-primary",
                 tags$div(

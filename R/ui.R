@@ -9,7 +9,12 @@ ui <- page_fillable(
       "Segoe UI", "Arial", "sans-serif"
     ),
     bg = "#FFFFFF",
-    fg = "#000000"
+    fg = "#000000",
+    "border-radius" = "0",
+    "border-radius-sm" = "0",
+    "border-radius-lg" = "0",
+    "border-radius-pill" = "0",
+    "btn-border-radius" = "0"
   ),
 
   # Custom CSS and shinyjs
