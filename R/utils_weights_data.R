@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- weights_data.R ------------------------------------------------
 # Grade projection + risk calculation (Arnold & Pistilli model).
 

@@ -1,3 +1,5 @@
+#' @keywords internal
+#' @importFrom tools file_ext
 # -- exam_import.R -------------------------------------------------
 # Parse Gradescope and manual exam score exports for upload wizard.
 

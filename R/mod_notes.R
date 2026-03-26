@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- notes_module.R ------------------------------------------------
 # Sidebar view: browse all student notes with category filtering.
 

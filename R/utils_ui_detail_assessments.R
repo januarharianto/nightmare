@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- ui_detail_assessments.R ---------------------------------------
 # Assessments card for student detail view: weights, projections, score table.
 

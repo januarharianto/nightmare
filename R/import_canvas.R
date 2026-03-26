@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- canvas.R -----------------------------------------------------
 # Import and process Canvas gradebook CSV exports.
 

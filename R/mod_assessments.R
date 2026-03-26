@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- assessments_module.R ------------------------------------------
 # Class-level mark distribution: density plots and grade breakdowns.
 

@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- ui_student_detail.R -------------------------------------------
 # Student detail view: banner + orchestrator calling 4 card builders.
 

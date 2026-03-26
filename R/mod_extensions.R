@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- extensions_module.R -------------------------------------------
 # Special considerations view + SEAMS2 export.
 

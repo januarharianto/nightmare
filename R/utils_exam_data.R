@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- exam_data.R ---------------------------------------------------
 # Exam sittings lifecycle, conflict resolution, summary queries.
 

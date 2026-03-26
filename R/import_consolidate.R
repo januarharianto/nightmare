@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- consolidate.R -------------------------------------------------
 # Left-join Canvas + special considerations + disability plans.
 

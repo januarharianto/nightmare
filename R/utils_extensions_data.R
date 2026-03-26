@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- extensions_data.R ---------------------------------------------
 # Extension matching, overrides, and SEAMS2 data processing.
 

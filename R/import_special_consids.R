@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- special_consids.R ---------------------------------------------
 # Import and process special considerations CSV files.
 

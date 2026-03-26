@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- mod_exams_summary.R --------------------------------------------
 # Summary table and config editing for exams.
 

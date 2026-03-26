@@ -5,6 +5,7 @@ Description: Local-first Shiny app for consolidating student academic data
     from Canvas, special considerations, and disability plans.
 Authors@R: person("Januar", "Harianto", role = c("aut", "cre"))
 License: MIT + file LICENSE
+Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Imports:
     shiny,
@@ -22,5 +23,5 @@ Imports:
     tools
 Suggests:
     testthat (>= 3.0.0)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Config/testthat/edition: 3

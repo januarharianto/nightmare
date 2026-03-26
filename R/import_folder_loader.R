@@ -1,3 +1,4 @@
+#' @keywords internal
 # -- folder_loader.R -----------------------------------------------
 # Scan unit folders for CSV/Excel files, auto-detect types, and import.
 
