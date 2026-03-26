@@ -48,51 +48,45 @@ app_server <- function(input, output, session) {
     TRUE
   }
 
-  show_data_dir_modal <- function(current_dir = NULL, allow_cancel = FALSE) {
-    default_root <- if (!is.null(current_dir)) dirname(current_dir) else path.expand("~")
-    roots <- c(Home = path.expand("~"))
-    shinyDirChoose(input, "data_dir_choose", roots = roots, defaultRoot = "Home",
-                   defaultPath = sub(paste0("^", path.expand("~"), "/?"), "", default_root))
-
-    footer_btns <- if (allow_cancel) {
-      tagList(modalButton("Cancel"), actionButton("data_dir_confirm", "Load", class = "btn-dark"))
+  # Open native OS folder picker (Finder on macOS, native on Windows, zenity on Linux).
+  choose_directory <- function() {
+    if (Sys.info()["sysname"] == "Darwin") {
+      path <- system('osascript -e "POSIX path of (choose folder)"', intern = TRUE)
+    } else if (.Platform$OS.type == "windows") {
+      path <- utils::choose.dir()
     } else {
-      actionButton("data_dir_confirm", "Load", class = "btn-dark")
+      path <- system("zenity --file-selection --directory 2>/dev/null", intern = TRUE)
+    }
+    if (length(path) > 0 && !is.na(path) && nchar(trimws(path)) > 0) trimws(path) else NULL
+  }
+
+  observeEvent(input$browse_data_dir, {
+    path <- choose_directory()
+    if (!is.null(path)) {
+      abs_path <- normalizePath(path)
+      save_settings(list(data_dir = abs_path))
+      removeModal()
+      dataDir(abs_path)
+    }
+  })
+
+  show_data_dir_modal <- function(current_dir = NULL, allow_cancel = FALSE) {
+    footer_btns <- if (allow_cancel) {
+      tagList(modalButton("Cancel"), actionButton("browse_data_dir", "Browse\u2026", class = "btn-dark"))
+    } else {
+      actionButton("browse_data_dir", "Browse\u2026", class = "btn-dark")
     }
     showModal(modalDialog(
       title = "Select Data Directory",
-      tags$p("Browse to the folder containing your unit data subfolders."),
-      shinyDirButton("data_dir_choose", "Browse...", title = "Select data folder"),
-      tags$div(id = "selected-dir-display", class = "metadata-value",
-               style = "margin-top: 8px; padding: 8px; background: #F5F5F5; min-height: 20px;",
-               if (!is.null(current_dir)) current_dir else "No folder selected"),
+      tags$p("Choose the folder containing your unit data subfolders."),
+      if (!is.null(current_dir)) {
+        tags$p(class = "metadata-value", style = "padding: 8px; background: #F5F5F5;",
+               tags$span(class = "metadata-label", "Current: "), current_dir)
+      },
       footer = footer_btns,
       easyClose = allow_cancel
     ))
   }
-
-  observeEvent(input$data_dir_choose, {
-    req(is.list(input$data_dir_choose))
-    roots <- c(Home = path.expand("~"))
-    chosen <- parseDirPath(roots, input$data_dir_choose)
-    if (length(chosen) > 0 && nchar(chosen) > 0) {
-      shinyjs::html("selected-dir-display", as.character(chosen))
-      # Store the selected path for the confirm button
-      session$userData$selected_data_dir <- as.character(chosen)
-    }
-  })
-
-  observeEvent(input$data_dir_confirm, {
-    path <- session$userData$selected_data_dir
-    if (is.null(path) || path == "" || !dir.exists(path)) {
-      showNotification("Please select a valid directory.", type = "error")
-      return()
-    }
-    abs_path <- normalizePath(path)
-    save_settings(list(data_dir = abs_path))
-    removeModal()
-    dataDir(abs_path)
-  })
 
   observeEvent(input$change_data_dir, {
     show_data_dir_modal(dataDir(), allow_cancel = TRUE)
