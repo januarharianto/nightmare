@@ -273,7 +273,13 @@ app_server <- function(input, output, session) {
                   ),
                   f
                 )
-              })
+              }),
+              tags$div(class = "unit-dropdown-divider"),
+              tags$div(
+                class = "unit-dropdown-item unit-dropdown-change-dir",
+                onclick = "Shiny.setInputValue('change_data_dir', true, {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
+                "Change directory\u2026"
+              )
             )
           )
         ),
