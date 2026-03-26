@@ -16,6 +16,29 @@ app_server <- function(input, output, session) {
   examData <- reactiveVal(list(version = 1L, saved_at = NULL, assessments = list()))
   weightsData <- reactiveVal(list(version = 1L, saved_at = NULL, weights = list()))
   editingWeights <- reactiveVal(FALSE)
+  availableFolders <- reactiveVal(character(0))
+
+  validate_and_save_weights <- function(new_weights, new_due_dates = NULL,
+                                         toggle_editing = FALSE) {
+    total <- sum(unlist(new_weights), na.rm = TRUE)
+    if (total > 100) {
+      showNotification(sprintf("Weights total %.0f%% exceeds 100%%. Please adjust.", total),
+                       type = "warning")
+      return(FALSE)
+    }
+
+    current <- weightsData()
+    current$weights <- new_weights
+    if (!is.null(new_due_dates)) current$due_dates <- new_due_dates
+    weightsData(current)
+    if (toggle_editing) editingWeights(FALSE)
+
+    unit <- currentUnit()
+    if (!is.null(unit)) {
+      save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
+    }
+    TRUE
+  }
 
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
@@ -65,13 +88,9 @@ app_server <- function(input, output, session) {
   }
 
   # Reset app state on every session start
-  session$onFlush(function() {
-    # Clear browser storage to prevent state persistence
-    shinyjs::runjs("
-      localStorage.clear();
-      sessionStorage.clear();
-    ")
-  })
+  observe({
+    shinyjs::runjs("localStorage.clear(); sessionStorage.clear();")
+  }) |> bindEvent(TRUE, once = TRUE)
 
   # Handle view navigation
   observeEvent(input$active_view, {
@@ -181,7 +200,7 @@ app_server <- function(input, output, session) {
     }
 
     meta <- datasetMetadata()
-    folders <- scan_data_folders(NIGHTMARE_CONFIG$data$data_dir)
+    folders <- availableFolders()
     active <- currentUnit()
 
     tags$div(
@@ -276,6 +295,7 @@ app_server <- function(input, output, session) {
   observe({
     data_dir <- NIGHTMARE_CONFIG$data$data_dir
     folders <- scan_data_folders(data_dir)
+    availableFolders(folders)
     last_unit <- read_last_unit(data_dir)
 
     if (length(folders) == 0) {
@@ -319,11 +339,22 @@ app_server <- function(input, output, session) {
       studentData(data.frame())
       isLoaded(FALSE)
       load_unit_data(new_unit)
+      availableFolders(scan_data_folders(NIGHTMARE_CONFIG$data$data_dir))
     }
   })
 
   # Search module
   selectedStudentId <- searchModuleServer("search", studentData)
+
+  selectedStudent <- reactive({
+    sid <- selectedStudentId()
+    if (is.null(sid)) return(NULL)
+    data <- studentData()
+    if (is.null(data) || nrow(data) == 0) return(NULL)
+    student <- data[data$student_id == sid, ]
+    if (nrow(student) == 0) return(NULL)
+    student[1, ]
+  })
 
   # Extensions module
   extensionsModuleServer("extensions", studentData, dataSources, currentUnit)
@@ -462,52 +493,25 @@ app_server <- function(input, output, session) {
   # Save weights from client-side JSON (student detail view)
   observeEvent(input$save_weights, {
     req(input$save_weights)
-    weights_json <- input$save_weights
-    weights_list <- fromJSON(weights_json, simplifyVector = FALSE)
+    weights_list <- fromJSON(input$save_weights, simplifyVector = FALSE)
     weights_list <- lapply(weights_list, as.numeric)
-
-    total <- sum(unlist(weights_list), na.rm = TRUE)
-    if (total > 100) {
-      showNotification(sprintf("Weights total %.0f%% exceeds 100%%. Please adjust.", total), type = "warning")
-      return()
-    }
-
-    current <- weightsData()
-    current$weights <- weights_list
-    # Preserve existing due_dates
-    weightsData(current)
-    editingWeights(FALSE)
-
-    unit <- currentUnit()
-    if (!is.null(unit)) {
-      save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
-    }
+    validate_and_save_weights(weights_list, toggle_editing = TRUE)
   })
 
   # Save assessment config from Assessments tab (weights + due dates)
   observeEvent(input$save_assessment_config, {
     req(input$save_assessment_config)
-    config_json <- input$save_assessment_config
-    config <- fromJSON(config_json, simplifyVector = FALSE)
-
-    current <- weightsData()
+    config <- fromJSON(input$save_assessment_config, simplifyVector = FALSE)
+    new_due_dates <- config$due_dates
     if (!is.null(config$weights)) {
       new_weights <- lapply(config$weights, as.numeric)
-      total <- sum(unlist(new_weights), na.rm = TRUE)
-      if (total > 100) {
-        showNotification(sprintf("Weights total %.0f%% exceeds 100%%. Please adjust.", total), type = "warning")
-        return()
-      }
-      current$weights <- new_weights
-    }
-    if (!is.null(config$due_dates)) {
-      current$due_dates <- config$due_dates
-    }
-    weightsData(current)
-
-    unit <- currentUnit()
-    if (!is.null(unit)) {
-      save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
+      validate_and_save_weights(new_weights, new_due_dates)
+    } else if (!is.null(new_due_dates)) {
+      current <- weightsData()
+      current$due_dates <- new_due_dates
+      weightsData(current)
+      unit <- currentUnit()
+      if (!is.null(unit)) save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
     }
   })
 
@@ -523,30 +527,41 @@ app_server <- function(input, output, session) {
     removeModal()
   })
 
-  # Student detail panel
+  # Student detail: orchestrator (banner + card placeholders)
   output$student_detail_panel <- renderUI({
-    # Show blank until data is loaded
-    if (!isLoaded()) {
-      return(NULL)
-    }
-
-    if (is.null(selectedStudentId())) {
+    if (!isLoaded()) return(NULL)
+    student <- selectedStudent()
+    if (is.null(student)) {
       return(div(class = "empty-state",
         tags$p("Select a student from the list to view details")))
     }
+    build_student_detail_banner(student, studentData())
+  })
 
-    student <- studentData() %>%
-      filter(student_id == selectedStudentId())
+  # Individual card renderUI outputs
+  output$card_assessments <- renderUI({
+    student <- selectedStudent()
+    if (is.null(student)) return(NULL)
+    build_assessments_card(student, studentData(), examData(), weightsData(), editingWeights())
+  })
 
-    if (nrow(student) == 0) {
-      return(div(class = "empty-state",
-        tags$p("Student not found")))
-    }
+  output$card_consids <- renderUI({
+    student <- selectedStudent()
+    if (is.null(student)) return(NULL)
+    build_consids_card(student)
+  })
 
-    student <- student[1, ]
-    sid <- as.character(student$student_id)
-    notes_for_student <- studentNotes()[[sid]] %||% list()
-    build_student_detail_view(student, studentData(), notes_for_student, examData(), weightsData(), editingWeights())
+  output$card_plans <- renderUI({
+    student <- selectedStudent()
+    if (is.null(student)) return(NULL)
+    build_plans_card(student)
+  })
+
+  output$card_notes <- renderUI({
+    student <- selectedStudent()
+    if (is.null(student)) return(NULL)
+    notes_for_student <- studentNotes()[[as.character(student$student_id)]] %||% list()
+    build_notes_card(student, notes_for_student)
   })
 
 }

@@ -1,7 +1,7 @@
 # -- ui_student_detail.R -------------------------------------------
 # Student detail view: banner + orchestrator calling 4 card builders.
 
-build_student_detail_view <- function(student, all_students = NULL, student_notes = list(), exam_data = NULL, weights_data = NULL, editing_weights = FALSE) {
+build_student_detail_banner <- function(student, all_students = NULL) {
   # Compute position in class for nav (alphabetical by surname)
   student_idx <- NULL
   total_students <- 0L
@@ -67,10 +67,10 @@ build_student_detail_view <- function(student, all_students = NULL, student_note
     # Cards grid
     tags$div(
       class = "detail-cards-grid",
-      build_assessments_card(student, all_students, exam_data, weights_data, editing_weights),
-      build_consids_card(student),
-      build_plans_card(student),
-      build_notes_card(student, student_notes)
+      uiOutput("card_assessments"),
+      uiOutput("card_consids"),
+      uiOutput("card_plans"),
+      uiOutput("card_notes")
     )
   )
 }
