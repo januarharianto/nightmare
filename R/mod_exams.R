@@ -31,9 +31,15 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
     maxPoints <- reactiveVal(NULL)
     newSittingId <- reactiveVal(NULL)
 
-    # Source wizard renderers and summary table (local = TRUE for closure access)
-    source(system.file("include", "mod_exams_wizard.R", package = "nightmare"), local = TRUE)
-    source(system.file("include", "mod_exams_summary.R", package = "nightmare"), local = TRUE)
+    # Wizard renderers and summary table
+    render_exam_wizard(ns, input, output, wizardOpen, wizardStep,
+                        parsedScores, detectedSource, matchPreview,
+                        conflicts, assessmentName, maxPoints,
+                        examData, studentData, dataSources)
+
+    render_exam_summary(ns, input, output, editingConfig,
+                         examData, studentData, dataSources,
+                         currentUnit, weightsData)
 
     # --- Open wizard ---
 
