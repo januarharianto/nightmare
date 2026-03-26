@@ -23,12 +23,12 @@ build_consids_card <- function(student) {
           # Split by outcome type groups (handle NA outcome_type)
           has_outcome <- !is.na(consids$outcome_type)
           extensions <- consids[has_outcome & consids$outcome_type %in%
-            c("Simple Extension", "Extension of time"), ]
+            EXTENSION_TYPES, ]
           replacements <- consids[has_outcome &
             grepl("replacement.*exam", consids$outcome_type, ignore.case = TRUE), ]
           mark_adj <- consids[has_outcome &
             grepl("mark.*adjustment", consids$outcome_type, ignore.case = TRUE), ]
-          ext_types <- c("Simple Extension", "Extension of time")
+          ext_types <- EXTENSION_TYPES
           other <- consids[has_outcome &
             !(consids$outcome_type %in% ext_types) &
             !grepl("replacement.*exam", consids$outcome_type, ignore.case = TRUE) &

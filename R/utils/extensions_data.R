@@ -1,6 +1,8 @@
 # -- extensions_data.R ---------------------------------------------
 # Extension matching, overrides, and SEAMS2 data processing.
 
+EXTENSION_TYPES <- c("Simple Extension", "Extension of time")
+
 # Migrate .match_overrides.json from old location to .nightmare/ subfolder.
 # Only moves if old file exists and new file does not.
 migrate_match_overrides <- function(data_dir, unit) {
@@ -66,7 +68,7 @@ flatten_extensions <- function(data) {
 
   if (is.null(data) || nrow(data) == 0) return(empty_df)
 
-  extension_types <- c("Simple Extension", "Extension of time")
+  extension_types <- EXTENSION_TYPES
 
   rows <- lapply(seq_len(nrow(data)), function(i) {
     consids <- data$special_consids[[i]]

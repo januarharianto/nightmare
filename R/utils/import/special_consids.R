@@ -106,7 +106,7 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
         stringsAsFactors = FALSE
       )),
       total_extensions = sum(
-        approved & outcome_type %in% c("Simple Extension", "Extension of time"),
+        approved & outcome_type %in% EXTENSION_TYPES,
         na.rm = TRUE
       ),
       has_replacement_exam = any(

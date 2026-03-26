@@ -1,16 +1,16 @@
 # -- exam_import.R -------------------------------------------------
 # Parse Gradescope and manual exam score exports for upload wizard.
 
+# Read CSV or Excel file based on extension.
+read_tabular <- function(path, ...) {
+  ext <- tolower(tools::file_ext(path))
+  if (ext %in% c("xlsx", "xls")) readxl::read_excel(path, ...) else readr::read_csv(path, show_col_types = FALSE, ...)
+}
+
 # Detect exam source type by reading headers.
 # Returns list(type = "gradescope"|"manual", headers = character(), preview = data.frame())
 detect_exam_source <- function(file_path) {
-  ext <- tolower(tools::file_ext(file_path))
-
-  raw <- if (ext %in% c("xlsx", "xls")) {
-    readxl::read_excel(file_path, n_max = 5)
-  } else {
-    readr::read_csv(file_path, n_max = 5, show_col_types = FALSE)
-  }
+  raw <- read_tabular(file_path, n_max = 5)
 
   headers <- names(raw)
   headers_lower <- tolower(headers)
@@ -27,13 +27,7 @@ detect_exam_source <- function(file_path) {
 # Parse a Gradescope export with user-chosen score column.
 # SID column is auto-detected. Returns a named list (SID -> score).
 parse_gradescope_export <- function(file_path, score_col) {
-  ext <- tolower(tools::file_ext(file_path))
-
-  raw <- if (ext %in% c("xlsx", "xls")) {
-    readxl::read_excel(file_path)
-  } else {
-    readr::read_csv(file_path, show_col_types = FALSE)
-  }
+  raw <- read_tabular(file_path)
 
   headers_lower <- tolower(names(raw))
 
@@ -57,13 +51,7 @@ parse_gradescope_export <- function(file_path, score_col) {
 
 # Extract max marks from a Gradescope column (first non-NA numeric value).
 extract_max_marks <- function(file_path, max_col) {
-  ext <- tolower(tools::file_ext(file_path))
-
-  raw <- if (ext %in% c("xlsx", "xls")) {
-    readxl::read_excel(file_path, n_max = 5)
-  } else {
-    readr::read_csv(file_path, n_max = 5, show_col_types = FALSE)
-  }
+  raw <- read_tabular(file_path, n_max = 5)
 
   if (!max_col %in% names(raw)) stop(paste("Column not found:", max_col))
 
@@ -76,13 +64,7 @@ extract_max_marks <- function(file_path, max_col) {
 # Parse manual columns: extract specified id and score columns.
 # Returns a named list (SID -> score).
 parse_manual_columns <- function(file_path, id_col, score_col) {
-  ext <- tolower(tools::file_ext(file_path))
-
-  raw <- if (ext %in% c("xlsx", "xls")) {
-    readxl::read_excel(file_path)
-  } else {
-    readr::read_csv(file_path, show_col_types = FALSE)
-  }
+  raw <- read_tabular(file_path)
 
   if (!id_col %in% names(raw)) stop(paste("Column not found:", id_col))
   if (!score_col %in% names(raw)) stop(paste("Column not found:", score_col))
