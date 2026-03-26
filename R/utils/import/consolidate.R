@@ -103,21 +103,7 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
   # Handle special considerations columns
   if (!"special_consids" %in% names(consolidated)) {
     consolidated$special_consids <- lapply(1:nrow(consolidated), function(i) {
-      data.frame(
-        ticket_id = character(),
-        assessment_name = character(),
-        assessment_title = character(),
-        assessment_category = character(),
-        assessment_type = character(),
-        outcome_type = character(),
-        classification = character(),
-        state = character(),
-        approved = logical(),
-        extension_date = as.Date(character()),
-        due_date = as.POSIXct(character()),
-        closing_date = as.POSIXct(character()),
-        stringsAsFactors = FALSE
-      )
+      empty_consids_df()
     })
   }
   if (!"total_extensions" %in% names(consolidated)) {
@@ -142,12 +128,7 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
   }
   if (!"plan_adjustments" %in% names(consolidated)) {
     consolidated$plan_adjustments <- lapply(1:nrow(consolidated), function(i) {
-      data.frame(
-        category = character(),
-        arrangement_type = character(),
-        value = character(),
-        stringsAsFactors = FALSE
-      )
+      empty_plan_adjustments_df()
     })
   }
 
@@ -157,21 +138,7 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
       # Special considerations defaults
       special_consids = ifelse(
         sapply(special_consids, is.null) | is.na(special_consids),
-        list(data.frame(
-          ticket_id = character(),
-          assessment_name = character(),
-          assessment_title = character(),
-          assessment_category = character(),
-          assessment_type = character(),
-          outcome_type = character(),
-          classification = character(),
-          state = character(),
-          approved = logical(),
-          extension_date = as.Date(character()),
-          due_date = as.POSIXct(character()),
-          closing_date = as.POSIXct(character()),
-          stringsAsFactors = FALSE
-        )),
+        list(empty_consids_df()),
         special_consids
       ),
       total_extensions = ifelse(is.na(total_extensions), 0L, as.integer(total_extensions)),
@@ -184,12 +151,7 @@ consolidate_student_data <- function(canvas, consids, plans, unit_filter = NULL,
       has_disability_plan = ifelse(is.na(has_disability_plan), FALSE, has_disability_plan),
       plan_adjustments = ifelse(
         sapply(plan_adjustments, is.null) | is.na(plan_adjustments),
-        list(data.frame(
-          category = character(),
-          arrangement_type = character(),
-          value = character(),
-          stringsAsFactors = FALSE
-        )),
+        list(empty_plan_adjustments_df()),
         plan_adjustments
       ),
 

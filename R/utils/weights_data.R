@@ -4,30 +4,16 @@
 # Load weights data from .nightmare/weights.json.
 # Returns a list with version, saved_at, weights.
 load_weights_data <- function(data_dir, unit) {
-  path <- file.path(data_dir, unit, ".nightmare", "weights.json")
   default <- list(version = 1L, saved_at = NULL, weights = list(), due_dates = list())
-
-  if (!file.exists(path)) return(default)
-
-  tryCatch({
-    payload <- fromJSON(path, simplifyVector = FALSE)
-    if (is.null(payload$weights)) return(default)
-    if (is.null(payload$due_dates)) payload$due_dates <- list()
-    payload
-  }, error = function(e) {
-    default
-  })
+  payload <- load_json(data_dir, unit, "weights.json", default)
+  if (is.null(payload$weights)) return(default)
+  if (is.null(payload$due_dates)) payload$due_dates <- list()
+  payload
 }
 
 # Save weights data to .nightmare/weights.json.
 save_weights_data <- function(data_dir, unit, weights_data) {
-  nightmare_dir <- ensure_nightmare_dir(data_dir, unit)
-
-  weights_data$version <- 2L
-  weights_data$saved_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
-
-  path <- file.path(nightmare_dir, "weights.json")
-  save_json(path, weights_data)
+  save_nightmare_json(data_dir, unit, "weights.json", weights_data, version = 2L)
 }
 
 # Compute assessment status from due date and score presence.

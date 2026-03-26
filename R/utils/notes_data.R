@@ -20,30 +20,13 @@ generate_note_id <- function() {
 # Load student notes from .nightmare/student_notes.json.
 # Returns a named list keyed by student_id, each value a list of note lists.
 load_student_notes <- function(data_dir, unit) {
-  path <- file.path(data_dir, unit, ".nightmare", "student_notes.json")
-  if (!file.exists(path)) return(list())
-
-  tryCatch({
-    payload <- fromJSON(path, simplifyVector = FALSE)
-    if (is.null(payload$notes)) return(list())
-    payload$notes
-  }, error = function(e) {
-    list()
-  })
+  payload <- load_json(data_dir, unit, "student_notes.json", list())
+  if (is.null(payload$notes)) list() else payload$notes
 }
 
 # Save student notes to .nightmare/student_notes.json.
 save_student_notes <- function(data_dir, unit, notes) {
-  nightmare_dir <- ensure_nightmare_dir(data_dir, unit)
-
-  payload <- list(
-    version = 1L,
-    saved_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
-    notes = notes
-  )
-
-  path <- file.path(nightmare_dir, "student_notes.json")
-  save_json(path, payload)
+  save_nightmare_json(data_dir, unit, "student_notes.json", list(notes = notes))
 }
 
 # Add a note for a student. Returns updated notes list.
@@ -127,8 +110,8 @@ flatten_all_notes <- function(notes, student_data) {
     }))
   })
 
-  result <- do.call(rbind, Filter(Negate(is.null), rows))
-  if (is.null(result) || nrow(result) == 0) return(empty_df)
+  result <- rbind_or_empty(rows, empty_df)
+  if (nrow(result) == 0) return(empty_df)
 
   # Sort reverse-chronological
   result <- result[order(result$timestamp, decreasing = TRUE), ]

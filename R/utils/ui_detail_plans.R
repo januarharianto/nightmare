@@ -9,10 +9,7 @@ build_plans_card <- function(student) {
       class = "detail-section-content",
       {
         has_plan <- isTRUE(student$has_disability_plan)
-        adjustments <- if (has_plan) student$plan_adjustments[[1]] else data.frame(
-          category = character(), arrangement_type = character(),
-          value = character(), stringsAsFactors = FALSE
-        )
+        adjustments <- if (has_plan) student$plan_adjustments[[1]] else empty_plan_adjustments_df()
         n_adjustments <- nrow(adjustments)
 
         # Summary row: Disability Plan status + count

@@ -111,9 +111,7 @@ flatten_extensions <- function(data) {
     )
   })
 
-  result <- do.call(rbind, Filter(Negate(is.null), rows))
-  if (is.null(result) || nrow(result) == 0) return(empty_df)
-  result
+  rbind_or_empty(rows, empty_df)
 }
 
 # Extract unique sorted assignment names from Canvas data.
@@ -235,18 +233,9 @@ apply_match_overrides <- function(match_result, overrides) {
 save_match_overrides <- function(data_dir, unit, overrides) {
   folder <- file.path(data_dir, unit)
   if (!dir.exists(folder)) return(invisible(NULL))
-
-  # Convert NA values to JSON null via explicit NULL assignment
   overrides_json <- lapply(overrides, function(x) if (is.na(x)) NULL else x)
-
-  payload <- list(
-    version = 1L,
-    saved_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
-    overrides = overrides_json
-  )
-
-  path <- file.path(ensure_nightmare_dir(data_dir, unit), "match_overrides.json")
-  save_json(path, payload)
+  save_nightmare_json(data_dir, unit, "match_overrides.json",
+                      list(overrides = overrides_json))
 }
 
 # Load match overrides from .nightmare/match_overrides.json.
@@ -255,21 +244,11 @@ save_match_overrides <- function(data_dir, unit, overrides) {
 # Returns empty list if the file is missing or corrupt.
 load_match_overrides <- function(data_dir, unit) {
   migrate_match_overrides(data_dir, unit)
-
-  path <- file.path(data_dir, unit, ".nightmare", "match_overrides.json")
-  if (!file.exists(path)) return(list())
-
-  tryCatch({
-    payload <- fromJSON(path, simplifyVector = FALSE)
-    if (is.null(payload$overrides)) return(list())
-
-    # Convert JSON null back to NA
-    result <- lapply(payload$overrides, function(x) if (is.null(x)) NA else x)
-    attr(result, "saved_at") <- payload$saved_at
-    result
-  }, error = function(e) {
-    list()
-  })
+  payload <- load_json(data_dir, unit, "match_overrides.json", list())
+  if (is.null(payload$overrides)) return(list())
+  result <- lapply(payload$overrides, function(x) if (is.null(x)) NA else x)
+  attr(result, "saved_at") <- payload$saved_at
+  result
 }
 
 # Validate overrides against current spec cons + canvas names.

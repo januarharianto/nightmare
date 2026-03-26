@@ -78,15 +78,10 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
     })
 
     # Combine non-null adjustments
-    adjustments_df <- do.call(rbind, Filter(Negate(is.null), adjustments_list))
+    adjustments_df <- rbind_or_empty(adjustments_list, empty_plan_adjustments_df())
 
-    if (is.null(adjustments_df)) {
-      adjustments_df <- data.frame(
-        category = character(),
-        arrangement_type = character(),
-        value = character(),
-        stringsAsFactors = FALSE
-      )
+    if (nrow(adjustments_df) == 0) {
+      adjustments_df <- empty_plan_adjustments_df()
     } else {
       # Deduplicate adjustments (same arrangement_type + value)
       adjustments_df <- adjustments_df[!duplicated(adjustments_df[, c("arrangement_type", "value")]), ]

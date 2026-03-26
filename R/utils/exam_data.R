@@ -4,29 +4,14 @@
 # Load exam data from .nightmare/exams.json.
 # Returns a list with version, saved_at, assessments.
 load_exam_data <- function(data_dir, unit) {
-  path <- file.path(data_dir, unit, ".nightmare", "exams.json")
   default <- list(version = 1L, saved_at = NULL, assessments = list())
-
-  if (!file.exists(path)) return(default)
-
-  tryCatch({
-    payload <- fromJSON(path, simplifyVector = FALSE)
-    if (is.null(payload$assessments)) return(default)
-    payload
-  }, error = function(e) {
-    default
-  })
+  payload <- load_json(data_dir, unit, "exams.json", default)
+  if (is.null(payload$assessments)) default else payload
 }
 
 # Save exam data to .nightmare/exams.json.
 save_exam_data <- function(data_dir, unit, exam_data) {
-  nightmare_dir <- ensure_nightmare_dir(data_dir, unit)
-
-  exam_data$version <- 1L
-  exam_data$saved_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
-
-  path <- file.path(nightmare_dir, "exams.json")
-  save_json(path, exam_data)
+  save_nightmare_json(data_dir, unit, "exams.json", exam_data)
 }
 
 # Add a sitting to an assessment. Creates the assessment if it doesn't exist.
@@ -102,9 +87,7 @@ detect_conflicts <- function(exam_data, name, new_scores) {
     )
   })
 
-  result <- do.call(rbind, Filter(Negate(is.null), rows))
-  if (is.null(result) || nrow(result) == 0) return(empty)
-  result
+  rbind_or_empty(rows, empty)
 }
 
 # Update active_sitting per the user's choices.
@@ -153,9 +136,7 @@ get_student_exam_scores <- function(exam_data, student_id) {
     )
   })
 
-  result <- do.call(rbind, Filter(Negate(is.null), rows))
-  if (is.null(result) || nrow(result) == 0) return(empty)
-  result
+  rbind_or_empty(rows, empty)
 }
 
 # Get all sittings for one student on one assessment.
@@ -185,9 +166,7 @@ get_student_sittings <- function(exam_data, name, student_id) {
     )
   })
 
-  result <- do.call(rbind, Filter(Negate(is.null), rows))
-  if (is.null(result) || nrow(result) == 0) return(empty)
-  result
+  rbind_or_empty(rows, empty)
 }
 
 # Extract class-level percentage scores per assessment (for Analytics view).
