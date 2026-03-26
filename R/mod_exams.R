@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- exams_module.R ------------------------------------------------
 # Exam upload module: UI, reactive state, event handlers, save logic.
 

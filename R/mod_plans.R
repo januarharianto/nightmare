@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- plans_module.R -------------------------------------------------
 # Sidebar view: browse all academic plans with category filtering.
 

@@ -3,7 +3,7 @@ Version: 0.1.0
 Title: NIGHTMARE - Student Data Management for Unit Coordinators
 Description: Local-first Shiny app for consolidating student academic data
     from Canvas, special considerations, and disability plans.
-Authors@R: person("Januar", "Harianto", role = c("aut", "cre"))
+Authors@R: person("Januar", "Harianto", email = "januar.harianto@sydney.edu.au", role = c("aut", "cre"))
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 4.1.0)

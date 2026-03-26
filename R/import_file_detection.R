@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- file_detection.R ----------------------------------------------
 # Detect data source type (Canvas, consids, plans) from column signatures.
 

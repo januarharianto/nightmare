@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- ui_detail_notes.R ---------------------------------------------
 # Notes card for student detail view: tag selector, input form, notes list.
 

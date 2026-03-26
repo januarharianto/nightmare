@@ -1,4 +1,8 @@
 #' NIGHTMARE Server
+#'
+#' @param input Shiny input object
+#' @param output Shiny output object
+#' @param session Shiny session object
 #' @export
 #'
 # -- server.R -----------------------------------------------------

@@ -1,9 +1,12 @@
-#' @keywords internal
-#' @importFrom tools file_ext
 # -- exam_import.R -------------------------------------------------
 # Parse Gradescope and manual exam score exports for upload wizard.
 
-# Read CSV or Excel file based on extension.
+#' Read tabular file (CSV or Excel)
+#' @param path Path to file
+#' @param ... Additional arguments passed to reader
+#' @return data.frame
+#' @keywords internal
+#' @importFrom tools file_ext
 read_tabular <- function(path, ...) {
   ext <- tolower(tools::file_ext(path))
   if (ext %in% c("xlsx", "xls")) readxl::read_excel(path, ...) else readr::read_csv(path, show_col_types = FALSE, ...)

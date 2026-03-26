@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- mod_exams_wizard.R ---------------------------------------------
 # Wizard step renderers for exam upload.
 

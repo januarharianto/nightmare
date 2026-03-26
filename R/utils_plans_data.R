@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- plans_data.R ---------------------------------------------------
 # Shared utilities for plan data: grouping, formatting, flattening.
 

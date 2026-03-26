@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- ui_detail_consids.R -------------------------------------------
 # Special considerations card for student detail view.
 

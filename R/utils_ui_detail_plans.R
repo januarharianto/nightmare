@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- ui_detail_plans.R ---------------------------------------------
 # Support plans card for student detail view: disability plan adjustments.
 

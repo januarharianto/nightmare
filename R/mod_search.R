@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- search_module.R -----------------------------------------------
 # Student search with list-based results and keyboard navigation.
 

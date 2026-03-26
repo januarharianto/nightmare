@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- notes_data.R --------------------------------------------------
 # Note CRUD, NOTE_TAGS definitions, JSON persistence.
 

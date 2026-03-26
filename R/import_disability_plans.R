@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- disability_plans.R --------------------------------------------
 # Import and process disability plans Excel files (headers row 3).
 

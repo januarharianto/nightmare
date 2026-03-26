@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- assessments_data.R --------------------------------------------
 # Canvas assignment extraction and class-level score aggregation.
 

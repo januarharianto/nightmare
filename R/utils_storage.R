@@ -1,4 +1,3 @@
-#' @keywords internal
 # -- storage.R ----------------------------------------------------
 # Shared persistence utilities: directory setup and JSON save.
 
