@@ -1,25 +1,11 @@
-#' Test Suite: Storage and Persistence
-#'
-#' Validates that data survives reload and export/import cycles
+# Test Suite: Storage and Persistence
 
-library(testthat)
-
-# Set working directory to project root if running from tests/
-if (basename(getwd()) == "tests") {
-  setwd("..")
-}
-
-# Load required functions
-source("R/utils/import/canvas.R")
-source("R/utils/import/special_consids.R")
-source("R/utils/import/disability_plans.R")
-source("R/utils/import/consolidate.R")
-source("R/utils/import/file_detection.R")
+skip_if_not(dir.exists("../../_sample-data"), "Sample data not available")
 
 test_that("RDS save/load preserves data structure", {
   # Load sample data
-  canvas <- import_canvas_grades("_sample-data/canvas gradebook.csv")
-  consids <- import_special_considerations("_sample-data/special considerations.csv")
+  canvas <- import_canvas_grades("../../_sample-data/canvas gradebook.csv")
+  consids <- import_special_considerations("../../_sample-data/special considerations.csv")
   consolidated <- consolidate_student_data(canvas, consids, NULL)
 
   # Save to RDS
@@ -38,7 +24,7 @@ test_that("RDS save/load preserves data structure", {
 })
 
 test_that("CSV save/load preserves student data", {
-  canvas <- import_canvas_grades("_sample-data/canvas gradebook.csv")
+  canvas <- import_canvas_grades("../../_sample-data/canvas gradebook.csv")
 
   # Save to CSV
   temp_file <- tempfile(fileext = ".csv")
@@ -56,7 +42,7 @@ test_that("CSV save/load preserves student data", {
 
 test_that("Large dataset (500+ students) exports successfully", {
   # Simulate large dataset by repeating sample data
-  canvas <- import_canvas_grades("_sample-data/canvas gradebook.csv")
+  canvas <- import_canvas_grades("../../_sample-data/canvas gradebook.csv")
 
   # Basic sanity check - original data loads
   expect_gt(nrow(canvas), 200)
@@ -71,7 +57,7 @@ test_that("Large dataset (500+ students) exports successfully", {
 })
 
 test_that("Backup RDS includes metadata", {
-  canvas <- import_canvas_grades("_sample-data/canvas gradebook.csv")
+  canvas <- import_canvas_grades("../../_sample-data/canvas gradebook.csv")
 
   backup <- list(
     metadata = list(
@@ -95,7 +81,7 @@ test_that("Backup RDS includes metadata", {
 })
 
 test_that("Export/import cycle maintains integrity", {
-  canvas <- import_canvas_grades("_sample-data/canvas gradebook.csv")
+  canvas <- import_canvas_grades("../../_sample-data/canvas gradebook.csv")
 
   # Export to CSV
   temp_csv <- tempfile(fileext = ".csv")
@@ -114,8 +100,8 @@ test_that("Export/import cycle maintains integrity", {
 })
 
 test_that("Nested list columns survive RDS round-trip", {
-  canvas <- import_canvas_grades("_sample-data/canvas gradebook.csv")
-  consids <- import_special_considerations("_sample-data/special considerations.csv")
+  canvas <- import_canvas_grades("../../_sample-data/canvas gradebook.csv")
+  consids <- import_special_considerations("../../_sample-data/special considerations.csv")
   consolidated <- consolidate_student_data(canvas, consids, NULL)
 
   # Save to RDS
