@@ -14,6 +14,14 @@ save_exam_data <- function(data_dir, unit, exam_data) {
   save_nightmare_json(data_dir, unit, "exams.json", exam_data)
 }
 
+# Look up a student's score in a specific sitting. Returns NULL if not found.
+get_sitting_score <- function(sittings, sitting_id, sid) {
+  for (s in sittings) {
+    if (s$sitting_id == sitting_id && !is.null(s$scores[[sid]])) return(s$scores[[sid]])
+  }
+  NULL
+}
+
 # Add a sitting to an assessment. Creates the assessment if it doesn't exist.
 # sitting: list(sitting_id, upload_date, source_type, source_file, scores)
 # scores: named list (SID -> score)
@@ -72,13 +80,7 @@ detect_conflicts <- function(exam_data, name, new_scores) {
     if (is.null(active_id)) return(NULL)
 
     # Find the active sitting's score for this student
-    prev_score <- NULL
-    for (s in assessment$sittings) {
-      if (s$sitting_id == active_id && !is.null(s$scores[[sid]])) {
-        prev_score <- s$scores[[sid]]
-        break
-      }
-    }
+    prev_score <- get_sitting_score(assessment$sittings, active_id, sid)
     if (is.null(prev_score)) return(NULL)
 
     data.frame(
@@ -121,13 +123,7 @@ get_student_exam_scores <- function(exam_data, student_id) {
     active_id <- a$active_sitting[[sid]]
     if (is.null(active_id)) return(NULL)
 
-    score <- NULL
-    for (s in a$sittings) {
-      if (s$sitting_id == active_id && !is.null(s$scores[[sid]])) {
-        score <- s$scores[[sid]]
-        break
-      }
-    }
+    score <- get_sitting_score(a$sittings, active_id, sid)
     if (is.null(score)) return(NULL)
 
     data.frame(
@@ -184,13 +180,7 @@ extract_exam_class_scores <- function(exam_data) {
     # Collect active score for each student as a percentage
     pcts <- vapply(names(a$active_sitting), function(sid) {
       active_id <- a$active_sitting[[sid]]
-      score <- NULL
-      for (s in a$sittings) {
-        if (s$sitting_id == active_id && !is.null(s$scores[[sid]])) {
-          score <- s$scores[[sid]]
-          break
-        }
-      }
+      score <- get_sitting_score(a$sittings, active_id, sid)
       if (is.null(score)) return(NA_real_)
       (score / mp) * 100
     }, numeric(1))

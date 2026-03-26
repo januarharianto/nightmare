@@ -24,11 +24,15 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
     )
   }
 
+  # Pre-compute exam scores once for this student (used in projection and table rendering)
+  student_exam_scores <- get_student_exam_scores(exam_data, as.character(student$student_id))
+
   # Grade projection strip (only when weights configured and at least one scored)
   projection_strip <- NULL
   if (!is.null(weights_data) && length(weights_data$weights) > 0) {
     projection <- calculate_projected_grade(
-      weights, student$assignments[[1]], exam_data, as.character(student$student_id), due_dates
+      weights, student$assignments[[1]], exam_data, as.character(student$student_id), due_dates,
+      exam_scores = student_exam_scores
     )
     if (projection$completed_weight > 0) {
       risk <- calculate_risk_level(projection)
@@ -205,8 +209,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
 
                 # Exam data rows (all uploaded assessments, missing if no score)
                 if (!is.null(exam_data) && length(exam_data$assessments) > 0) {
-                  sid <- as.character(student$student_id)
-                  scores_df <- get_student_exam_scores(exam_data, sid)
+                  scores_df <- student_exam_scores
                   lapply(names(exam_data$assessments), function(aname) {
                     a <- exam_data$assessments[[aname]]
                     mp <- a$max_points

@@ -35,7 +35,7 @@ compute_assessment_status <- function(due_date, has_score) {
 # canvas_assignments: data.frame of student's Canvas assignments
 # exam_data: exam data list (from load_exam_data)
 # student_id: student identifier
-calculate_projected_grade <- function(weights, canvas_assignments, exam_data, student_id, due_dates = list()) {
+calculate_projected_grade <- function(weights, canvas_assignments, exam_data, student_id, due_dates = list(), exam_scores = NULL) {
   completed_points <- 0
   completed_weight <- 0
   total_weight <- 0
@@ -53,7 +53,9 @@ calculate_projected_grade <- function(weights, canvas_assignments, exam_data, st
   }
 
   # Get exam scores for this student
-  exam_scores <- get_student_exam_scores(exam_data, student_id)
+  if (is.null(exam_scores)) {
+    exam_scores <- get_student_exam_scores(exam_data, student_id)
+  }
 
   for (aname in names(weights)) {
     w <- as.numeric(weights[[aname]])
