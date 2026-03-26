@@ -48,6 +48,41 @@ app_server <- function(input, output, session) {
     TRUE
   }
 
+  show_data_dir_modal <- function(current_dir = NULL, allow_cancel = FALSE) {
+    prefill <- if (!is.null(current_dir)) current_dir
+               else normalizePath("data", mustWork = FALSE)
+    footer_btns <- if (allow_cancel) {
+      tagList(modalButton("Cancel"), actionButton("data_dir_confirm", "Load", class = "btn-dark"))
+    } else {
+      actionButton("data_dir_confirm", "Load", class = "btn-dark")
+    }
+    showModal(modalDialog(
+      title = "Select Data Directory",
+      tags$p("Enter the path to the folder containing your unit data subfolders."),
+      textInput("data_dir_input", label = NULL,
+                placeholder = "/path/to/data",
+                value = prefill),
+      footer = footer_btns,
+      easyClose = allow_cancel
+    ))
+  }
+
+  observeEvent(input$data_dir_confirm, {
+    path <- trimws(input$data_dir_input)
+    if (is.null(path) || path == "" || !dir.exists(path)) {
+      showNotification("Directory not found. Please enter a valid path.", type = "error")
+      return()
+    }
+    abs_path <- normalizePath(path)
+    save_settings(list(data_dir = abs_path))
+    removeModal()
+    dataDir(abs_path)
+  })
+
+  observeEvent(input$change_data_dir, {
+    show_data_dir_modal(dataDir(), allow_cancel = TRUE)
+  })
+
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
     data_dir <- dataDir()
@@ -299,39 +334,63 @@ app_server <- function(input, output, session) {
     )
   })
 
-  # Show folder picker on startup (auto-load last unit if available)
+  # Startup: load data or prompt for directory
   observe({
-    data_dir <- dataDir()
-    folders <- scan_data_folders(data_dir)
+    dir <- dataDir()
+
+    # Reset state when directory changes (prevents stale data)
+    studentData(data.frame())
+    isLoaded(FALSE)
+    currentUnit(NULL)
+    studentNotes(list())
+    examData(list(version = 1L, saved_at = NULL, assessments = list()))
+    weightsData(list(version = 1L, saved_at = NULL, weights = list(), due_dates = list()))
+    availableFolders(character(0))
+
+    # Branch 1: No saved directory — show directory picker
+    if (is.null(dir)) {
+      show_data_dir_modal()
+      return()
+    }
+
+    # Branch 2 & 3: Directory exists — scan for units
+    folders <- scan_data_folders(dir)
     availableFolders(folders)
-    last_unit <- read_last_unit(data_dir)
+    last_unit <- read_last_unit(dir)
 
     if (length(folders) == 0) {
+      # Branch 2: Directory exists but has no unit folders
       showModal(modalDialog(
         title = "No Data Found",
-        tags$p("No data folders found. Place your files in a subfolder under ",
-               tags$code("data/"), " (e.g. ", tags$code("data/BIOL2022/"), ")."),
+        tags$p("No data folders found in ", tags$code(dir), "."),
         tags$p("Each subfolder should contain Canvas gradebook CSV, special considerations CSV,
                and/or disability plans Excel files."),
-        footer = modalButton("OK"),
+        footer = tagList(
+          actionButton("change_dir_from_empty", "Change Directory", class = "btn-dark"),
+          modalButton("OK")
+        ),
         easyClose = TRUE
       ))
       return()
     }
 
-    # Auto-load last unit if valid
+    # Branch 3: Valid directory with unit folders
     if (!is.null(last_unit) && last_unit %in% folders) {
       load_unit_data(last_unit)
       return()
     }
 
-    # Fallback: show modal to select unit
     showModal(modalDialog(
       title = "Select Unit",
       selectInput("folder_select", "Unit of Study", choices = folders, selected = folders[1]),
       footer = actionButton("folder_confirm", "Load", class = "btn-dark"),
       easyClose = FALSE
     ))
+  })
+
+  observeEvent(input$change_dir_from_empty, {
+    removeModal()
+    show_data_dir_modal(dataDir())
   })
 
   # Handle folder selection (startup modal)
