@@ -2,6 +2,7 @@
 # Scan unit folders for CSV/Excel files, auto-detect types, and import.
 
 #' Scan data directory for unit subfolders containing data files
+#' @keywords internal
 #'
 #' @param data_dir Path to the root data directory
 #' @return Character vector of subfolder names, or empty character if none found
@@ -20,6 +21,7 @@ scan_data_folders <- function(data_dir) {
 }
 
 #' Load all data files from a unit folder using auto-detection
+#' @keywords internal
 #'
 #' @param folder_path Full path to the unit subfolder
 #' @param unit_filter Unit code for filtering (derived from folder name)
@@ -56,6 +58,7 @@ load_folder <- function(folder_path, unit_filter = NULL) {
 }
 
 #' Read the last loaded unit from disk
+#' @keywords internal
 #'
 #' @param data_dir Path to the root data directory
 #' @return Character string of last unit name, or NULL
@@ -66,6 +69,7 @@ read_last_unit <- function(data_dir) {
 }
 
 #' Save the last loaded unit to disk
+#' @keywords internal
 #'
 #' @param data_dir Path to the root data directory
 #' @param unit Character string of unit name

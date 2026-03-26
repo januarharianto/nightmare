@@ -2,6 +2,7 @@
 # Left-join Canvas + special considerations + disability plans.
 
 #' Detect unit code from Canvas data
+#' @keywords internal
 #'
 #' @param canvas_data data.frame from import_canvas_grades
 #' @return Character unit code (e.g., "BIOL2022")
@@ -19,6 +20,7 @@ detect_unit_from_canvas <- function(canvas_data) {
 }
 
 #' Detect year from Canvas data
+#' @keywords internal
 #'
 #' @param canvas_data data.frame from import_canvas_grades
 #' @return Character year code (e.g., "2025")
@@ -33,6 +35,7 @@ detect_year_from_canvas <- function(canvas_data) {
 }
 
 #' Detect semester from Canvas data
+#' @keywords internal
 #'
 #' @param canvas_data data.frame from import_canvas_grades with semester attribute
 #' @return Character semester code (e.g., "S1", "S2", "S2C")
@@ -58,6 +61,7 @@ detect_semester_from_canvas <- function(canvas_data) {
 }
 
 #' Consolidate Student Data
+#' @keywords internal
 #'
 #' @param canvas data.frame from import_canvas_grades
 #' @param consids data.frame from import_special_considerations

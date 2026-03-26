@@ -4,6 +4,7 @@
 # Standalone helpers (no closure deps)
 
 #' Get wizard step definitions
+#' @keywords internal
 #' @return list with nums and labels
 get_steps <- function() {
   list(
@@ -13,6 +14,7 @@ get_steps <- function() {
 }
 
 #' Build the wizard card wrapper with step indicator and footer
+#' @keywords internal
 #' @param current_step integer step number
 #' @param content tag list for card body
 #' @param footer tag list for card footer

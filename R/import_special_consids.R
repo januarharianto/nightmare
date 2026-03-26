@@ -2,6 +2,7 @@
 # Import and process special considerations CSV files.
 
 #' Import Special Considerations
+#' @keywords internal
 #'
 #' @param file_path Path to special considerations CSV file
 #' @param unit_filter Optional unit code to filter by (e.g., "BIOL2022")

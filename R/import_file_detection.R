@@ -2,6 +2,7 @@
 # Detect data source type (Canvas, consids, plans) from column signatures.
 
 #' Detect file type based on column signatures
+#' @keywords internal
 #'
 #' @param file_path Path to CSV or Excel file
 #' @return Character: "canvas", "special_consids", "plans", or "unknown"

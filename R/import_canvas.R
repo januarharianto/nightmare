@@ -2,6 +2,7 @@
 # Import and process Canvas gradebook CSV exports.
 
 #' Import Canvas Gradebook
+#' @keywords internal
 #'
 #' @param file_path Path to Canvas gradebook CSV file
 #' @return data.frame with student records and assignment data

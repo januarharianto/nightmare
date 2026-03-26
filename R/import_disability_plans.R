@@ -2,6 +2,7 @@
 # Import and process disability plans Excel files (headers row 3).
 
 #' Import Disability Plans
+#' @keywords internal
 #'
 #' @param file_path Path to disability plans Excel file
 #' @param unit_filter Optional unit code to filter by (e.g., "BIOL2022")
