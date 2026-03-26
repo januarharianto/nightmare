@@ -1,0 +1,12 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^app\.R$
+^data$
+^docs$
+^backups$
+^\.claude$
+^CLAUDE\.md$
+^DEPLOYMENT\.md$
+^_sample-data$
+^\.DS_Store$
+^\.Rhistory$
