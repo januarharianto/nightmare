@@ -1,6 +1,27 @@
 # -- ui_detail_assessments.R ---------------------------------------
 # Assessments card for student detail view: weights, projections, score table.
 
+# Shared JS for live weight-total calculation.
+weight_total_script <- function() {
+  tags$script(HTML("
+    document.querySelectorAll('.weight-input').forEach(function(el) {
+      el.addEventListener('input', function() {
+        var total = 0;
+        document.querySelectorAll('.weight-input').forEach(function(inp) {
+          var v = parseFloat(inp.value);
+          if (!isNaN(v)) total += v;
+        });
+        var display = document.getElementById('weight-total-display');
+        if (display) {
+          display.textContent = total.toFixed(0) + ' / 100%';
+          if (total > 100) display.classList.add('weight-total-over');
+          else display.classList.remove('weight-total-over');
+        }
+      });
+    });
+  "))
+}
+
 build_assessments_card <- function(student, all_students = NULL, exam_data = NULL, weights_data = NULL, editing_weights = FALSE) {
   weights <- if (!is.null(weights_data)) weights_data$weights else list()
   due_dates <- if (!is.null(weights_data)) weights_data$due_dates else list()
@@ -273,23 +294,7 @@ build_assessments_card <- function(student, all_students = NULL, exam_data = NUL
                       tags$td(id = "weight-total-display", sprintf("%.0f / 100%%", total_weight))
                     )
                   ),
-                  tags$script(HTML("
-                    document.querySelectorAll('.weight-input').forEach(function(el) {
-                      el.addEventListener('input', function() {
-                        var total = 0;
-                        document.querySelectorAll('.weight-input').forEach(function(inp) {
-                          var v = parseFloat(inp.value);
-                          if (!isNaN(v)) total += v;
-                        });
-                        var display = document.getElementById('weight-total-display');
-                        if (display) {
-                          display.textContent = total.toFixed(0) + ' / 100%';
-                          if (total > 100) display.classList.add('weight-total-over');
-                          else display.classList.remove('weight-total-over');
-                        }
-                      });
-                    });
-                  "))
+                  weight_total_script()
                 )
               }
             )

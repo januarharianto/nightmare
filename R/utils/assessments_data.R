@@ -60,6 +60,32 @@ compute_grade_counts <- function(percentages) {
   )
 }
 
+# Shared decoration for grade distribution plots.
+# Call AFTER drawing the main plot geometry. Adds boundary lines, x-axis,
+# grade labels and counts.
+render_grade_decorations <- function(percentages, y_max) {
+  grades <- compute_grade_counts(percentages)
+
+  # Grade boundary lines
+  abline(v = c(50, 65, 75, 85), lty = 2, col = "#CCCCCC")
+
+  # X-axis with boundary ticks only
+  axis(1, at = c(0, 50, 65, 75, 85, 100), labels = c(0, 50, 65, 75, 85, 100),
+       lwd = 0, lwd.ticks = 0.5, col.ticks = "#CCCCCC", col.axis = "#000000",
+       cex.axis = 1.0, padj = -0.5)
+
+  # Grade labels (light, top) and counts (black, below)
+  label_pos <- c(25, 57.5, 70, 80, 92.5)
+  label_txt <- c("F", "P", "CR", "D", "HD")
+  count_txt <- as.character(grades[label_txt])
+  text(label_pos, rep(y_max * 1.47, 5), label_txt, col = "#AAAAAA",
+       cex = 0.9, font = 2)
+  text(label_pos, rep(y_max * 1.25, 5), count_txt, col = "#000000",
+       cex = 1.15, font = 2)
+
+  invisible(NULL)
+}
+
 # Draw a density plot for an assessment's percentage distribution.
 # Black outline, no fill, grade boundary lines, minimal axes.
 # Grade labels and counts integrated at top of plot.
@@ -72,7 +98,6 @@ render_density_plot <- function(percentages) {
   }
 
   d <- density(percentages, from = 0, to = 100, bw = "SJ")
-  grades <- compute_grade_counts(percentages)
   y_max <- max(d$y)
 
   par(mar = c(2.5, 0, 0, 0), bg = "#FFFFFF")
@@ -81,25 +106,7 @@ render_density_plot <- function(percentages) {
        col = "#000000", lwd = 1.5,
        zero.line = FALSE, frame.plot = FALSE)
 
-  # Grade boundary lines
-  boundaries <- c(50, 65, 75, 85)
-  abline(v = boundaries, lty = 2, col = "#CCCCCC")
-
-  # X-axis with boundary ticks only
-  axis(1, at = c(0, 50, 65, 75, 85, 100), labels = c(0, 50, 65, 75, 85, 100),
-       lwd = 0, lwd.ticks = 0.5, col.ticks = "#CCCCCC", col.axis = "#000000",
-       cex.axis = 1.0, padj = -0.5)
-
-  # Grade labels (light, top) and counts (black, below) stacked vertically
-  label_pos <- c(25, 57.5, 70, 80, 92.5)
-  label_txt <- c("F", "P", "CR", "D", "HD")
-  count_txt <- as.character(grades[label_txt])
-  text(label_pos, rep(y_max * 1.47, 5), label_txt, col = "#AAAAAA",
-       cex = 0.9, font = 2)
-  text(label_pos, rep(y_max * 1.25, 5), count_txt, col = "#000000",
-       cex = 1.15, font = 2)
-
-  invisible(NULL)
+  render_grade_decorations(percentages, y_max)
 }
 
 # Draw a histogram for an assessment's percentage distribution.
@@ -115,35 +122,16 @@ render_histogram_plot <- function(percentages) {
   }
 
   breaks <- c(seq(0, 50, by = 10), 65, 75, 85, 100)
-  grades <- compute_grade_counts(percentages)
-  y_max <- max(hist(percentages, breaks = breaks, plot = FALSE)$density)
+  h <- hist(percentages, breaks = breaks, plot = FALSE)
+  y_max <- max(h$density)
 
   par(mar = c(2.5, 0, 0, 0), bg = "#FFFFFF")
-  h <- hist(percentages, breaks = breaks, plot = FALSE)
   plot(h, main = "", xlab = "", ylab = "", axes = FALSE,
        xlim = c(0, 100), ylim = c(0, y_max * 1.6),
        col = "#F5F5F5", border = "#000000",
        freq = FALSE)
 
-  # Grade boundary lines
-  boundaries <- c(50, 65, 75, 85)
-  abline(v = boundaries, lty = 2, col = "#CCCCCC")
-
-  # X-axis with boundary ticks only
-  axis(1, at = c(0, 50, 65, 75, 85, 100), labels = c(0, 50, 65, 75, 85, 100),
-       lwd = 0, lwd.ticks = 0.5, col.ticks = "#CCCCCC", col.axis = "#000000",
-       cex.axis = 1.0, padj = -0.5)
-
-  # Grade labels (light, top) and counts (black, below) stacked vertically
-  label_pos <- c(25, 57.5, 70, 80, 92.5)
-  label_txt <- c("F", "P", "CR", "D", "HD")
-  count_txt <- as.character(grades[label_txt])
-  text(label_pos, rep(y_max * 1.47, 5), label_txt, col = "#AAAAAA",
-       cex = 0.9, font = 2)
-  text(label_pos, rep(y_max * 1.25, 5), count_txt, col = "#000000",
-       cex = 1.15, font = 2)
-
-  invisible(NULL)
+  render_grade_decorations(percentages, y_max)
 }
 
 # Compute percentile rank for a student's assessments against the class.

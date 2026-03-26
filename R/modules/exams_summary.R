@@ -191,23 +191,7 @@ output$exam_summary <- renderUI({
           tags$td(colspan = "3", "")
         )
       ),
-      tags$script(HTML("
-        document.querySelectorAll('.weight-input').forEach(function(el) {
-          el.addEventListener('input', function() {
-            var total = 0;
-            document.querySelectorAll('.weight-input').forEach(function(inp) {
-              var v = parseFloat(inp.value);
-              if (!isNaN(v)) total += v;
-            });
-            var display = document.getElementById('weight-total-display');
-            if (display) {
-              display.textContent = total.toFixed(0) + ' / 100%';
-              if (total > 100) display.classList.add('weight-total-over');
-              else display.classList.remove('weight-total-over');
-            }
-          });
-        });
-      "))
+      weight_total_script()
     )
   }
 
