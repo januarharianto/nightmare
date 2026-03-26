@@ -21,6 +21,10 @@ app_server <- function(input, output, session) {
   weightsData <- reactiveVal(list(version = 1L, saved_at = NULL, weights = list()))
   editingWeights <- reactiveVal(FALSE)
   availableFolders <- reactiveVal(character(0))
+  dataDir <- reactiveVal({
+    saved <- read_settings()$data_dir
+    if (!is.null(saved) && dir.exists(saved)) saved else NULL
+  })
 
   validate_and_save_weights <- function(new_weights, new_due_dates = NULL,
                                          toggle_editing = FALSE) {
@@ -39,14 +43,14 @@ app_server <- function(input, output, session) {
 
     unit <- currentUnit()
     if (!is.null(unit)) {
-      save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
+      save_weights_data(dataDir(), unit, current)
     }
     TRUE
   }
 
   # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
   load_unit_data <- function(unit) {
-    data_dir <- NIGHTMARE_CONFIG$data$data_dir
+    data_dir <- dataDir()
     folder_path <- file.path(data_dir, unit)
 
     tryCatch({
@@ -297,7 +301,7 @@ app_server <- function(input, output, session) {
 
   # Show folder picker on startup (auto-load last unit if available)
   observe({
-    data_dir <- NIGHTMARE_CONFIG$data$data_dir
+    data_dir <- dataDir()
     folders <- scan_data_folders(data_dir)
     availableFolders(folders)
     last_unit <- read_last_unit(data_dir)
@@ -343,7 +347,7 @@ app_server <- function(input, output, session) {
       studentData(data.frame())
       isLoaded(FALSE)
       load_unit_data(new_unit)
-      availableFolders(scan_data_folders(NIGHTMARE_CONFIG$data$data_dir))
+      availableFolders(scan_data_folders(dataDir()))
     }
   })
 
@@ -389,7 +393,7 @@ app_server <- function(input, output, session) {
 
     updated <- add_note(studentNotes(), info$student_id, info$category, info$text)
     studentNotes(updated)
-    save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
+    save_student_notes(dataDir(), unit, updated)
   })
 
   # Delete a note
@@ -401,7 +405,7 @@ app_server <- function(input, output, session) {
 
     updated <- delete_note(studentNotes(), info$student_id, info$note_id)
     studentNotes(updated)
-    save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
+    save_student_notes(dataDir(), unit, updated)
   })
 
   # Edit a note -- show modal with pre-filled values
@@ -486,7 +490,7 @@ app_server <- function(input, output, session) {
     resolutions[[info$student_id]] <- as.integer(info$sitting_id)
     exam <- resolve_conflicts(exam, info$assessment, resolutions)
     examData(exam)
-    save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
+    save_exam_data(dataDir(), unit, exam)
   })
 
   # Toggle weight editing mode
@@ -515,7 +519,7 @@ app_server <- function(input, output, session) {
       current$due_dates <- new_due_dates
       weightsData(current)
       unit <- currentUnit()
-      if (!is.null(unit)) save_weights_data(NIGHTMARE_CONFIG$data$data_dir, unit, current)
+      if (!is.null(unit)) save_weights_data(dataDir(), unit, current)
     }
   })
 
@@ -527,7 +531,7 @@ app_server <- function(input, output, session) {
 
     updated <- edit_note(studentNotes(), info$student_id, info$note_id, info$category, info$text)
     studentNotes(updated)
-    save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
+    save_student_notes(dataDir(), unit, updated)
     removeModal()
   })
 
