@@ -11,7 +11,7 @@ examsModuleUI <- function(id) {
   )
 }
 
-examsModuleServer <- function(id, studentData, examData, currentUnit, dataSources, weightsData = NULL) {
+examsModuleServer <- function(id, studentData, examData, currentUnit, dataSources, weightsData = NULL, dataDir) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -239,7 +239,7 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       # Save
       unit <- currentUnit()
       if (!is.null(unit)) {
-        save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
+        save_exam_data(dataDir(), unit, exam)
       }
       examData(exam)
 
@@ -268,7 +268,7 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
         exam$assessments[[aname]] <- NULL
         unit <- currentUnit()
         if (!is.null(unit)) {
-          save_exam_data(NIGHTMARE_CONFIG$data$data_dir, unit, exam)
+          save_exam_data(dataDir(), unit, exam)
         }
         examData(exam)
         showNotification(paste0("Deleted '", aname, "'"), type = "message")

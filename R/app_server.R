@@ -365,7 +365,7 @@ app_server <- function(input, output, session) {
   })
 
   # Extensions module
-  extensionsModuleServer("extensions", studentData, dataSources, currentUnit)
+  extensionsModuleServer("extensions", studentData, dataSources, currentUnit, dataDir = dataDir)
 
   # Assessments module
   assessmentsModuleServer("assessments", studentData, examData, weightsData)
@@ -377,7 +377,7 @@ app_server <- function(input, output, session) {
   plansModuleServer("plans", studentData, dataSources)
 
   # Exams module
-  examsModuleServer("exams", studentData, examData, currentUnit, dataSources, weightsData)
+  examsModuleServer("exams", studentData, examData, currentUnit, dataSources, weightsData, dataDir = dataDir)
 
   # Navigate to student from notes feed
   observeEvent(input$navigate_to_student, {

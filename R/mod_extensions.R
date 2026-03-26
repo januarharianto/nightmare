@@ -29,7 +29,7 @@ extensionsModuleUI <- function(id) {
   )
 }
 
-extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
+extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, dataDir) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -68,7 +68,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
         return()
       }
 
-      data_dir <- NIGHTMARE_CONFIG$data$data_dir
+      data_dir <- dataDir()
       saved <- load_match_overrides(data_dir, unit)
       if (length(saved) == 0) {
         overridesLoadedFromDisk(FALSE)
@@ -435,7 +435,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
       # Save to disk
       unit <- currentUnit()
       if (!is.null(unit) && length(new_overrides) > 0) {
-        data_dir <- NIGHTMARE_CONFIG$data$data_dir
+        data_dir <- dataDir()
         save_match_overrides(data_dir, unit, new_overrides)
       }
 
