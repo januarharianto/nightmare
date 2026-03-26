@@ -10,6 +10,7 @@
 #' @importFrom rlang .data
 #' @importFrom stats density ecdf median sd
 #' @importFrom graphics abline axis hist par plot plot.new text
+#' @importFrom shinyFiles shinyDirButton shinyDirChoose parseDirPath
 NULL
 
 #' Run the NIGHTMARE Shiny app

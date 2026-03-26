@@ -20,7 +20,8 @@ Imports:
     rlang,
     stats,
     graphics,
-    tools
+    tools,
+    shinyFiles
 Suggests:
     testthat (>= 3.0.0)
 RoxygenNote: 7.3.3
