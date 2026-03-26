@@ -1,33 +1,10 @@
+#' NIGHTMARE Server
+#' @export
+#'
 # -- server.R -----------------------------------------------------
 # Main server: reactive state, module orchestration, event handling.
 
-source("R/utils/storage.R")
-source("R/utils/import/canvas.R")
-source("R/utils/import/special_consids.R")
-source("R/utils/import/disability_plans.R")
-source("R/utils/import/consolidate.R")
-source("R/utils/import/file_detection.R")
-source("R/utils/import/folder_loader.R")
-source("R/utils/ui_detail_assessments.R")
-source("R/utils/ui_detail_consids.R")
-source("R/utils/plans_data.R")
-source("R/utils/ui_detail_plans.R")
-source("R/utils/ui_detail_notes.R")
-source("R/utils/ui_student_detail.R")
-source("R/utils/extensions_data.R")
-source("R/utils/assessments_data.R")
-source("R/utils/notes_data.R")
-source("R/modules/search_module.R")
-source("R/modules/extensions_module.R")
-source("R/modules/assessments_module.R")
-source("R/modules/notes_module.R")
-source("R/utils/exam_data.R")
-source("R/utils/weights_data.R")
-source("R/utils/import/exam_import.R")
-source("R/modules/plans_module.R")
-source("R/modules/exams_module.R")
-
-server <- function(input, output, session) {
+app_server <- function(input, output, session) {
 
   # Reactive values
   studentData <- reactiveVal(data.frame())
@@ -115,10 +92,10 @@ server <- function(input, output, session) {
     # Return placeholder if no data
     if (is.null(data) || nrow(data) == 0) {
       return(list(
-        unit = "—",
-        year = "—",
-        semester = "—",
-        student_count = "—",
+        unit = "\u2014",
+        year = "\u2014",
+        semester = "\u2014",
+        student_count = "\u2014",
         sources = list(canvas = FALSE, consids = FALSE, plans = FALSE)
       ))
     }
@@ -127,13 +104,13 @@ server <- function(input, output, session) {
     unit <- if ("unit_of_study" %in% names(data) && nrow(data) > 0) {
       unique(data$unit_of_study)[1]
     } else {
-      "—"
+      "\u2014"
     }
 
     # Extract year from attribute
     year <- attr(data, "academic_year")
     if (is.null(year) || is.na(year)) {
-      year <- "—"
+      year <- "\u2014"
     }
 
     # Extract semester from attribute (set by canvas import)
@@ -142,7 +119,7 @@ server <- function(input, output, session) {
       # Fallback: try detection function
       semester <- tryCatch(
         detect_semester_from_canvas(data),
-        error = function(e) "—"
+        error = function(e) "\u2014"
       )
     }
 
@@ -249,7 +226,7 @@ server <- function(input, output, session) {
           tags$span(class = "metadata-label", "Students:"),
           tags$span(
             class = "metadata-value",
-            if (meta$student_count == "—") "—" else as.character(meta$student_count)
+            if (meta$student_count == "\u2014") "\u2014" else as.character(meta$student_count)
           )
         ),
         tags$div(
@@ -392,7 +369,7 @@ server <- function(input, output, session) {
     save_student_notes(NIGHTMARE_CONFIG$data$data_dir, unit, updated)
   })
 
-  # Edit a note — show modal with pre-filled values
+  # Edit a note -- show modal with pre-filled values
   observeEvent(input$edit_note, {
     req(input$edit_note)
     info <- input$edit_note

@@ -43,7 +43,7 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
     if (col_name %in% names(df)) df[[col_name]] else rep(default, nrow(df))
   }
 
-  # Process each consideration record — extract all relevant fields
+  # Process each consideration record -- extract all relevant fields
   consids_processed <- data %>%
     mutate(
       student_id = as.character(.data[[student_id_col]]),
@@ -79,7 +79,7 @@ import_special_considerations <- function(file_path, unit_filter = NULL, year_fi
            assessment_category, assessment_type, outcome_type, classification,
            state, approved, extension_date, due_date, closing_date)
 
-  # No dedup — each ticket is a unique consideration event.
+  # No dedup -- each ticket is a unique consideration event.
   # A student can have multiple replacement exams for the same assessment
   # (each sitting generates a new ticket with its own due date).
   # Sort by due_date so records appear in chronological order.

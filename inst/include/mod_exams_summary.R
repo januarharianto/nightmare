@@ -1,6 +1,6 @@
 # -- exams_summary.R -----------------------------------------------
 # Summary table and config editing for exams. Sourced inside examsModuleServer()
-# with local = TRUE — has access to: ns, input, output, session,
+# with local = TRUE -- has access to: ns, input, output, session,
 # examData(), studentData(), dataSources(), currentUnit(), weightsData(),
 # editingConfig()
 

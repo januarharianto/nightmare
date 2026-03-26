@@ -318,7 +318,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit) {
 
       modal_content <- tagList()
 
-      # Section 1: Currently matched (manual) — editable existing overrides
+      # Section 1: Currently matched (manual) -- editable existing overrides
       if (length(overrides) > 0) {
         section_items <- tagList()
         for (sc_name in names(overrides)) {

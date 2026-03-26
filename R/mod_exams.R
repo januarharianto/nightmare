@@ -32,8 +32,8 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
     newSittingId <- reactiveVal(NULL)
 
     # Source wizard renderers and summary table (local = TRUE for closure access)
-    source("R/modules/exams_wizard.R", local = TRUE)
-    source("R/modules/exams_summary.R", local = TRUE)
+    source(system.file("include", "mod_exams_wizard.R", package = "nightmare"), local = TRUE)
+    source(system.file("include", "mod_exams_summary.R", package = "nightmare"), local = TRUE)
 
     # --- Open wizard ---
 
@@ -218,7 +218,7 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
           if (action == "new") {
             resolution_map[[sid]] <- new_id
           }
-          # "old" means keep current active_sitting — no change needed
+          # "old" means keep current active_sitting -- no change needed
         }
         num_replaced <- length(resolution_map)
         if (num_replaced > 0) {

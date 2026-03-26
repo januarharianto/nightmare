@@ -43,7 +43,7 @@ add_exam_sitting <- function(exam_data, name, max_points, sitting) {
       )
     )
   } else {
-    # Existing assessment — append sitting
+    # Existing assessment -- append sitting
     existing_ids <- vapply(assessment$sittings, function(s) s$sitting_id, integer(1))
     sitting$sitting_id <- max(existing_ids) + 1L
 

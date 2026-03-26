@@ -1,3 +1,6 @@
+#' Application configuration
+#' @export
+#'
 # -- config.R -----------------------------------------------------
 # Application configuration: paths, version, feature flags.
 

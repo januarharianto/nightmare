@@ -79,7 +79,7 @@ build_consids_card <- function(student) {
               )
             ),
 
-            # Replacement Exams group (shown first — most actionable)
+            # Replacement Exams group (shown first -- most actionable)
             if (nrow(replacements) > 0 || nrow(pending_no_outcome) > 0) {
               exam_rows <- rbind(
                 if (nrow(replacements) > 0) replacements else NULL,

@@ -1,6 +1,6 @@
 # -- exams_wizard.R ------------------------------------------------
 # Wizard step renderers for exam upload. Sourced inside examsModuleServer()
-# with local = TRUE — has access to: ns, input, output, session,
+# with local = TRUE -- has access to: ns, input, output, session,
 # parsedScores(), detectedSource(), matchPreview(), conflicts(),
 # assessmentName(), maxPoints(), newSittingId(), wizardOpen(), wizardStep()
 
@@ -401,7 +401,7 @@ render_review_step <- function() {
 
   content <- tags$div(
     tags$div(class = "exams-label meta-label",
-      paste0("Review — ", assessmentName())
+      paste0("Review \u2014 ", assessmentName())
     ),
     stats,
     unmatched_warning,

@@ -9,13 +9,13 @@ extract_class_scores <- function(data, due_dates = list()) {
   if (is.null(data) || nrow(data) == 0) return(list())
   if (!"assignments" %in% names(data)) return(list())
 
-  # All students share the same assignment list — use the first to get names
+  # All students share the same assignment list -- use the first to get names
   ref <- data$assignments[[1]]
   if (is.null(ref) || nrow(ref) == 0) return(list())
 
   # Only completed assessments (using due-date-based status)
   # Use has_score=TRUE to test whether the assessment *would* be completed
-  # (i.e. due date is in the past or not set) — individual student scores checked later
+  # (i.e. due date is in the past or not set) -- individual student scores checked later
   statuses <- vapply(seq_len(nrow(ref)), function(i) {
     compute_assessment_status(due_dates[[ref$name[i]]], TRUE)
   }, character(1))

@@ -1,7 +1,11 @@
+#' NIGHTMARE UI
+#' @export
+#'
 # -- ui.R ---------------------------------------------------------
 # UI definition: layout, navigation, output placeholders.
 
-ui <- page_fillable(
+app_ui <- function() {
+  page_fillable(
   theme = bs_theme(
     version = 5,
     base_font = font_collection(
@@ -22,7 +26,8 @@ ui <- page_fillable(
   htmltools::htmlDependency(
     name = "nightmare",
     version = NIGHTMARE_CONFIG$ui$version,
-    src = c(file = normalizePath("www")),
+    src = "app/www",
+    package = "nightmare",
     stylesheet = "custom.css",
     script = "search-keyboard.js"
   ),
@@ -103,4 +108,5 @@ ui <- page_fillable(
     tags$span(class = "footer-sep", "|"),
     tags$span("MIT License")
   )
-)
+  )
+}

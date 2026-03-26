@@ -71,7 +71,7 @@ searchModuleServer <- function(id, studentData) {
           div(class = "result-item-name", results$name[i]),
           div(class = "result-item-meta",
             span(class = "result-item-sid", paste0("SID: ", results$student_id[i])),
-            span(class = "result-item-sep", " · "),
+            span(class = "result-item-sep", " \u00b7 "),
             span(class = "result-item-unikey", results$sis_login_id[i])
           )
         )
