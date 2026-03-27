@@ -116,9 +116,29 @@ flatten_extensions <- function(data, due_dates = list()) {
   spec_cons_result <- rbind_or_empty(rows, empty_df)
 
   # --- Synthetic plan extension rows ---
-  # For students with plan extension entitlements, generate a row per assessment
-  # that has a due date, even if they have no spec con.
-  if (length(due_dates) == 0) return(spec_cons_result)
+  # For students with plan extension entitlements, generate a row per Canvas
+  # assignment even if they have no spec con.
+  # Due date priority: 1) spec cons due_date, 2) configured due_dates, 3) NA (TBC)
+
+  # Get Canvas assignment names
+  canvas_names <- character(0)
+  if (!is.null(data) && nrow(data) > 0 && "assignments" %in% names(data)) {
+    ref <- data$assignments[[1]]
+    if (!is.null(ref) && nrow(ref) > 0) canvas_names <- unique(ref$name)
+  }
+  if (length(canvas_names) == 0) return(spec_cons_result)
+
+  # Build due date lookup: spec cons dates first, then configured dates overlay
+  spec_cons_dates <- list()
+  if (nrow(spec_cons_result) > 0) {
+    for (j in seq_len(nrow(spec_cons_result))) {
+      aname <- spec_cons_result$assessment_name[j]
+      dd <- spec_cons_result$due_date[j]
+      if (!is.null(dd) && !is.na(dd) && is.null(spec_cons_dates[[aname]])) {
+        spec_cons_dates[[aname]] <- dd
+      }
+    }
+  }
 
   synthetic_rows <- lapply(seq_len(nrow(data)), function(i) {
     plan_adj <- data$plan_adjustments[[i]]
@@ -137,13 +157,18 @@ flatten_extensions <- function(data, due_dates = list()) {
 
     sid <- as.character(data$student_id[i])
 
-    # Generate one row per assessment with a due date
-    asg_rows <- lapply(names(due_dates), function(aname) {
-      dd <- due_dates[[aname]]
-      if (is.null(dd) || dd == "") return(NULL)
-      due_dt <- tryCatch(as.Date(dd), error = function(e) NA)
-      if (is.na(due_dt)) return(NULL)
-      ext_dt <- if (!is.na(plan_days)) due_dt + plan_days else NA
+    # Generate one row per Canvas assessment
+    asg_rows <- lapply(canvas_names, function(aname) {
+      # Due date priority: spec cons > configured > NA
+      due_dt <- NA
+      sc_dd <- spec_cons_dates[[aname]]
+      if (!is.null(sc_dd) && !is.na(sc_dd)) {
+        due_dt <- as.Date(sc_dd)
+      } else if (!is.null(due_dates[[aname]]) && due_dates[[aname]] != "") {
+        due_dt <- tryCatch(as.Date(due_dates[[aname]]), error = function(e) NA)
+      }
+
+      ext_dt <- if (!is.na(due_dt) && !is.na(plan_days)) due_dt + plan_days else NA
 
       data.frame(
         student_id = sid,
@@ -155,7 +180,7 @@ flatten_extensions <- function(data, due_dates = list()) {
         state = "Approved",
         approved = TRUE,
         extension_date = ext_dt,
-        due_date = as.POSIXct(as.character(due_dt)),
+        due_date = if (!is.na(due_dt)) as.POSIXct(as.character(due_dt)) else as.POSIXct(NA),
         closing_date = as.POSIXct(NA),
         has_plan_extension = TRUE,
         plan_days = plan_days,
