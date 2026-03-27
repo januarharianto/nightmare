@@ -457,11 +457,13 @@ build_extensions_table <- function(ext_flat, canvas_name, match_result) {
   due_dates_formatted <- fmt_date(as.Date(filtered$due_date))
   ext_dates_formatted <- fmt_date(filtered$extension_date)
 
-  # Compute +Days
+  # Compute +Days (blank for plan-only extensions — only show for spec cons)
+  is_plan_only <- filtered$ticket_id == ""
   days_diff <- as.numeric(difftime(filtered$extension_date,
                                    as.Date(filtered$due_date),
                                    units = "days"))
-  plus_days <- ifelse(is.na(days_diff), "TBC", as.character(days_diff))
+  plus_days <- ifelse(is_plan_only, "",
+               ifelse(is.na(days_diff), "TBC", as.character(days_diff)))
 
   # Plan indicator: show days if available, "Yes" if plan exists but no days, "" if no plan
   plan_col <- ifelse(
