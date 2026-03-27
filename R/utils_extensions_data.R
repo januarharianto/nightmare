@@ -47,7 +47,7 @@ parse_plan_days <- function(value) {
 # Flatten extensions from nested student data.
 # Un-nests special_consids, filters to extension types, and returns a flat
 # data.frame with one row per extension record.
-flatten_extensions <- function(data) {
+flatten_extensions <- function(data, due_dates = list()) {
   # Schema for empty result
   empty_df <- data.frame(
     student_id = character(),
@@ -113,7 +113,63 @@ flatten_extensions <- function(data) {
     )
   })
 
-  rbind_or_empty(rows, empty_df)
+  spec_cons_result <- rbind_or_empty(rows, empty_df)
+
+  # --- Synthetic plan extension rows ---
+  # For students with plan extension entitlements, generate a row per assessment
+  # that has a due date, even if they have no spec con.
+  if (length(due_dates) == 0) return(spec_cons_result)
+
+  synthetic_rows <- lapply(seq_len(nrow(data)), function(i) {
+    plan_adj <- data$plan_adjustments[[i]]
+    if (is.null(plan_adj) || nrow(plan_adj) == 0) return(NULL)
+
+    # Check for extension entitlement in plan
+    aa_rows <- plan_adj[plan_adj$category == "Assessment Adjustment", , drop = FALSE]
+    if (nrow(aa_rows) == 0) return(NULL)
+    ext_rows <- aa_rows[grepl("Extension|Take Home", aa_rows$arrangement_type,
+                              ignore.case = TRUE), , drop = FALSE]
+    if (nrow(ext_rows) == 0) return(NULL)
+
+    # Extract plan days
+    parsed <- vapply(ext_rows$value, parse_plan_days, numeric(1))
+    plan_days <- if (all(is.na(parsed))) NA_real_ else max(parsed, na.rm = TRUE)
+
+    sid <- as.character(data$student_id[i])
+
+    # Generate one row per assessment with a due date
+    asg_rows <- lapply(names(due_dates), function(aname) {
+      dd <- due_dates[[aname]]
+      if (is.null(dd) || dd == "") return(NULL)
+      due_dt <- tryCatch(as.Date(dd), error = function(e) NA)
+      if (is.na(due_dt)) return(NULL)
+      ext_dt <- if (!is.na(plan_days)) due_dt + plan_days else NA
+
+      data.frame(
+        student_id = sid,
+        name = as.character(data$name[i]),
+        sis_login_id = as.character(data$sis_login_id[i]),
+        ticket_id = "",
+        assessment_name = aname,
+        outcome_type = "Plan Extension",
+        state = "Approved",
+        approved = TRUE,
+        extension_date = ext_dt,
+        due_date = as.POSIXct(as.character(due_dt)),
+        closing_date = as.POSIXct(NA),
+        has_plan_extension = TRUE,
+        plan_days = plan_days,
+        stringsAsFactors = FALSE
+      )
+    })
+
+    rbind_or_empty(asg_rows, empty_df)
+  })
+
+  synthetic_result <- rbind_or_empty(synthetic_rows, empty_df)
+  if (nrow(synthetic_result) == 0) return(spec_cons_result)
+
+  rbind(spec_cons_result, synthetic_result)
 }
 
 # Extract unique sorted assignment names from Canvas data.
