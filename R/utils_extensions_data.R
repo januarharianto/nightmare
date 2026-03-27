@@ -332,19 +332,32 @@ validate_match_overrides <- function(overrides, spec_cons_names, canvas_names) {
   keep
 }
 
-# Compute summary statistics for extensions on a given Canvas assignment.
-compute_extension_stats <- function(ext_flat, canvas_name, match_result) {
-  # Find which spec_cons_names map to this canvas assignment
+# Filter ext_flat to rows matching a Canvas assignment -- includes both
+# spec cons rows (via match result) and synthetic rows (Canvas name direct match).
+# Deduplicates: spec con rows take precedence over synthetic for the same student.
+filter_extensions_for_assignment <- function(ext_flat, canvas_name, match_result) {
+  if (is.null(ext_flat) || nrow(ext_flat) == 0) return(ext_flat[0, , drop = FALSE])
+
   sc_names <- match_result$matched$spec_cons_name[
     match_result$matched$canvas_name == canvas_name
   ]
 
-  if (length(sc_names) == 0 || is.null(ext_flat) || nrow(ext_flat) == 0) {
-    return(list(total = 0L, approved = 0L, pending = 0L, with_plan = 0L,
-                avg_days = NA_real_))
-  }
+  filtered <- ext_flat[ext_flat$assessment_name %in% sc_names |
+                       ext_flat$assessment_name == canvas_name, , drop = FALSE]
 
-  filtered <- ext_flat[ext_flat$assessment_name %in% sc_names, , drop = FALSE]
+  if (nrow(filtered) == 0) return(filtered)
+
+  # Deduplicate: keep spec con rows (ticket_id != "") over synthetic (ticket_id == "")
+  filtered <- filtered[order(filtered$ticket_id == "", filtered$student_id), ]
+  filtered <- filtered[!duplicated(paste(filtered$student_id, canvas_name)), ]
+
+  filtered
+}
+
+# Compute summary statistics for extensions on a given Canvas assignment.
+compute_extension_stats <- function(ext_flat, canvas_name, match_result) {
+  filtered <- filter_extensions_for_assignment(ext_flat, canvas_name, match_result)
+
   if (nrow(filtered) == 0) {
     return(list(total = 0L, approved = 0L, pending = 0L, with_plan = 0L,
                 avg_days = NA_real_))
@@ -386,16 +399,7 @@ build_extensions_table <- function(ext_flat, canvas_name, match_result) {
     check.names = FALSE
   )
 
-  # Find matching spec_cons_names
-  sc_names <- match_result$matched$spec_cons_name[
-    match_result$matched$canvas_name == canvas_name
-  ]
-
-  if (length(sc_names) == 0 || is.null(ext_flat) || nrow(ext_flat) == 0) {
-    return(empty_table)
-  }
-
-  filtered <- ext_flat[ext_flat$assessment_name %in% sc_names, , drop = FALSE]
+  filtered <- filter_extensions_for_assignment(ext_flat, canvas_name, match_result)
   if (nrow(filtered) == 0) return(empty_table)
 
   # Format dates
@@ -461,6 +465,10 @@ build_seams2_export <- function(display_table, canvas_name) {
 
   # Filter to approved only
   approved <- display_table[display_table$.approved == TRUE, , drop = FALSE]
+  if (nrow(approved) == 0) return(empty_export)
+
+  # Exclude synthetic plan extensions with no specific date
+  approved <- approved[!(is.na(approved$.extension_date) & approved$Outcome == "Plan Extension"), , drop = FALSE]
   if (nrow(approved) == 0) return(empty_export)
 
   # Deduplicate by student_id, keeping latest extension_date
