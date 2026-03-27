@@ -376,6 +376,27 @@ filter_extensions_for_assignment <- function(ext_flat, canvas_name, match_result
   filtered <- filtered[order(filtered$ticket_id == "", filtered$student_id), ]
   filtered <- filtered[!duplicated(paste(filtered$student_id, canvas_name)), ]
 
+  # Backfill due dates on synthetic rows from spec con rows for the same assignment
+  is_synthetic <- filtered$ticket_id == ""
+  if (any(is_synthetic) && any(!is_synthetic)) {
+    spec_con_rows <- filtered[!is_synthetic, , drop = FALSE]
+    ref_due <- spec_con_rows$due_date[!is.na(spec_con_rows$due_date)]
+    if (length(ref_due) > 0) {
+      ref_date <- ref_due[1]
+      na_due <- is_synthetic & is.na(filtered$due_date)
+      if (any(na_due)) {
+        filtered$due_date[na_due] <- ref_date
+        # Recompute extension_date = due_date + plan_days
+        for (idx in which(na_due)) {
+          pd <- filtered$plan_days[idx]
+          if (!is.na(pd)) {
+            filtered$extension_date[idx] <- as.Date(ref_date) + pd
+          }
+        }
+      }
+    }
+  }
+
   filtered
 }
 
