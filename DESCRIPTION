@@ -1,5 +1,5 @@
 Package: nightmare
-Version: 0.2.0
+Version: 0.2.1
 Title: NIGHTMARE - Student Data Management for Unit Coordinators
 Description: Local-first Shiny app for consolidating student academic data
     from Canvas, special considerations, and disability plans.
