@@ -6,7 +6,7 @@
 
 NIGHTMARE_CONFIG <- list(
   ui = list(
-    version = "0.2.2",
+    version = "0.2.3",
     app_name = "NIGHTMARE",
     subtitle = "New Incredibly Glitchy Hacking Tool to Manage All Records Effortlessly",
     author = "Januar Harianto"
