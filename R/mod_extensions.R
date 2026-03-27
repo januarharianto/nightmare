@@ -29,7 +29,7 @@ extensionsModuleUI <- function(id) {
   )
 }
 
-extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, dataDir) {
+extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, dataDir, weightsData = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -38,7 +38,8 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
     extensionsFlat <- reactive({
       data <- studentData()
       if (is.null(data) || nrow(data) == 0) return(data.frame())
-      flatten_extensions(data)
+      dd <- if (!is.null(weightsData)) weightsData()$due_dates else list()
+      flatten_extensions(data, due_dates = dd)
     })
 
     canvasNames <- reactive({
@@ -119,8 +120,7 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
 
         if (length(matched_canvas) > 0 && !is.null(ext) && nrow(ext) > 0) {
           counts <- vapply(matched_canvas, function(cn) {
-            sc_names <- mr$matched$spec_cons_name[mr$matched$canvas_name == cn]
-            sum(ext$assessment_name %in% sc_names)
+            nrow(filter_extensions_for_assignment(ext, cn, mr))
           }, integer(1))
           matched_choices <- matched_canvas
           names(matched_choices) <- paste0(matched_canvas, " (", counts, ")")
@@ -219,9 +219,9 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
 
     output$extensions_table <- renderUI({
       sources <- dataSources()
-      if (!sources$consids) {
+      if (!sources$consids && !sources$plans) {
         return(tags$div(class = "empty-state",
-          tags$p("No special considerations data available")
+          tags$p("No special considerations or plan data available")
         ))
       }
 

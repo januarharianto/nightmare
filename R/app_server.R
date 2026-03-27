@@ -439,7 +439,7 @@ app_server <- function(input, output, session) {
   })
 
   # Extensions module
-  extensionsModuleServer("extensions", studentData, dataSources, currentUnit, dataDir = dataDir)
+  extensionsModuleServer("extensions", studentData, dataSources, currentUnit, dataDir = dataDir, weightsData = weightsData)
 
   # Assessments module
   assessmentsModuleServer("assessments", studentData, examData, weightsData)
