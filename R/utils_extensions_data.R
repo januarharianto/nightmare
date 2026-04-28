@@ -258,18 +258,12 @@ match_assessments <- function(spec_cons_names, canvas_names, max_distance = 0.3)
       next
     }
 
-    # Step 3: Fuzzy match via agrep
+    # Step 3: Fuzzy match via agrep -- never auto-accept; always surface for
+    # user confirmation, since fuzzy distance can silently route to the wrong
+    # assignment (e.g. "Scientific Report" vs "Scientific Paper Quiz").
     fuzzy_hits <- agrep(sc_name, canvas_names, max.distance = max_distance,
                         ignore.case = TRUE)
-    if (length(fuzzy_hits) == 1) {
-      matched <- rbind(matched, data.frame(
-        spec_cons_name = sc_name,
-        canvas_name = canvas_names[fuzzy_hits],
-        stringsAsFactors = FALSE
-      ))
-      next
-    }
-    if (length(fuzzy_hits) > 1) {
+    if (length(fuzzy_hits) >= 1) {
       ambiguous[[sc_name]] <- canvas_names[fuzzy_hits]
       next
     }

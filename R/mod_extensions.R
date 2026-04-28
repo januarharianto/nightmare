@@ -344,17 +344,21 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
       }
 
       # Section 2: Ambiguous matches (excluding already-overridden)
+      # Expose ALL canvas options (not just fuzzy candidates) so the user can
+      # pick the correct Canvas name even when the fuzzy suggestion is wrong.
       new_ambiguous <- ambiguous_items[!names(ambiguous_items) %in% names(overrides)]
       if (length(new_ambiguous) > 0) {
         section_items <- tagList()
         for (sc_name in names(new_ambiguous)) {
           candidates <- new_ambiguous[[sc_name]]
           input_id <- ns(paste0("match_", gsub("[^a-zA-Z0-9]", "_", sc_name)))
-          choices <- c(setNames(candidates, candidates), "Skip (no match)" = "__skip__")
+          choices <- c(setNames(canvas, canvas), "Skip (no match)" = "__skip__")
+          suggested_lbl <- paste0("Suggested: ", paste(candidates, collapse = ", "))
 
           section_items <- tagList(section_items,
             tags$div(class = "match-item",
               tags$div(class = "stat-label", sc_name),
+              tags$div(class = "match-suggested meta-label", suggested_lbl),
               radioButtons(input_id, label = NULL, choices = choices, selected = "__skip__")
             )
           )
