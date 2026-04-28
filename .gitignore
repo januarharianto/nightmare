@@ -44,3 +44,6 @@ Thumbs.db
 .vscode/
 .idea/
 /dist
+
+/.quarto/
+**/*.quarto_ipynb
