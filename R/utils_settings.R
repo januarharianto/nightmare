@@ -15,6 +15,7 @@ read_settings <- function() {
 #' @keywords internal
 save_settings <- function(settings) {
   tryCatch({
+    settings <- modifyList(read_settings(), settings)
     path <- settings_path()
     dir <- dirname(path)
     if (!dir.exists(dir)) dir.create(dir, recursive = TRUE)

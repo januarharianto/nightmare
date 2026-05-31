@@ -9,9 +9,21 @@ load_exam_data <- function(data_dir, unit) {
   if (is.null(payload$assessments)) default else payload
 }
 
+# Load exam data from an offering path.
+load_exam_data_for_path <- function(offering_path) {
+  default <- list(version = 1L, saved_at = NULL, assessments = list())
+  payload <- load_json_for_path(offering_path, "exams.json", default)
+  if (is.null(payload$assessments)) default else payload
+}
+
 # Save exam data to .nightmare/exams.json.
 save_exam_data <- function(data_dir, unit, exam_data) {
   save_nightmare_json(data_dir, unit, "exams.json", exam_data)
+}
+
+# Save exam data to an offering path.
+save_exam_data_for_path <- function(offering_path, exam_data) {
+  save_nightmare_json_for_path(offering_path, "exams.json", exam_data)
 }
 
 # Look up a student's score in a specific sitting. Returns NULL if not found.

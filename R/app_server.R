@@ -8,6 +8,18 @@
 # -- server.R -----------------------------------------------------
 # Main server: reactive state, module orchestration, event handling.
 
+offering_by_id <- function(offerings, offering_id) {
+  if (is.null(offerings) || nrow(offerings) == 0L || is.null(offering_id)) return(NULL)
+  idx <- match(offering_id, offerings$offering_id)
+  if (is.na(idx)) return(NULL)
+  offerings[idx, , drop = FALSE]
+}
+
+offering_year_filter <- function(offering) {
+  if (is.null(offering) || nrow(offering) == 0L || is.na(offering$year[[1]])) return(NULL)
+  as.character(offering$year[[1]])
+}
+
 app_server <- function(input, output, session) {
 
   # Reactive values
@@ -15,15 +27,24 @@ app_server <- function(input, output, session) {
   isLoaded <- reactiveVal(FALSE)
   activeView <- reactiveVal("student")
   currentUnit <- reactiveVal(NULL)
+  currentOffering <- reactiveVal(NULL)
+  selectedStudentId <- reactiveVal(NULL)
   dataSources <- reactiveVal(list(canvas = FALSE, consids = FALSE, plans = FALSE))
   studentNotes <- reactiveVal(list())
   examData <- reactiveVal(list(version = 1L, saved_at = NULL, assessments = list()))
   weightsData <- reactiveVal(list(version = 1L, saved_at = NULL, weights = list()))
+  canvasRefreshStatus <- reactiveVal(list(state = "idle", message = NULL, metadata = NULL))
   editingWeights <- reactiveVal(FALSE)
   availableFolders <- reactiveVal(character(0))
+  availableOfferings <- reactiveVal(empty_offerings())
   dataDir <- reactiveVal({
     saved <- read_settings()$data_dir
     if (!is.null(saved) && dir.exists(saved)) saved else NULL
+  })
+  currentOfferingPath <- reactive({
+    offering <- currentOffering()
+    if (is.null(offering) || nrow(offering) == 0L) return(NULL)
+    offering$path[[1]]
   })
 
   validate_and_save_weights <- function(new_weights, new_due_dates = NULL,
@@ -41,9 +62,9 @@ app_server <- function(input, output, session) {
     weightsData(current)
     if (toggle_editing) editingWeights(FALSE)
 
-    unit <- currentUnit()
-    if (!is.null(unit)) {
-      save_weights_data(dataDir(), unit, current)
+    offering_path <- currentOfferingPath()
+    if (!is.null(offering_path)) {
+      save_weights_data_for_path(offering_path, current)
     }
     TRUE
   }
@@ -92,42 +113,113 @@ app_server <- function(input, output, session) {
     show_data_dir_modal(dataDir(), allow_cancel = TRUE)
   })
 
-  # Helper: load unit data (reusable from startup, modal confirm, and unit switcher)
-  load_unit_data <- function(unit) {
+  show_canvas_config_modal <- function(offering) {
+    cfg <- offering_canvas_config(offering)
+    showModal(modalDialog(
+      title = "Canvas Sync",
+      tags$p("Store the Canvas API token in your system keychain and map this unit to a Canvas course."),
+      textInput("canvas_base_url", "Canvas URL", value = cfg$base_url,
+                placeholder = "https://canvas.sydney.edu.au"),
+      textInput("canvas_course_id", "Canvas course ID", value = cfg$course_id),
+      passwordInput("canvas_token", "API token (stored in Keychain)", value = ""),
+      tags$p(class = "canvas-config-note",
+        "Leave the token blank to keep the existing keychain token."
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("save_canvas_config", "Save", class = "btn-dark")
+      ),
+      easyClose = TRUE
+    ))
+  }
+
+  weights_with_canvas_due_dates <- function(current, canvas_data) {
+    due_dates <- attr(canvas_data, "due_dates")
+    if (is.null(current)) current <- list(version = 1L, saved_at = NULL, weights = list(), due_dates = list())
+    if (is.null(due_dates) || length(due_dates) == 0) {
+      return(list(weights = current, changed = FALSE))
+    }
+
+    existing <- current$due_dates
+    if (is.null(existing)) existing <- list()
+    current$due_dates <- modifyList(existing, due_dates)
+    list(weights = current, changed = TRUE)
+  }
+
+  apply_canvas_due_dates <- function(canvas_data, unit) {
+    offering_path <- isolate(currentOfferingPath())
+    merged <- weights_with_canvas_due_dates(isolate(weightsData()), canvas_data)
+    if (!isTRUE(merged$changed)) return(invisible(FALSE))
+
+    current <- merged$weights
+    weightsData(current)
+    if (!is.null(offering_path)) save_weights_data_for_path(offering_path, current)
+    invisible(TRUE)
+  }
+
+  update_loaded_data <- function(imported, unit) {
+    if (is.null(imported$canvas)) {
+      showNotification("No Canvas gradebook found in folder", type = "error")
+      return(FALSE)
+    }
+
+    consolidated <- suppressMessages(consolidate_student_data(
+      imported$canvas, imported$consids, imported$plans
+    ))
+
+    dataSources(list(
+      canvas = !is.null(imported$canvas),
+      consids = !is.null(imported$consids),
+      plans = !is.null(imported$plans)
+    ))
+
+    studentData(consolidated)
+    isLoaded(TRUE)
+    currentUnit(unit)
+
+    if (nrow(consolidated) > 0) {
+      sorted <- consolidated[order(consolidated$name), ]
+      selectedStudentId(as.character(sorted$student_id[1]))
+    }
+
+    TRUE
+  }
+
+  # Helper: load offering data (reusable from startup, modal confirm, and switchers)
+  load_offering_data <- function(offering) {
     data_dir <- dataDir()
-    folder_path <- file.path(data_dir, unit)
+    if (is.null(data_dir) || is.null(offering) || nrow(offering) == 0L) return(FALSE)
+    folder_path <- offering$path[[1]]
+    unit <- offering$unit[[1]]
+    year_filter <- offering_year_filter(offering)
 
     tryCatch({
-      imported <- load_folder(folder_path, unit_filter = unit)
+      imported <- suppressMessages(load_folder(folder_path, unit_filter = unit, year_filter = year_filter))
+      loaded_notes <- load_notes_data_for_path(folder_path)
+      loaded_exams <- load_exam_data_for_path(folder_path)
+      loaded_weights <- load_weights_data_for_path(folder_path)
+      merged_weights <- weights_with_canvas_due_dates(loaded_weights, imported$canvas)
 
-      dataSources(list(
-        canvas = !is.null(imported$canvas),
-        consids = !is.null(imported$consids),
-        plans = !is.null(imported$plans)
-      ))
-
-      if (is.null(imported$canvas)) {
-        showNotification("No Canvas gradebook found in folder", type = "error")
+      if (!update_loaded_data(imported, unit)) {
         return(FALSE)
       }
 
-      consolidated <- consolidate_student_data(
-        imported$canvas, imported$consids, imported$plans
-      )
-
-      studentData(consolidated)
-      isLoaded(TRUE)
-      currentUnit(unit)
-      studentNotes(load_student_notes(data_dir, unit))
-      examData(load_exam_data(data_dir, unit))
-      weightsData(load_weights_data(data_dir, unit))
+      studentNotes(loaded_notes)
+      examData(loaded_exams)
+      weightsData(merged_weights$weights)
+      if (isTRUE(merged_weights$changed)) {
+        save_weights_data_for_path(folder_path, merged_weights$weights)
+      }
+      currentOffering(offering)
+      save_last_offering(data_dir, offering$offering_id[[1]])
       save_last_unit(data_dir, unit)
 
-      # Default to first student alphabetically
-      if (nrow(consolidated) > 0) {
-        sorted <- consolidated[order(consolidated$name), ]
-        selectedStudentId(as.character(sorted$student_id[1]))
-      }
+      snapshot_meta <- canvas_refresh_status(folder_path)
+      canvasRefreshStatus(list(
+        state = "idle",
+        message = NULL,
+        metadata = snapshot_meta
+      ))
 
       return(TRUE)
     }, error = function(e) {
@@ -181,7 +273,12 @@ app_server <- function(input, output, session) {
     # Extract year from attribute
     year <- attr(data, "academic_year")
     if (is.null(year) || is.na(year)) {
-      year <- "\u2014"
+      offering <- currentOffering()
+      if (!is.null(offering) && !is.na(offering$year[[1]])) {
+        year <- offering$year[[1]]
+      } else {
+        year <- "\u2014"
+      }
     }
 
     # Extract semester from attribute (set by canvas import)
@@ -192,6 +289,10 @@ app_server <- function(input, output, session) {
         detect_semester_from_canvas(data),
         error = function(e) "\u2014"
       )
+      if ((is.null(semester) || is.na(semester) || identical(semester, "\u2014")) &&
+          !is.null(currentOffering()) && !is.na(currentOffering()$semester[[1]])) {
+        semester <- currentOffering()$semester[[1]]
+      }
     }
 
     list(
@@ -201,6 +302,27 @@ app_server <- function(input, output, session) {
       student_count = nrow(data),
       sources = dataSources()
     )
+  })
+
+  canvasStatusLabel <- reactive({
+    offering <- currentOffering()
+    if (is.null(offering)) return("Not configured")
+    cfg <- offering_canvas_config(offering)
+    status <- canvasRefreshStatus()
+
+    if (identical(status$state, "syncing")) return("Refreshing...")
+    if (identical(status$state, "error") && !is.null(status$message)) return(status$message)
+    if (is.null(cfg$base_url) || !nzchar(cfg$base_url) ||
+        is.null(cfg$course_id) || !nzchar(cfg$course_id)) {
+      return("Not configured")
+    }
+
+    meta <- status$metadata
+    if (!is.null(meta) && !is.null(meta$fetched_at)) {
+      return(paste("Updated", meta$fetched_at))
+    }
+
+    "Configured"
   })
 
   # Render main content (switches between views)
@@ -252,8 +374,81 @@ app_server <- function(input, output, session) {
     }
 
     meta <- datasetMetadata()
-    folders <- availableFolders()
-    active <- currentUnit()
+    offerings <- availableOfferings()
+    active_offering <- currentOffering()
+    active_unit <- currentUnit()
+    cfg <- offering_canvas_config(active_offering)
+    configured <- nzchar(cfg$base_url) && nzchar(cfg$course_id)
+    syncing <- identical(canvasRefreshStatus()$state, "syncing")
+    refresh_button <- actionButton(
+      "refresh_canvas",
+      if (syncing) "Refreshing" else "Refresh",
+      class = "canvas-refresh-btn"
+    )
+    if (!configured || syncing) {
+      refresh_button <- shinyjs::disabled(refresh_button)
+    }
+
+    units <- sort(unique(offerings$unit))
+    unit_control <- if (length(units) > 1L) {
+      tags$div(
+        class = "metadata-value metadata-value-clickable metadata-value-static",
+        onclick = "event.stopPropagation(); document.getElementById('unit-dropdown').classList.toggle('open')",
+        tags$span(active_unit %||% meta$unit),
+        tags$span(class = "unit-dropdown-indicator", HTML("&#9660;")),
+        tags$div(
+          id = "unit-dropdown",
+          class = "metadata-dropdown unit-dropdown",
+          lapply(units, function(unit) {
+            is_active <- identical(unit, active_unit)
+            tags$div(
+              class = paste("metadata-dropdown-item unit-dropdown-item", if (is_active) "active" else ""),
+              onclick = sprintf(
+                "event.stopPropagation(); Shiny.setInputValue('unit_dropdown_select', %s, {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
+                jsonlite::toJSON(unit, auto_unbox = TRUE)
+              ),
+              unit
+            )
+          })
+        )
+      )
+    } else {
+      tags$span(class = "metadata-value metadata-value-static", active_unit %||% meta$unit)
+    }
+
+    unit_offerings <- offerings[offerings$unit == active_unit, , drop = FALSE]
+    offering_label <- if (!is.null(active_offering) && nrow(active_offering) > 0L) {
+      active_offering$label[[1]]
+    } else {
+      "\u2014"
+    }
+    offering_control <- if (nrow(unit_offerings) > 1L) {
+      tags$div(
+        class = "metadata-value metadata-value-clickable metadata-value-offering",
+        onclick = "event.stopPropagation(); document.getElementById('offering-dropdown').classList.toggle('open')",
+        tags$span(offering_label),
+        tags$span(class = "unit-dropdown-indicator", HTML("&#9660;")),
+        tags$div(
+          id = "offering-dropdown",
+          class = "metadata-dropdown unit-dropdown",
+          lapply(seq_len(nrow(unit_offerings)), function(i) {
+            offering <- unit_offerings[i, , drop = FALSE]
+            is_active <- !is.null(active_offering) &&
+              identical(offering$offering_id[[1]], active_offering$offering_id[[1]])
+            tags$div(
+              class = paste("metadata-dropdown-item unit-dropdown-item", if (is_active) "active" else ""),
+              onclick = sprintf(
+                "event.stopPropagation(); Shiny.setInputValue('offering_dropdown_select', %s, {priority: 'event'}); document.getElementById('offering-dropdown').classList.remove('open');",
+                jsonlite::toJSON(offering$offering_id[[1]], auto_unbox = TRUE)
+              ),
+              offering$label[[1]]
+            )
+          })
+        )
+      )
+    } else {
+      tags$span(class = "metadata-value metadata-value-static metadata-value-offering", offering_label)
+    }
 
     tags$div(
       class = "metadata-panel",
@@ -263,34 +458,12 @@ app_server <- function(input, output, session) {
         tags$div(
           class = "metadata-item unit-selector",
           tags$span(class = "metadata-label", "Unit:"),
-          tags$div(
-            class = "metadata-value metadata-value-clickable",
-            onclick = "document.getElementById('unit-dropdown').classList.toggle('open')",
-            tags$span(meta$unit),
-            tags$span(class = "unit-dropdown-indicator", HTML("&#9660;")),
-            # Inline dropdown
-            tags$div(
-              id = "unit-dropdown",
-              class = "unit-dropdown",
-              lapply(sort(folders), function(f) {
-                is_active <- identical(f, active)
-                tags$div(
-                  class = paste("unit-dropdown-item", if (is_active) "active" else ""),
-                  onclick = sprintf(
-                    "Shiny.setInputValue('unit_dropdown_select', '%s', {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
-                    f
-                  ),
-                  f
-                )
-              }),
-              tags$div(class = "unit-dropdown-divider"),
-              tags$div(
-                class = "unit-dropdown-item unit-dropdown-change-dir",
-                onclick = "Shiny.setInputValue('change_data_dir', true, {priority: 'event'}); document.getElementById('unit-dropdown').classList.remove('open');",
-                "Change directory\u2026"
-              )
-            )
-          )
+          unit_control
+        ),
+        tags$div(
+          class = "metadata-item offering-selector",
+          tags$span(class = "metadata-label", "Offering:"),
+          offering_control
         ),
         tags$div(
           class = "metadata-item",
@@ -311,15 +484,31 @@ app_server <- function(input, output, session) {
           tags$span(class = "metadata-label", "Semester:"),
           tags$span(class = "metadata-value", meta$semester)
         ),
+        tags$div(
+          class = "metadata-item canvas-sync-item",
+          tags$span(class = "metadata-label", "Canvas:"),
+          tags$span(
+            class = paste(
+              "canvas-sync-status",
+              if (configured) "configured" else "missing",
+              if (identical(canvasRefreshStatus()$state, "error")) "error" else ""
+            ),
+            canvasStatusLabel()
+          ),
+          refresh_button,
+          actionButton("configure_canvas", "Configure", class = "canvas-configure-btn")
+        )
       ),
       # Close dropdown on outside click (idempotent listener)
       tags$script(HTML("
         if (!window._unitDropdownListener) {
           window._unitDropdownListener = true;
           document.addEventListener('click', function(e) {
-            if (!e.target.closest('.unit-selector')) {
-              var dd = document.getElementById('unit-dropdown');
-              if (dd) dd.classList.remove('open');
+            if (!e.target.closest('.unit-selector') && !e.target.closest('.offering-selector')) {
+              ['unit-dropdown', 'offering-dropdown'].forEach(function(id) {
+                var dd = document.getElementById(id);
+                if (dd) dd.classList.remove('open');
+              });
             }
           });
         }
@@ -357,10 +546,12 @@ app_server <- function(input, output, session) {
     studentData(data.frame())
     isLoaded(FALSE)
     currentUnit(NULL)
+    currentOffering(NULL)
     studentNotes(list())
     examData(list(version = 1L, saved_at = NULL, assessments = list()))
     weightsData(list(version = 1L, saved_at = NULL, weights = list(), due_dates = list()))
     availableFolders(character(0))
+    availableOfferings(empty_offerings())
 
     # Branch 1: No saved directory — show directory picker
     if (is.null(dir)) {
@@ -368,12 +559,12 @@ app_server <- function(input, output, session) {
       return()
     }
 
-    # Branch 2 & 3: Directory exists — scan for units
-    folders <- scan_data_folders(dir)
-    availableFolders(folders)
-    last_unit <- read_last_unit(dir)
+    # Branch 2 & 3: Directory exists — scan for offerings
+    offerings <- scan_data_offerings(dir)
+    availableOfferings(offerings)
+    availableFolders(sort(unique(offerings$unit)))
 
-    if (length(folders) == 0) {
+    if (nrow(offerings) == 0) {
       # Branch 2: Directory exists but has no unit folders
       showModal(modalDialog(
         title = "No Data Found",
@@ -389,15 +580,20 @@ app_server <- function(input, output, session) {
       return()
     }
 
-    # Branch 3: Valid directory with unit folders
-    if (!is.null(last_unit) && last_unit %in% folders) {
-      load_unit_data(last_unit)
+    # Branch 3: Valid directory with offerings
+    selected <- resolve_saved_offering(dir, offerings)
+    if (!is.null(selected)) {
+      isolate(load_offering_data(selected))
       return()
     }
 
+    choices <- stats::setNames(
+      offerings$offering_id,
+      paste(offerings$unit, offerings$label, sep = " - ")
+    )
     showModal(modalDialog(
-      title = "Select Unit",
-      selectInput("folder_select", "Unit of Study", choices = folders, selected = folders[1]),
+      title = "Select Offering",
+      selectInput("folder_select", "Unit + Offering", choices = choices, selected = offerings$offering_id[[1]]),
       footer = actionButton("folder_confirm", "Load", class = "btn-dark"),
       easyClose = FALSE
     ))
@@ -411,7 +607,8 @@ app_server <- function(input, output, session) {
   # Handle folder selection (startup modal)
   observeEvent(input$folder_confirm, {
     removeModal()
-    load_unit_data(input$folder_select)
+    offering <- offering_by_id(availableOfferings(), input$folder_select)
+    load_offering_data(offering)
   })
 
   # Handle unit selection from inline dropdown
@@ -420,13 +617,127 @@ app_server <- function(input, output, session) {
     if (!is.null(new_unit) && new_unit != currentUnit()) {
       studentData(data.frame())
       isLoaded(FALSE)
-      load_unit_data(new_unit)
-      availableFolders(scan_data_folders(dataDir()))
+      offering <- newest_offering_for_unit(availableOfferings(), new_unit)
+      load_offering_data(offering)
     }
   })
 
+  observeEvent(input$offering_dropdown_select, {
+    offering_id <- input$offering_dropdown_select
+    active_offering <- currentOffering()
+    if (!is.null(offering_id) &&
+        (is.null(active_offering) || !identical(offering_id, active_offering$offering_id[[1]]))) {
+      studentData(data.frame())
+      isLoaded(FALSE)
+      offering <- offering_by_id(availableOfferings(), offering_id)
+      load_offering_data(offering)
+    }
+  })
+
+  observeEvent(input$configure_canvas, {
+    offering <- currentOffering()
+    if (is.null(offering)) return()
+    show_canvas_config_modal(offering)
+  })
+
+  observeEvent(input$save_canvas_config, {
+    offering <- currentOffering()
+    if (is.null(offering)) return()
+
+    base_url <- normalize_canvas_base_url(input$canvas_base_url)
+    course_id <- trimws(input$canvas_course_id)
+    token <- input$canvas_token
+
+    if (!nzchar(base_url) || !nzchar(course_id)) {
+      showNotification("Canvas URL and course ID are required.", type = "warning")
+      return()
+    }
+
+    save_canvas_course_config(
+      offering_id = offering$offering_id[[1]],
+      base_url = base_url,
+      course_id = course_id
+    )
+
+    if (!is.null(token) && nzchar(token)) {
+      tryCatch({
+        canvas_store_token(base_url, token)
+        showNotification("Canvas settings saved. Token stored in Keychain.", type = "message")
+      }, error = function(e) {
+        showNotification(e$message, type = "error")
+      })
+    } else {
+      showNotification("Canvas settings saved. Existing token unchanged.", type = "message")
+    }
+
+    current_status <- canvasRefreshStatus()
+    canvasRefreshStatus(list(state = "idle", message = NULL, metadata = current_status$metadata))
+    removeModal()
+  })
+
+  observeEvent(input$refresh_canvas, {
+    offering <- currentOffering()
+    if (is.null(offering)) return()
+    unit <- offering$unit[[1]]
+    folder_path <- currentOfferingPath()
+    if (is.null(folder_path)) return()
+
+    cfg <- offering_canvas_config(offering)
+    if (!nzchar(cfg$base_url) || !nzchar(cfg$course_id)) {
+      show_canvas_config_modal(offering)
+      return()
+    }
+
+    canvasRefreshStatus(list(state = "syncing", message = "Refreshing...", metadata = canvasRefreshStatus()$metadata))
+
+    tryCatch({
+      token <- canvas_get_token(cfg$base_url)
+      fetched <- fetch_canvas_gradebook(
+        base_url = cfg$base_url,
+        course_id = cfg$course_id,
+        token = token,
+        unit = unit
+      )
+      if (!is.na(offering$year[[1]])) {
+        fetched$metadata$academic_year <- offering$year[[1]]
+      }
+      if (!is.na(offering$semester[[1]])) {
+        fetched$metadata$semester <- offering$semester[[1]]
+      }
+      save_canvas_api_snapshot(folder_path, fetched$canvas, fetched$metadata)
+
+      imported <- suppressMessages(load_folder(
+        folder_path,
+        unit_filter = unit,
+        year_filter = offering_year_filter(offering)
+      ))
+      if (!update_loaded_data(imported, unit)) {
+        stop("Canvas refresh completed, but the refreshed gradebook could not be loaded.", call. = FALSE)
+      }
+      apply_canvas_due_dates(imported$canvas, unit)
+
+      canvasRefreshStatus(list(
+        state = "ok",
+        message = NULL,
+        metadata = fetched$metadata
+      ))
+      showNotification(
+        sprintf("Canvas refreshed: %d students, %d assignments.",
+                fetched$metadata$student_count, fetched$metadata$assignment_count),
+        type = "message"
+      )
+    }, error = function(e) {
+      canvasRefreshStatus(list(
+        state = "error",
+        message = "Refresh failed",
+        metadata = canvasRefreshStatus()$metadata
+      ))
+      showNotification(paste("Canvas refresh failed:", e$message), type = "error")
+    })
+  })
+
   # Search module
-  selectedStudentId <- searchModuleServer("search", studentData)
+  searchModuleServer("search", studentData, selectedStudentId)
 
   selectedStudent <- reactive({
     sid <- selectedStudentId()
@@ -451,7 +762,10 @@ app_server <- function(input, output, session) {
   plansModuleServer("plans", studentData, dataSources)
 
   # Exams module
-  examsModuleServer("exams", studentData, examData, currentUnit, dataSources, weightsData, dataDir = dataDir)
+  examsModuleServer(
+    "exams", studentData, examData, currentUnit, dataSources,
+    weightsData, dataDir = dataDir, currentOfferingPath = currentOfferingPath
+  )
 
   # Navigate to student from notes feed
   observeEvent(input$navigate_to_student, {
@@ -462,24 +776,24 @@ app_server <- function(input, output, session) {
   observeEvent(input$save_note, {
     req(input$save_note)
     info <- input$save_note
-    unit <- currentUnit()
-    if (is.null(unit)) return()
+    offering_path <- currentOfferingPath()
+    if (is.null(offering_path)) return()
 
     updated <- add_note(studentNotes(), info$student_id, info$category, info$text)
     studentNotes(updated)
-    save_student_notes(dataDir(), unit, updated)
+    save_notes_data_for_path(offering_path, updated)
   })
 
   # Delete a note
   observeEvent(input$delete_note, {
     req(input$delete_note)
     info <- input$delete_note
-    unit <- currentUnit()
-    if (is.null(unit)) return()
+    offering_path <- currentOfferingPath()
+    if (is.null(offering_path)) return()
 
     updated <- delete_note(studentNotes(), info$student_id, info$note_id)
     studentNotes(updated)
-    save_student_notes(dataDir(), unit, updated)
+    save_notes_data_for_path(offering_path, updated)
   })
 
   # Edit a note -- show modal with pre-filled values
@@ -556,15 +870,15 @@ app_server <- function(input, output, session) {
   observeEvent(input$exam_sitting_change, {
     req(input$exam_sitting_change)
     info <- input$exam_sitting_change
-    unit <- currentUnit()
-    if (is.null(unit)) return()
+    offering_path <- currentOfferingPath()
+    if (is.null(offering_path)) return()
 
     exam <- examData()
     resolutions <- list()
     resolutions[[info$student_id]] <- as.integer(info$sitting_id)
     exam <- resolve_conflicts(exam, info$assessment, resolutions)
     examData(exam)
-    save_exam_data(dataDir(), unit, exam)
+    save_exam_data_for_path(offering_path, exam)
   })
 
   # Toggle weight editing mode
@@ -592,20 +906,20 @@ app_server <- function(input, output, session) {
       current <- weightsData()
       current$due_dates <- new_due_dates
       weightsData(current)
-      unit <- currentUnit()
-      if (!is.null(unit)) save_weights_data(dataDir(), unit, current)
+      offering_path <- currentOfferingPath()
+      if (!is.null(offering_path)) save_weights_data_for_path(offering_path, current)
     }
   })
 
   observeEvent(input$confirm_edit_note_data, {
     req(input$confirm_edit_note_data)
     info <- input$confirm_edit_note_data
-    unit <- currentUnit()
-    if (is.null(unit)) return()
+    offering_path <- currentOfferingPath()
+    if (is.null(offering_path)) return()
 
     updated <- edit_note(studentNotes(), info$student_id, info$note_id, info$category, info$text)
     studentNotes(updated)
-    save_student_notes(dataDir(), unit, updated)
+    save_notes_data_for_path(offering_path, updated)
     removeModal()
   })
 

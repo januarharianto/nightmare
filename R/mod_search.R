@@ -37,7 +37,7 @@ filter_student_search_index <- function(indexed, term) {
   indexed[match, , drop = FALSE]
 }
 
-searchModuleServer <- function(id, studentData) {
+searchModuleServer <- function(id, studentData, selectedStudentId = reactiveVal(NULL)) {
   moduleServer(id, function(input, output, session) {
 
     # Reactive search term
@@ -105,9 +105,6 @@ searchModuleServer <- function(id, studentData) {
         result_items
       )
     })
-
-    # Selected student ID reactive
-    selectedStudentId <- reactiveVal(NULL)
 
     # Handle result item click
     observeEvent(input$selected_index, {

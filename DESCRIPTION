@@ -16,6 +16,8 @@ Imports:
     stringr,
     shinyjs,
     jsonlite,
+    httr2,
+    keyring,
     htmltools,
     rlang,
     stats,

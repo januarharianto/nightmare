@@ -370,21 +370,52 @@ label.search-label { display: block; margin-bottom: var(--sp-xs); }
   margin-bottom: 0;
 }
 
-.metadata-grid { display: flex; flex-wrap: nowrap; gap: 28px; padding: 0; background-color: transparent; border: none; align-items: center; width: 100%; }
-.metadata-item { display: flex; gap: var(--sp-xs); align-items: baseline; white-space: nowrap; flex-shrink: 0; }
+.metadata-grid { display: flex; flex-wrap: wrap; gap: 8px 28px; padding: 0; background-color: transparent; border: none; align-items: center; width: 100%; }
+.metadata-item { display: flex; gap: var(--sp-xs); align-items: baseline; white-space: nowrap; flex: 0 1 auto; min-width: 0; }
 .metadata-label { font-size: var(--text-sm); font-weight: 700; color: var(--c-muted); letter-spacing: 0.5px; text-transform: uppercase; }
-.metadata-value { font-size: 15px; font-weight: 600; color: var(--c-hover); }
+.metadata-value { font-size: 15px; font-weight: 600; color: var(--c-hover); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .metadata-value:empty::after { content: "\2014"; color: var(--c-border-light); }
 
-.metadata-value-clickable { position: relative; cursor: pointer; border: 1px solid var(--c-border); padding: 3px var(--sp-sm); background-color: var(--c-bg); display: inline-flex; align-items: center; gap: 6px; }
-.metadata-value-clickable:hover { background-color: var(--c-surface); border-color: #999; }
+.metadata-value-static { display: inline-block; max-width: 160px; }
+.metadata-value-offering { max-width: 220px; }
+.metadata-value-clickable { position: relative; cursor: pointer; border: 1px solid var(--c-border); padding: 3px var(--sp-sm); background-color: var(--c-bg); display: inline-flex; align-items: center; gap: 6px; max-width: 220px; overflow: visible; }
+.metadata-value-clickable > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.metadata-value-clickable:hover { background-color: var(--c-surface); border-color: var(--c-hover); }
 .metadata-value-clickable .unit-dropdown-indicator { font-size: 8px; color: var(--c-subtle); line-height: 1; }
 
-.unit-dropdown { display: none; position: absolute; top: calc(100% + 1px); left: -1px; background-color: var(--c-bg); border: 1px solid var(--c-border); z-index: 1001; min-width: 140px; max-height: 200px; overflow-y: auto; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+.canvas-sync-item { margin-left: auto; gap: var(--sp-sm); align-items: center; }
+.canvas-sync-status { font-size: var(--text-sm); color: var(--c-subtle); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.canvas-sync-status.configured { color: var(--c-hover); }
+.canvas-sync-status.error { color: var(--c-fg); font-weight: 700; }
+.canvas-refresh-btn,
+.canvas-configure-btn {
+  border: 1px solid var(--c-border);
+  background-color: var(--c-bg);
+  color: var(--c-fg);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  line-height: 1.2;
+}
+.canvas-refresh-btn { background-color: var(--c-fg); color: var(--c-bg); border-color: var(--c-fg); }
+.canvas-refresh-btn:hover,
+.canvas-configure-btn:hover { background-color: var(--c-surface-hover); color: var(--c-fg); }
+.canvas-refresh-btn[disabled] { background-color: var(--c-border-light); border-color: var(--c-border-light); color: var(--c-border); cursor: not-allowed; }
+.canvas-config-note { font-size: var(--text-sm); color: var(--c-subtle); margin-top: -4px; }
+
+.metadata-dropdown,
+.unit-dropdown { display: none; position: absolute; top: calc(100% + 1px); left: -1px; background-color: var(--c-bg); border: 1px solid var(--c-border); z-index: 1001; min-width: 140px; max-width: min(360px, 80vw); max-height: 220px; overflow-y: auto; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+.metadata-dropdown.open,
 .unit-dropdown.open { display: block; }
-.unit-dropdown-item { padding: 6px var(--sp-md) 6px 28px; font-size: var(--text-base); cursor: pointer; color: var(--c-hover); position: relative; }
+.metadata-dropdown-item,
+.unit-dropdown-item { padding: 6px var(--sp-md) 6px 28px; font-size: var(--text-base); cursor: pointer; color: var(--c-hover); position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.metadata-dropdown-item:hover,
 .unit-dropdown-item:hover { background-color: var(--c-surface-hover); }
+.metadata-dropdown-item.active::before,
 .unit-dropdown-item.active::before { content: "\2713"; position: absolute; left: 10px; }
+.metadata-dropdown-item.active,
 .unit-dropdown-item.active { font-weight: 700; color: var(--c-fg); }
 
 /* === 9. SOURCE TAGS === */

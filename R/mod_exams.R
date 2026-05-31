@@ -11,7 +11,8 @@ examsModuleUI <- function(id) {
   )
 }
 
-examsModuleServer <- function(id, studentData, examData, currentUnit, dataSources, weightsData = NULL, dataDir) {
+examsModuleServer <- function(id, studentData, examData, currentUnit, dataSources,
+                              weightsData = NULL, dataDir, currentOfferingPath = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -237,9 +238,9 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       exam$assessments[[aname]]$sittings[[n_sittings]]$num_replaced <- num_replaced
 
       # Save
-      unit <- currentUnit()
-      if (!is.null(unit)) {
-        save_exam_data(dataDir(), unit, exam)
+      offering_path <- if (!is.null(currentOfferingPath)) currentOfferingPath() else NULL
+      if (!is.null(offering_path)) {
+        save_exam_data_for_path(offering_path, exam)
       }
       examData(exam)
 
@@ -266,9 +267,9 @@ examsModuleServer <- function(id, studentData, examData, currentUnit, dataSource
       exam <- examData()
       if (!is.null(exam$assessments[[aname]])) {
         exam$assessments[[aname]] <- NULL
-        unit <- currentUnit()
-        if (!is.null(unit)) {
-          save_exam_data(dataDir(), unit, exam)
+        offering_path <- if (!is.null(currentOfferingPath)) currentOfferingPath() else NULL
+        if (!is.null(offering_path)) {
+          save_exam_data_for_path(offering_path, exam)
         }
         examData(exam)
         showNotification(paste0("Deleted '", aname, "'"), type = "message")

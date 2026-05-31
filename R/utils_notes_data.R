@@ -24,9 +24,28 @@ load_student_notes <- function(data_dir, unit) {
   if (is.null(payload$notes)) list() else payload$notes
 }
 
+# Load student notes from an offering path.
+load_student_notes_for_path <- function(offering_path) {
+  payload <- load_json_for_path(offering_path, "student_notes.json", list())
+  if (is.null(payload$notes)) list() else payload$notes
+}
+
+load_notes_data_for_path <- function(offering_path) {
+  load_student_notes_for_path(offering_path)
+}
+
 # Save student notes to .nightmare/student_notes.json.
 save_student_notes <- function(data_dir, unit, notes) {
   save_nightmare_json(data_dir, unit, "student_notes.json", list(notes = notes))
+}
+
+# Save student notes to an offering path.
+save_student_notes_for_path <- function(offering_path, notes) {
+  save_nightmare_json_for_path(offering_path, "student_notes.json", list(notes = notes))
+}
+
+save_notes_data_for_path <- function(offering_path, notes_data) {
+  save_student_notes_for_path(offering_path, notes_data)
 }
 
 # Add a note for a student. Returns updated notes list.

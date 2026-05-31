@@ -11,9 +11,23 @@ load_weights_data <- function(data_dir, unit) {
   payload
 }
 
+# Load weights data from an offering path.
+load_weights_data_for_path <- function(offering_path) {
+  default <- list(version = 1L, saved_at = NULL, weights = list(), due_dates = list())
+  payload <- load_json_for_path(offering_path, "weights.json", default)
+  if (is.null(payload$weights)) return(default)
+  if (is.null(payload$due_dates)) payload$due_dates <- list()
+  payload
+}
+
 # Save weights data to .nightmare/weights.json.
 save_weights_data <- function(data_dir, unit, weights_data) {
   save_nightmare_json(data_dir, unit, "weights.json", weights_data, version = 2L)
+}
+
+# Save weights data to an offering path.
+save_weights_data_for_path <- function(offering_path, weights_data) {
+  save_nightmare_json_for_path(offering_path, "weights.json", weights_data, version = 2L)
 }
 
 # Compute assessment status from due date and score presence.
