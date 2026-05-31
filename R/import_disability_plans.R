@@ -11,14 +11,24 @@
 import_disability_plans <- function(file_path, unit_filter = NULL, year_filter = NULL) {
   message("Importing disability plans from: ", file_path)
 
-  # Read first 2 rows to get real headers (categories + arrangement names)
-  header_rows <- read_excel(file_path, col_names = FALSE, n_max = 2,
-                            .name_repair = "minimal")
-  categories <- as.character(header_rows[1, ])       # Row 1 = category names
-  arrangement_names <- as.character(header_rows[2, ]) # Row 2 = arrangement names
+  empty_result <- function() {
+    result <- data.frame(
+      student_id = character(),
+      name = character(),
+      has_disability_plan = logical(),
+      stringsAsFactors = FALSE
+    )
+    result$plan_adjustments <- list()
+    result
+  }
 
-  # Read the full file with no header to get row 3 headers for metadata columns
   raw_data <- read_excel(file_path, col_names = FALSE, .name_repair = "minimal")
+  if (nrow(raw_data) < 4) {
+    return(empty_result())
+  }
+
+  categories <- as.character(raw_data[1, ])        # Row 1 = category names
+  arrangement_names <- as.character(raw_data[2, ]) # Row 2 = arrangement names
 
   # Extract row 3 headers (used for metadata column identification)
   row3_headers <- as.character(raw_data[3, ])
@@ -31,6 +41,9 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
   # Convert to data frame and filter out empty rows
   data <- as.data.frame(data, stringsAsFactors = FALSE)
   data <- data[!is.na(data$SID) & data$SID != "", ]
+  if (nrow(data) == 0) {
+    return(empty_result())
+  }
 
   # Apply unit filter if provided
   if (!is.null(unit_filter)) {
@@ -47,11 +60,12 @@ import_disability_plans <- function(file_path, unit_filter = NULL, year_filter =
     data <- data[data$Year == year_filter, ]
     message(sprintf("Filtered plans to %d rows for year %s", nrow(data), year_filter))
   }
+  if (nrow(data) == 0) return(empty_result())
 
   # Identify arrangement columns (cols 16 onward are arrangements)
   # Metadata columns are 1-15
   n_metadata <- min(15, ncol(data))
-  arrangement_indices <- seq(n_metadata + 1, ncol(data))
+  arrangement_indices <- if (ncol(data) > n_metadata) seq(n_metadata + 1, ncol(data)) else integer(0)
 
   # Filter values to exclude
   exclude_pattern <- "not required|date has passed"

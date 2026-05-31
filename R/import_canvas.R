@@ -6,6 +6,30 @@
 #'
 #' @param file_path Path to Canvas gradebook CSV file
 #' @return data.frame with student records and assignment data
+prepare_canvas_assignment_metadata <- function(data, assignment_cols, points_possible_row,
+                                               has_points_possible) {
+  col_meta <- lapply(assignment_cols, function(col) {
+    max_pts <- if (has_points_possible) suppressWarnings(as.numeric(points_possible_row[[col]])) else NA_real_
+    scores_raw <- suppressWarnings(as.numeric(data[[col]]))
+    na_ratio <- if (nrow(data) > 0) sum(is.na(scores_raw)) / nrow(data) else 1
+
+    name_part <- str_extract(col, "^[^\\[\\(]+")
+    name_part <- str_trim(name_part)
+    id_part <- str_extract(col, "\\((\\d+)\\)")
+    assignment_id <- str_extract(id_part, "\\d+")
+
+    list(
+      col = col,
+      name = name_part,
+      assignment_id = ifelse(is.na(assignment_id), "", assignment_id),
+      max_points = max_pts,
+      is_ongoing = na_ratio > 0.60
+    )
+  })
+
+  Filter(function(m) !is.na(m$max_points) && m$max_points > 0, col_meta)
+}
+
 import_canvas_grades <- function(file_path) {
   message("Importing Canvas gradebook from: ", file_path)
 
@@ -52,16 +76,9 @@ import_canvas_grades <- function(file_path) {
   # Identify assignment columns: match columns ending with (id)
   assignment_cols <- names(data)[grepl("\\(\\d+\\)$", names(data))]
 
-  # Pre-compute per-column: max_points, is_ongoing, and filter out non-graded
-  col_meta <- lapply(assignment_cols, function(col) {
-    max_pts <- if (has_points_possible) as.numeric(points_possible_row[[col]]) else NA_real_
-    scores_raw <- as.numeric(data[[col]])
-    na_ratio <- sum(is.na(scores_raw)) / nrow(data)
-    list(col = col, max_points = max_pts, is_ongoing = na_ratio > 0.60)
-  })
-
-  # Filter out assignments where max_points is 0 or NA (attendance, surveys, etc.)
-  col_meta <- Filter(function(m) !is.na(m$max_points) && m$max_points > 0, col_meta)
+  col_meta <- prepare_canvas_assignment_metadata(
+    data, assignment_cols, points_possible_row, has_points_possible
+  )
 
   # Extract final grade (look for "Current Grade" or similar)
   final_grade_col <- names(data)[grepl("^Current (Score|Grade|Points)", names(data), ignore.case = TRUE)]
@@ -88,15 +105,8 @@ import_canvas_grades <- function(file_path) {
     assignments_list <- lapply(col_meta, function(m) {
       col <- m$col
 
-      # Parse assignment name and ID from column header
-      name_part <- str_extract(col, "^[^\\[\\(]+")
-      # Strip trailing weight bracket if present e.g. " [10%] "
-      name_part <- str_replace(name_part, "\\s*$", "")
-      id_part <- str_extract(col, "\\((\\d+)\\)")
-      assignment_id <- str_extract(id_part, "\\d+")
-
       # Get score for this student - keep NA as NA
-      score <- as.numeric(data[[col]][i])
+      score <- suppressWarnings(as.numeric(data[[col]][i]))
 
       max_pts <- m$max_points
       pct <- if (!is.na(score) && !is.na(max_pts) && max_pts > 0) {
@@ -106,12 +116,12 @@ import_canvas_grades <- function(file_path) {
       }
 
       data.frame(
-        name = str_trim(name_part),
+        name = m$name,
         score = score,
         max_points = max_pts,
         percentage = pct,
         is_ongoing = m$is_ongoing,
-        assignment_id = ifelse(is.na(assignment_id), "", assignment_id),
+        assignment_id = m$assignment_id,
         stringsAsFactors = FALSE
       )
     })

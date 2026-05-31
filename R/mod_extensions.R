@@ -58,6 +58,14 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
       val
     })
 
+    selectedExtensionsTable <- reactive({
+      assess <- selectedAssessment()
+      mr <- matchResult()
+      if (is.null(assess) || is.null(mr)) return(NULL)
+
+      build_extensions_table(extensionsFlat(), assess, mr)
+    })
+
     # --- Load overrides from disk when data loads ---
 
     observe({
@@ -239,8 +247,12 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
         ))
       }
 
-      ext <- extensionsFlat()
-      tbl <- build_extensions_table(ext, assess, mr)
+      tbl <- selectedExtensionsTable()
+      if (is.null(tbl)) {
+        return(tags$div(class = "empty-state",
+          tags$p("No special considerations data available")
+        ))
+      }
 
       if (nrow(tbl) == 0) {
         return(tags$div(class = "empty-state",
@@ -469,11 +481,10 @@ extensionsModuleServer <- function(id, studentData, dataSources, currentUnit, da
     observe({
       assess <- selectedAssessment()
       mr <- matchResult()
-      ext <- extensionsFlat()
 
       has_approved <- FALSE
-      if (!is.null(assess) && !is.null(mr) && nrow(ext) > 0) {
-        tbl <- build_extensions_table(ext, assess, mr)
+      if (!is.null(assess) && !is.null(mr)) {
+        tbl <- selectedExtensionsTable()
         has_approved <- any(tbl$.approved, na.rm = TRUE)
       }
 

@@ -14,14 +14,42 @@ searchModuleUI <- function(id) {
   )
 }
 
+prepare_student_search_index <- function(data) {
+  if (is.null(data) || nrow(data) == 0) return(data)
+
+  indexed <- data
+  indexed$.search_name <- tolower(ifelse(is.na(indexed$name), "", indexed$name))
+  indexed$.search_student_id <- tolower(ifelse(is.na(indexed$student_id), "", as.character(indexed$student_id)))
+  indexed$.search_login <- tolower(ifelse(is.na(indexed$sis_login_id), "", indexed$sis_login_id))
+  indexed
+}
+
+filter_student_search_index <- function(indexed, term) {
+  if (is.null(indexed) || nrow(indexed) == 0) return(indexed)
+
+  q <- tolower(trimws(term %||% ""))
+  if (!nzchar(q)) return(indexed[0, , drop = FALSE])
+
+  match <- grepl(q, indexed$.search_name, fixed = TRUE) |
+    grepl(q, indexed$.search_student_id, fixed = TRUE) |
+    grepl(q, indexed$.search_login, fixed = TRUE)
+
+  indexed[match, , drop = FALSE]
+}
+
 searchModuleServer <- function(id, studentData) {
   moduleServer(id, function(input, output, session) {
 
     # Reactive search term
-    searchTerm <- reactive({
+    searchTermRaw <- reactive({
       term <- input$search_box
       if (is.null(term) || term == "") return("")
       tolower(trimws(term))
+    })
+    searchTerm <- searchTermRaw |> debounce(200)
+
+    indexedStudents <- reactive({
+      prepare_student_search_index(studentData())
     })
 
     # Filter students based on search
@@ -29,15 +57,10 @@ searchModuleServer <- function(id, studentData) {
       term <- searchTerm()
       if (term == "" || nchar(term) == 0) return(NULL)
 
-      data <- studentData()
+      data <- indexedStudents()
       req(data)
 
-      results <- data %>%
-        filter(
-          grepl(term, tolower(name), fixed = TRUE) |
-          grepl(term, tolower(as.character(student_id)), fixed = TRUE) |
-          grepl(term, tolower(sis_login_id), fixed = TRUE)
-        ) %>%
+      results <- filter_student_search_index(data, term) %>%
         select(name, student_id, sis_login_id) %>%
         arrange(name)
 

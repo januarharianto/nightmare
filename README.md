@@ -17,8 +17,23 @@ devtools::load_all()
 
 ## Usage
 
+From an installed package:
+
 ```r
 nightmare::run_nightmare()
+```
+
+From a local checkout during development:
+
+```r
+pkgload::load_all()
+run_nightmare()
+```
+
+Or from the shell:
+
+```bash
+Rscript -e "pkgload::load_all(); run_nightmare()"
 ```
 
 Drop your data files into `data/UNITCODE/` (e.g. `data/BIOL2022/`). The app auto-detects Canvas gradebooks (CSV), special considerations (CSV), and disability plans (XLSX).
