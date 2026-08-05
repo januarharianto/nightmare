@@ -545,6 +545,9 @@ label.search-label { display: block; margin-bottom: var(--sp-xs); }
 .plans-search-section input { width: 100%; padding: var(--sp-md); font-size: var(--text-md); border: 1px solid var(--c-border); font-family: inherit; }
 .plans-search-section input:focus { outline: 2px solid var(--c-fg); background-color: var(--c-bg); }
 .plans-filter-tags { flex-wrap: wrap; }
+.btn-export-plans { margin-left: auto; padding: var(--sp-sm) var(--sp-lg); font-size: 11px; flex-shrink: 0; }
+.btn-export-plans[disabled],
+.btn-export-plans.disabled { background-color: var(--c-border-light); color: var(--c-border); cursor: not-allowed; }
 .plans-summary { padding: 10px var(--sp-md); flex-shrink: 0; }
 .plans-item-header { display: flex; align-items: baseline; gap: var(--sp-sm); margin-bottom: var(--sp-xs); }
 .plans-item-name { font-size: var(--text-md); font-weight: 600; color: var(--c-fg); }

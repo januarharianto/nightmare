@@ -154,3 +154,45 @@ flatten_all_plans <- function(data) {
   result$login_lower <- tolower(result$sis_login_id)
   result
 }
+
+# Build a one-row-per-student CSV export with one column per plan group.
+build_plans_export <- function(flat) {
+  groups <- PLAN_GROUPS
+  if (!is.null(flat) && nrow(flat) > 0 && "group" %in% names(flat)) {
+    groups <- c(groups, setdiff(unique(flat$group), groups))
+    groups <- groups[!is.na(groups) & nzchar(groups)]
+  }
+
+  empty <- data.frame(
+    Name = character(),
+    Unikey = character(),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+  for (group in groups) empty[[group]] <- character()
+
+  if (is.null(flat) || nrow(flat) == 0) return(empty)
+
+  collapse_group <- function(rows, group) {
+    details <- rows$display_detail[rows$group == group]
+    details <- unique(details[!is.na(details) & nzchar(details)])
+    paste(details, collapse = "; ")
+  }
+
+  by_student <- split(flat, flat$student_id)
+  rows <- lapply(by_student, function(student_rows) {
+    row <- data.frame(
+      Name = student_rows$name[[1]],
+      Unikey = student_rows$sis_login_id[[1]],
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    )
+    for (group in groups) row[[group]] <- collapse_group(student_rows, group)
+    row
+  })
+
+  result <- do.call(rbind, rows)
+  result <- result[order(tolower(result$Name), result$Unikey), , drop = FALSE]
+  row.names(result) <- NULL
+  result
+}

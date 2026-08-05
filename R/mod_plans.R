@@ -37,7 +37,9 @@ plansModuleUI <- function(id) {
     ),
     tags$div(class = "plans-toolbar toolbar",
       tags$span(class = "plans-label meta-label", "Category"),
-      tags$div(class = "plans-filter-tags toggle-group", filter_buttons)
+      tags$div(class = "plans-filter-tags toggle-group", filter_buttons),
+      downloadButton(ns("export_csv"), "Export CSV",
+                     class = "btn-primary btn-export-plans")
     ),
     uiOutput(ns("plan_stats")),
     tags$div(class = "plans-list-container scroll-container",
@@ -76,6 +78,22 @@ plansModuleServer <- function(id, studentData, dataSources) {
         flat <- flat[match, , drop = FALSE]
       }
       flat
+    })
+
+    output$export_csv <- downloadHandler(
+      filename = function() {
+        paste0("NIGHTMARE_Plans_", format(Sys.Date(), "%Y%m%d"), ".csv")
+      },
+      content = function(file) {
+        flat <- plansFlat()
+        visible_student_ids <- unique(filteredPlans()$student_id)
+        export_rows <- flat[flat$student_id %in% visible_student_ids, , drop = FALSE]
+        write.csv(build_plans_export(export_rows), file, row.names = FALSE, na = "")
+      }
+    )
+
+    observe({
+      shinyjs::toggleState("export_csv", condition = nrow(filteredPlans()) > 0)
     })
 
     output$plan_stats <- renderUI({
